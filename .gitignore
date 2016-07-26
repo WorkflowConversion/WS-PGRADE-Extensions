@@ -1,1 +1,7 @@
+# maven outputs all compiled classes in here
 target/
+
+# eclipse specific things
+.project
+.classpath
+.settings
