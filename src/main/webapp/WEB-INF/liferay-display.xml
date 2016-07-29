@@ -2,6 +2,7 @@
 <!DOCTYPE display PUBLIC "-//Liferay//DTD Display 6.2.0//EN" "http://www.liferay.com/dtd/liferay-display_6_2_0.dtd">
 <display>
     <category name="Workflow Conversion">
-        <portlet id="WorkflowImporterVaadin" />
+    	<!-- portlet.name property is defined in build.properties -->
+        <portlet id="${portlet.name}" />
     </category>
 </display>

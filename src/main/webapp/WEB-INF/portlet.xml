@@ -4,25 +4,23 @@
 	xsi:schemaLocation='http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd'
 	version='2.0'>
 	<portlet>
-		<description>gUSE Workflow Importer (Vaadin)</description>
-		<portlet-name>WorkflowImporterVaadin</portlet-name>
-		<display-name>gUSE WorkflowImporterVaadin</display-name>
+		<description>WS-PGRADE Workflow Importer</description>
+		<!-- portlet.name property is defined in build.properties -->
+		<portlet-name>${portlet.name}</portlet-name>
+		<display-name>WS-PGRADE Workflow Importer</display-name>
 		<portlet-class>com.vaadin.terminal.gwt.server.ApplicationPortlet2</portlet-class>
 		<init-param>
 			<name>application</name>
-			<value>com.workflowconversion.guse.portlet.importer.WorkflowImporterVaadinApplication</value>
+			<value>com.workflowconversion.importer.guse.vaadin.WorkflowImporterApplication</value>
 		</init-param>
-		<!-- Vaadin 7.0+ <portlet-class>com.vaadin.server.VaadinPortlet</portlet-class> 
-			<init-param> <name>UI</name> <value>com.workflowconversion.guse.portlet.importer.WorkflowImporterVaadinApplication</value> 
-			</init-param> -->
 		<expiration-cache>0</expiration-cache>
 		<supports>
 			<mime-type>text/html</mime-type>
 			<portlet-mode>VIEW</portlet-mode>
 		</supports>
 		<portlet-info>
-			<title>WS-PGRADE Workflow Importer (Vaadin)</title>
-			<short-title>Workflow Importer (Vaadin)</short-title>
+			<title>WS-PGRADE Workflow Importer</title>
+			<short-title>WS-PGRADE Workflow Importer</short-title>
 		</portlet-info>
 		<security-role-ref>
 			<role-name>administrator</role-name>
