@@ -5,54 +5,62 @@
         <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>
     </listener>
     
-    <!-- Vaadin stuff -->
+    <!-- Vaadin specific entries -->
 	<context-param>
 		<description>Vaadin production mode</description>
 		<param-name>productionMode</param-name>
-		<param-value>false</param-value>
+		<param-value>true</param-value>
 	</context-param>
 	<servlet>
-		<servlet-name>WorkflowImporterVaadinPortlet</servlet-name>
+		<!-- portlet.name property is defined in build.properties -->
+		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>
 		<init-param>
 			<description>Vaadin application class to start</description>
 			<param-name>application</param-name>
-			<param-value>com.workflowconversion.guse.portlet.importer.WorkflowImporterVaadinApplication</param-value>
+			<param-value>com.workflowconversion.importer.guse.vaadin.WorkflowImporterApplication</param-value>
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>
 	
 	<servlet-mapping>
-		<servlet-name>WorkflowImporterVaadinPortlet</servlet-name>
-		<url-pattern>/WorkflowImporterVaadinPortletServlet/*</url-pattern>	
+		<!-- portlet.name property is defined in build.properties -->
+		<servlet-name>${portlet.name}Servlet</servlet-name>
+		<url-pattern>/${portlet.name}Servlet/*</url-pattern>	
 	</servlet-mapping>
 	<servlet-mapping>
-		<servlet-name>WorkflowImporterVaadinPortlet</servlet-name>
+		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/VAADIN/*</url-pattern>	
 	</servlet-mapping>
     
+    <!-- the next sections are needed to enable communication with gUSE's back end -->
     <servlet>
         <servlet-name>InitServices</servlet-name>
         <servlet-class>hu.sztaki.lpds.information.local.InitAxisServices</servlet-class>
         <init-param>
             <param-name>baseurl</param-name>
-            <param-value>http://localhost:8080/WorkflowImporterVaadin/servlet/AxisServlet</param-value>
+            <!-- portlet.name property is defined in build.properties -->
+            <param-value>http://localhost:8080/${portlet.name}/servlet/AxisServlet</param-value>
         </init-param>
         <init-param>
             <param-name>install-4</param-name>
-            <param-value>webapps/WorkflowImporterVaadin/WEB-INF/lib/wfi.wsdd</param-value>
+            <!-- portlet.name property is defined in build.properties -->
+            <param-value>webapps/${portlet.name}/WEB-INF/lib/wfi.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>install-1</param-name>
-            <param-value>webapps/WorkflowImporterVaadin/WEB-INF/lib/storage.wsdd</param-value>
+            <!-- portlet.name property is defined in build.properties -->
+            <param-value>webapps/${portlet.name}/WEB-INF/lib/storage.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>install-2</param-name>
-            <param-value>webapps/WorkflowImporterVaadin/WEB-INF/lib/submitter.wsdd</param-value>
+            <!-- portlet.name property is defined in build.properties -->
+            <param-value>webapps/${portlet.name}/WEB-INF/lib/submitter.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>install-3</param-name>
-            <param-value>webapps/WorkflowImporterVaadin/WEB-INF/lib/remote.wsdd</param-value>
+            <!-- portlet.name property is defined in build.properties -->
+            <param-value>webapps/${portlet.name}/WEB-INF/lib/remote.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>run-0</param-name>
@@ -117,20 +125,17 @@
 
     <servlet>
         <servlet-name>AxisServlet</servlet-name>
-        <!-- <display-name>Apache-Axis Servlet</display-name>  --> 
         <servlet-class>org.apache.axis.transport.http.AxisServlet</servlet-class>       
     </servlet>
 
     <servlet>
         <servlet-name>AdminServlet</servlet-name>
-        <!--  <display-name>Axis Admin Servlet</display-name>  -->
         <servlet-class>org.apache.axis.transport.http.AdminServlet</servlet-class>
         <load-on-startup>100</load-on-startup>
     </servlet>
 
     <servlet>
         <servlet-name>SOAPMonitorService</servlet-name>
-        <!--  <display-name>SOAPMonitorService</display-name>  -->
         <servlet-class>org.apache.axis.monitor.SOAPMonitorService</servlet-class>
         <init-param>
             <param-name>SOAPMonitorPort</param-name>
@@ -166,6 +171,6 @@
         <session-timeout>30</session-timeout>
     </session-config>
     <welcome-file-list>
-        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 </web-app>
