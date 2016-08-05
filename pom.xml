@@ -12,14 +12,10 @@
 
 	<properties>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
 		<guse.version>3.7.4</guse.version>
-		<liferay.version>6.2.0</liferay.version>
+		<liferay.version>6.2.0-ga2</liferay.version>
 		<asm.version>3.5</asm.version>
 		<vaadin.version>6.8.12</vaadin.version>
-		<!-- name of the war file, without the .war extension -->
-		<war.name>WorkflowImporterPortlet</war.name>
 	</properties>
 
 	<!-- other repositories -->
@@ -28,10 +24,26 @@
 			<id>gUSE</id>
 			<name>gUSE Maven repository</name>
 			<url>http://guse.sztaki.hu/nexus/content/repositories/releases</url>
-		</repository>		
+		</repository>
+		<!-- At the time of release, the needed version of liferay's portal-service 
+			was not found in the public maven repositories, so a in-project repository 
+			was created containing the needed jar file -->
+		<repository>
+			<id>WorkflowImporterPortlet_local_repo</id>
+			<name>Local project Maven repository</name>
+			<url>${project.basedir}/lib/mvnrepo/</url>
+		</repository>
 	</repositories>
 
+	<!-- NOTE: All properties have been defined in build.properties -->
 	<dependencies>
+		<!-- from our in-project maven repository -->
+		<dependency>
+			<groupId>com.liferay</groupId>
+			<artifactId>portal-service</artifactId>
+			<version>${liferay.version}</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin</artifactId>
@@ -206,42 +218,78 @@
 			<artifactId>xstream</artifactId>
 			<version>1.3.1</version>
 		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.32</version>
+		</dependency>
 	</dependencies>
 
-	<build>	
-		<finalName>${war.name}</finalName>
-		<!-- 
-		<filters>
-			<filter>packaging.properties</filter>
-		</filters>
-		<resources>			
-			<resource>
-				<filtering>true</filtering>
-				<directory>src/main/webapp/WEB-INF</directory>
-				<includes>
-					<include>liferay-display.xml</include>
-					<include>liferay-plugin-package.xml</include>
-					<include>liferay-portlet.xml</include>
-					<include>portlet.xml</include>
-					<include>sun-jaxws.xml</include>
-					<include>web.xml</include>
-				</includes>
-			</resource>
-		</resources>
-		 -->
+	<build>
+		<finalName>${portlet.name}</finalName>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>properties-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<phase>initialize</phase>
+						<goals>
+							<goal>read-project-properties</goal>
+						</goals>
+						<configuration>
+							<files>
+								<file>${project.basedir}/build.properties</file>
+							</files>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<dependencies>
+					<dependency>
+						<groupId>com.jcraft</groupId>
+						<artifactId>jsch</artifactId>
+						<version>0.1.53</version>
+					</dependency>
+					<dependency>
+						<groupId>ant</groupId>
+						<artifactId>ant-jsch</artifactId>
+						<version>1.6.5</version>
+					</dependency>
+				</dependencies>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<configuration>
+							<target>
+								<!-- as defined in build.properties -->
+								<scp file="${project.build.directory}/${portlet.name}.war"
+									todir="${remote.server.username}@${remote.server}:${remote.server.deploy.path}"
+									password="${remote.server.password}" trust="true" verbose="true"/>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>2.4</version>				
+				<version>2.4</version>
 				<configuration>
 					<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar</packagingExcludes>
 					<filters>
