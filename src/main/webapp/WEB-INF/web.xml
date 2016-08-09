@@ -4,6 +4,9 @@
     <listener>
         <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>
     </listener>
+    <listener>
+    	<listener-class>com.workflowconversion.importer.guse.servlet.CleanUpShutdownContextListener</listener-class>
+    </listener>
     
     <!-- Vaadin specific entries -->
 	<context-param>
