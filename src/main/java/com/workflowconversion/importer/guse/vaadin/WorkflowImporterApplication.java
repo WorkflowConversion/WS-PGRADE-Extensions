@@ -17,7 +17,8 @@ import com.liferay.portal.util.PortalUtil;
 import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.PortletRequestListener;
 import com.vaadin.ui.Window;
-import com.workflowconversion.importer.guse.config.PortletConfiguration;
+import com.workflowconversion.importer.guse.Settings;
+import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
 import com.workflowconversion.importer.guse.user.PortletUser;
 import com.workflowconversion.importer.guse.vaadin.ui.SimpleWarningWindow;
@@ -28,6 +29,12 @@ import hu.sztaki.lpds.information.local.InformationBase;
 import hu.sztaki.lpds.information.local.PropertyLoader;
 import hu.sztaki.lpds.storage.inf.PortalStorageClient;
 
+/**
+ * The entry point of our vaadin app.
+ * 
+ * @author delagarza
+ *
+ */
 public class WorkflowImporterApplication extends Application implements PortletRequestListener {
 
 	private static final long serialVersionUID = -1691439006632825854L;
@@ -41,22 +48,27 @@ public class WorkflowImporterApplication extends Application implements PortletR
 	@Override
 	public void init() {
 		LOG.info("initializing WorkflowImporterApplication");
-
+		final String vaadinTheme = Settings.getInstance().getVaadinTheme();
+		setTheme(vaadinTheme);
 		final Window mainWindow;
 
 		if (currentUser.isAuthenticated()) {
-			if (PortletConfiguration.getInstance().isValid()) {
+			final DatabaseConfiguration dbConfig = Settings.getInstance().getDatabaseConfiguration();
+			if (dbConfig.isValid()) {
 				// happy path!
-				mainWindow = new WorkflowImporterMainWindow(currentUser);
+				mainWindow = new WorkflowImporterMainWindow(currentUser,
+						Settings.getInstance().getPermissionManager(),
+						Settings.getInstance().getVaadinTheme());
 			} else {
 				mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/lock.png")
 						.setLongDescription(
 								"This portlet has not been properly initialized. You probably need to restart gUSE.")
-						.newWarningWindow();
+						.setTheme(vaadinTheme).newWarningWindow();
 			}
 		} else {
 			mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/attention.png")
-					.setLongDescription("You need to be logged-in to access this portlet.").newWarningWindow();
+					.setTheme(vaadinTheme).setLongDescription("You need to be logged-in to access this portlet.")
+					.newWarningWindow();
 		}
 		setMainWindow(mainWindow);
 	}

@@ -22,20 +22,25 @@ public class SimpleWarningWindow extends Window {
 	private final String shortDescription;
 	private final String longDescription;
 	private final int notificationType;
+	private final String theme;
 
 	// the only way to get instances of this class is via its builder class
 	private SimpleWarningWindow(final String iconLocation, final int iconWidth, final int iconHeight,
-			final String shortDescription, final String longDescription, final int notificationType) {
+			final String shortDescription, final String longDescription, final int notificationType,
+			final String theme) {
 		this.iconLocation = iconLocation;
 		this.iconWidth = iconWidth;
 		this.iconHeight = iconHeight;
 		this.shortDescription = shortDescription;
 		this.longDescription = longDescription;
 		this.notificationType = notificationType;
+		this.theme = theme;
 		setUpUI();
 	}
 
 	private void setUpUI() {
+		setTheme(theme);
+
 		final Embedded icon = new Embedded(null, new ThemeResource(iconLocation));
 		icon.setWidth(Integer.toString(iconWidth) + "px");
 		icon.setHeight(Integer.toString(iconHeight) + "px");
@@ -82,6 +87,7 @@ public class SimpleWarningWindow extends Window {
 		private String shortDescription = "Content is currently not available.";
 		private int notificationType = Notification.TYPE_ERROR_MESSAGE;
 		private String longDescription = "There was an error in your request. Please inform the administrator of the portal.";
+		private String theme = "reindeer";
 
 		/**
 		 * Sets the icon location. This will be used as a {@link ThemeResource}, so make sure to provide a path relative
@@ -164,13 +170,25 @@ public class SimpleWarningWindow extends Window {
 		}
 
 		/**
+		 * Sets the vaadin theme.
+		 * 
+		 * @param theme
+		 *            The theme.
+		 * @return this instance of the {@link Builder}.
+		 */
+		public Builder setTheme(final String theme) {
+			this.theme = theme;
+			return this;
+		}
+
+		/**
 		 * Builds a new {@link SimpleWarningWindow} with the current parameters.
 		 * 
 		 * @return A new instance of a {@link SimpleWarningWindow}.
 		 */
 		public SimpleWarningWindow newWarningWindow() {
 			return new SimpleWarningWindow(this.iconLocation, this.iconWidth, this.iconHeight, this.shortDescription,
-					this.longDescription, this.notificationType);
+					this.longDescription, this.notificationType, this.theme);
 		}
 
 	}

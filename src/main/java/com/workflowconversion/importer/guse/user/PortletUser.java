@@ -1,5 +1,6 @@
 package com.workflowconversion.importer.guse.user;
 
+import java.io.Serializable;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -16,12 +17,14 @@ import com.liferay.portal.model.User;
  * @author delagarza
  *
  */
-public class PortletUser {
+public class PortletUser implements Serializable {
+
+	private static final long serialVersionUID = 2414547246279102482L;
 
 	protected final static Logger LOG = LoggerFactory.getLogger(PortletUser.class);
 
 	private final User liferayUser;
-	private final Set<Role> roles;
+	private final Set<String> roles;
 
 	/**
 	 * Constructor.
@@ -31,7 +34,7 @@ public class PortletUser {
 	 */
 	public PortletUser(final User liferayUser) {
 		this.liferayUser = liferayUser;
-		this.roles = new TreeSet<Role>();
+		this.roles = new TreeSet<String>();
 		fillRoles();
 	}
 
@@ -41,33 +44,7 @@ public class PortletUser {
 			try {
 				for (final com.liferay.portal.model.Role role : liferayUser.getRoles()) {
 					// convert between liferay role name and our enums
-					switch (role.getName()) {
-					case "Administrator":
-						roles.add(Role.Admin);
-						break;
-					case "Power User":
-						roles.add(Role.PowerUser);
-						break;
-					case "User":
-						roles.add(Role.User);
-						break;
-					case "End User":
-						roles.add(Role.EndUser);
-						break;
-					case "Guest":
-						roles.add(Role.Guest);
-						break;
-					case "kittyrole":
-						roles.add(Role.KittyRole);
-						break;
-					case "RobotPermissionOwner":
-						roles.add(Role.RobotPermissionOwner);
-						break;
-					default:
-						if (LOG.isInfoEnabled()) {
-							LOG.info("Ignoring unrecognized role: " + role.getName());
-						}
-					}
+					roles.add(role.getName());
 				}
 			} catch (SystemException e) {
 				throw new RuntimeException("Could not retrieve user roles.", e);
@@ -85,29 +62,6 @@ public class PortletUser {
 	}
 
 	/**
-	 * Whether the user has write privileges.
-	 * 
-	 * @return {@code true} if the user has write privileges, {@code false} otherwise.
-	 */
-	public boolean canEdit() {
-		return roles.contains(Role.Admin) || roles.contains(Role.KittyRole);
-	}
-
-	/**
-	 * Whether the user has read privileges.
-	 * 
-	 * @return {@code true} if the user has read privileges, {@code false} otherwise.
-	 */
-	public boolean canRead() {
-		// so, anyone that is logged-in has read access
-
-		// Interviewer: Gary Oldman, who has read access?
-		// Gary Oldman: https://www.youtube.com/watch?v=74BzSTQCl_c (except Guest users, that is)
-		return roles.contains(Role.User) || roles.contains(Role.PowerUser) || roles.contains(Role.Admin)
-				|| roles.contains(Role.EndUser) || roles.contains(Role.KittyRole);
-	}
-
-	/**
 	 * Returns the full name of the user.
 	 * 
 	 * @return The full name of the user.
@@ -121,12 +75,13 @@ public class PortletUser {
 	}
 
 	/**
-	 * Simple enum mapping role names to handy java objects.
+	 * Whether this user has the passed role.
 	 * 
-	 * @author delagarza
+	 * @param role
+	 *            The role.
+	 * @return {@code true} if this user has the queried role.
 	 */
-	public enum Role {
-		Admin, PowerUser, User, EndUser, Guest, KittyRole, RobotPermissionOwner;
+	public boolean hasRole(final String role) {
+		return roles.contains(role);
 	}
-
 }
