@@ -223,6 +223,16 @@
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.32</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.6</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>19.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -254,9 +264,9 @@
 						<version>0.1.53</version>
 					</dependency>
 					<dependency>
-						<groupId>ant</groupId>
+						<groupId>org.apache.ant</groupId>
 						<artifactId>ant-jsch</artifactId>
-						<version>1.6.5</version>
+						<version>1.8.1</version>
 					</dependency>
 				</dependencies>
 				<artifactId>maven-antrun-plugin</artifactId>
@@ -265,11 +275,22 @@
 					<execution>
 						<phase>install</phase>
 						<configuration>
+							<!-- we do a two-step deployment, first we upload the war file, but we give it a non-deployable extension
+								 in order to avoid the annoying 'java.util.zip.ZipException: error in opening zip file' error,
+								 then we change its name -->
 							<target>
-								<!-- as defined in build.properties -->
-								<scp file="${project.build.directory}/${portlet.name}.war"
-									todir="${remote.server.username}@${remote.server}:${remote.server.deploy.path}"
-									password="${remote.server.password}" trust="true" verbose="true"/>
+								<!-- portlet.name is defined in build.properties -->
+								<scp 
+									file="${project.build.directory}/${portlet.name}.war"
+									remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
+									password="${remote.server.password}" 
+									trust="true" verbose="false" />
+								<sshexec 
+									host="${remote.server}" 
+									username="${remote.server.username}" 
+									password="${remote.server.password}" 
+									trust="true" verbose="false"
+									command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war"/>
 							</target>
 						</configuration>
 						<goals>

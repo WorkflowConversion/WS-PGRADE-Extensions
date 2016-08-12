@@ -1,21 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <display-name>WS-PGRADE in Liferay</display-name>
+    
     <listener>
-        <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>
+        <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>        
     </listener>
     <listener>
-    	<listener-class>com.workflowconversion.importer.guse.servlet.CleanUpShutdownContextListener</listener-class>
+    	<listener-class>com.workflowconversion.importer.guse.servlet.WorkflowImporterContextListener</listener-class>
     </listener>
     
+    <context-param>
+    	<description>Vaadin Theme used</description>
+    	<param-name>vaadinTheme</param-name>
+    	<param-value>reindeer</param-value>
+    </context-param>
+    <context-param>
+    	<description>DB Configuration implementation used</description>
+    	<param-name>databaseConfiguration.implementation</param-name>
+    	<param-value>com.workflowconversion.importer.guse.config.impl.GUSEProvidedDatabaseConfiguration</param-value>
+    </context-param>
+    <context-param>
+    	<description>Permission Manager implementation used</description>
+    	<param-name>permissionManager.implementation</param-name>
+    	<param-value>com.workflowconversion.importer.guse.permission.impl.PropertiesFilePermissionManager</param-value>
+    </context-param>
+    <context-param>
+    	<description>Location of the permissions properties file</description>
+    	<param-name>permissions.location</param-name>
+    	<param-value>permissions.properties</param-value>
+    </context-param>
+    <context-param>
+    	<description>Implementations of application providers</description>
+    	<param-name>application.providers</param-name>
+    	<param-value>
+    		com.workflowconversion.importer.guse.appdb.impl.SQLApplicationProvider,
+    		com.workflowconversion.importer.guse.appdb.impl.UnicoreApplicationProvider	
+    	</param-value>
+    </context-param>
+    
+	<!-- portlet.name property is defined in build.propeties --> 
     <!-- Vaadin specific entries -->
-	<context-param>
+    <context-param>
 		<description>Vaadin production mode</description>
 		<param-name>productionMode</param-name>
 		<param-value>true</param-value>
 	</context-param>
 	<servlet>
-		<!-- portlet.name property is defined in build.properties -->
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>
 		<init-param>
@@ -25,9 +55,7 @@
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>
-	
-	<servlet-mapping>
-		<!-- portlet.name property is defined in build.properties -->
+	<servlet-mapping> 
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/${portlet.name}Servlet/*</url-pattern>	
 	</servlet-mapping>
@@ -35,7 +63,7 @@
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/VAADIN/*</url-pattern>	
 	</servlet-mapping>
-    
+	
     <!-- the next sections are needed to enable communication with gUSE's back end -->
     <servlet>
         <servlet-name>InitServices</servlet-name>
