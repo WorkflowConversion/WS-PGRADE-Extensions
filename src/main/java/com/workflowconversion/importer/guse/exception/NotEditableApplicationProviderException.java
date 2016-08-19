@@ -6,7 +6,9 @@ package com.workflowconversion.importer.guse.exception;
  * @author delagarza
  *
  */
-public class NotEditableApplicationProviderException extends RuntimeException {
+public class NotEditableApplicationProviderException extends ApplicationException {
+
+	private static final long serialVersionUID = -4721655382750206432L;
 
 	/**
 	 * Constructor.

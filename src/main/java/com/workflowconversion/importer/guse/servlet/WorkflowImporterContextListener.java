@@ -6,10 +6,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.axis.utils.StringUtils;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +48,10 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 				ApplicationProvider.class);
 		final String vaadinTheme = extractInitParam("vaadinTheme", servletContextEvent);
 		final Settings.Builder settingsBuilder = new Settings.Builder();
+		final PoolProperties poolProperties = extractPoolProperties(servletContextEvent.getServletContext());
 		settingsBuilder.setVaadinTheme(vaadinTheme).setDatabaseConfiguration(dbConfig)
-				.setPermissionManager(permissionManager).setApplicationProviders(applicationProviders);
+				.setPermissionManager(permissionManager).setApplicationProviders(applicationProviders)
+				.setPoolProperties(poolProperties);
 		Settings.setInstance(settingsBuilder.newApplicationSettings());
 	}
 
@@ -92,6 +96,20 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 			implementations.add(newInstance(className, interfaceClass));
 		}
 		return implementations;
+	}
+
+	// extracts pool properties from web.xml
+	private PoolProperties extractPoolProperties(final ServletContext servletContext) {
+		final PoolProperties poolProperties = new PoolProperties();
+		poolProperties.setValidationInterval(Long.valueOf(servletContext.getInitParameter("pool.validationInterval")));
+		poolProperties.setTimeBetweenEvictionRunsMillis(
+				Integer.valueOf(servletContext.getInitParameter("pool.timeBetweenEviction")));
+		poolProperties.setMaxActive(Integer.valueOf(servletContext.getInitParameter("pool.maxActive")));
+		poolProperties.setMaxIdle(Integer.valueOf(servletContext.getInitParameter("pool.maxIdle")));
+		poolProperties.setMinIdle(Integer.valueOf(servletContext.getInitParameter("pool.minIdle")));
+		poolProperties.setInitialSize(Integer.valueOf(servletContext.getInitParameter("pool.initialSize")));
+		poolProperties.setMaxWait(Integer.valueOf(servletContext.getInitParameter("pool.maxWait")));
+		return poolProperties;
 	}
 
 	@Override

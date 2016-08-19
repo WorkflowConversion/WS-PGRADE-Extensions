@@ -11,10 +11,27 @@ public class Application implements Serializable, Comparable<Application> {
 
 	private static final long serialVersionUID = -8200132807492156967L;
 
+	private int id;
 	private String name;
 	private String version;
+	private String resource;
 	private String description;
 	private String path;
+
+	/**
+	 * @return the id
+	 */
+	public int getId() {
+		return id;
+	}
+
+	/**
+	 * @param id
+	 *            the id to set
+	 */
+	public void setId(int id) {
+		this.id = id;
+	}
 
 	/**
 	 * @return the name
@@ -76,6 +93,21 @@ public class Application implements Serializable, Comparable<Application> {
 		this.version = version;
 	}
 
+	/**
+	 * @return the resource
+	 */
+	public String getResource() {
+		return resource;
+	}
+
+	/**
+	 * @param resource
+	 *            the resource to set
+	 */
+	public void setResource(String resource) {
+		this.resource = resource;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -118,6 +150,17 @@ public class Application implements Serializable, Comparable<Application> {
 		key.append(name).append(",version=");
 		key.append(version);
 		return key.toString();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Application [id=" + id + ", name=" + name + ", version=" + version + ", resource=" + resource
+				+ ", description=" + description + ", path=" + path + "]";
 	}
 
 }

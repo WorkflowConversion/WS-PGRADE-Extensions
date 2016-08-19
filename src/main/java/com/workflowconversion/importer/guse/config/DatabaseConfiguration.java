@@ -9,28 +9,28 @@ package com.workflowconversion.importer.guse.config;
 public interface DatabaseConfiguration {
 
 	/**
-	 * The database driver (e.g., {@code com.mysql.jdbc.Driver}).
+	 * Retrieves the database driver (e.g., {@code com.mysql.jdbc.Driver}).
 	 * 
 	 * @return The database driver.
 	 */
 	public String getDriver();
 
 	/**
-	 * The database JDBC url (e.g., {@code jdbc:mysql://localhost:3306/user})
+	 * Retrieves the database JDBC url (e.g., {@code jdbc:mysql://localhost:3306/user})
 	 * 
 	 * @return The databse url.
 	 */
 	public String getURL();
 
 	/**
-	 * The username to access the database.
+	 * Retrieves the username to access the database.
 	 * 
 	 * @return The database username.
 	 */
 	public String getUsername();
 
 	/**
-	 * The password to access the database.
+	 * Retrieves the password to access the database.
 	 * 
 	 * @return The database password.
 	 */
