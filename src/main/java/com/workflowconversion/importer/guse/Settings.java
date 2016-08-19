@@ -5,6 +5,7 @@ import java.util.Collections;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
@@ -19,6 +20,7 @@ import com.workflowconversion.importer.guse.permission.PermissionManager;
 public class Settings {
 
 	private final String vaadinTheme;
+	private final PoolProperties poolProperties;
 	private final DatabaseConfiguration databaseConfiguration;
 	private final PermissionManager permissionManager;
 	private final Collection<ApplicationProvider> applicationProviders;
@@ -94,8 +96,16 @@ public class Settings {
 		return this.applicationProviders;
 	}
 
+	/**
+	 * @return the poolProperties
+	 */
+	public PoolProperties getPoolProperties() {
+		return poolProperties;
+	}
+
 	private Settings(final String vaadinTheme, final DatabaseConfiguration databaseConfiguration,
-			final PermissionManager permissionManager, final Collection<ApplicationProvider> applicationProviders) {
+			final PermissionManager permissionManager, final Collection<ApplicationProvider> applicationProviders,
+			final PoolProperties poolProperties) {
 		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
 				"vaadinTheme cannot be null or empty, please use the Builder.setVaadinTheme() method to set a non-blank value");
 		Validate.notNull(databaseConfiguration,
@@ -104,10 +114,13 @@ public class Settings {
 				"permissionManager cannot be null, please use the Builder.setPermissionManager() method to set a non-null value");
 		Validate.notEmpty(applicationProviders,
 				"applicationProviders cannot be null or empty, please use the Builder.setApplicationProviders() method to set a proper value");
+		Validate.notNull(poolProperties,
+				"poolProperties cannot be null, please use the Builder.setPoolProperties() methd to set a non-null value");
 		this.vaadinTheme = vaadinTheme;
 		this.databaseConfiguration = databaseConfiguration;
 		this.permissionManager = permissionManager;
 		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
+		this.poolProperties = poolProperties;
 	}
 
 	/**
@@ -121,6 +134,7 @@ public class Settings {
 		private DatabaseConfiguration databaseConfiguration;
 		private PermissionManager permissionManager;
 		private Collection<ApplicationProvider> applicationProviders;
+		private PoolProperties poolProperties;
 
 		/**
 		 * Sets the vaadin theme.
@@ -175,13 +189,26 @@ public class Settings {
 		}
 
 		/**
+		 * Sets the pool properties.
+		 * 
+		 * @param poolProperties
+		 *            The pool properties.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder setPoolProperties(final PoolProperties poolProperties) {
+			Validate.notNull(poolProperties, "poolProperties cannot be null");
+			this.poolProperties = poolProperties;
+			return this;
+		}
+
+		/**
 		 * Builds a new {@link Settings}.
 		 * 
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newApplicationSettings() {
-			return new Settings(vaadinTheme, databaseConfiguration, permissionManager, applicationProviders);
+			return new Settings(vaadinTheme, databaseConfiguration, permissionManager, applicationProviders,
+					poolProperties);
 		}
 	}
-
 }

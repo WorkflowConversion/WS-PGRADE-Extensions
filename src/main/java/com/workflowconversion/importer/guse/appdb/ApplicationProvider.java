@@ -3,6 +3,7 @@ package com.workflowconversion.importer.guse.appdb;
 import java.util.Collection;
 
 import com.workflowconversion.importer.guse.exception.NotEditableApplicationProviderException;
+import com.workflowconversion.importer.guse.user.PortletUser;
 
 /**
  * Interface for application databases. So far, there are a couple of implementations, the custom gUSE application
@@ -14,18 +15,34 @@ import com.workflowconversion.importer.guse.exception.NotEditableApplicationProv
 public interface ApplicationProvider {
 
 	/**
-	 * Whether the database provider allows changes.
+	 * Whether the provider allows changes.
 	 * 
 	 * @return {@code true} if changes are allowed, {@code false} otherwise.
 	 */
 	public boolean isEditable();
 
 	/**
-	 * Returns all applications.
+	 * Whether the provider needs to be initialized.
+	 * 
+	 * @return {@code true} if this provider needs to be initialized, {@code false} otherwise.
+	 */
+	public boolean needsInit();
+
+	/**
+	 * Initializes this provider. It is the responsibility of the caller to query if this provider requires
+	 * initialization (i.e., call the {@link #needsInit()} method) and to invoke this method if required.
+	 */
+	public void init();
+
+	/**
+	 * Returns all applications for the user.
+	 * 
+	 * @param user
+	 *            The user requesting this operation.
 	 * 
 	 * @return All applications.
 	 */
-	public Collection<Application> getApplications();
+	public Collection<Application> getApplications(final PortletUser user);
 
 	/**
 	 * Adds application. If this database provider is not editable (i.e., {@link #isEditable()} returns {@code false}),

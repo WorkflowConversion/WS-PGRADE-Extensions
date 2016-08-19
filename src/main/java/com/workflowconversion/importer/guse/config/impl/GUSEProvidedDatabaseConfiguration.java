@@ -10,6 +10,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
+import com.workflowconversion.importer.guse.exception.InvalidPropertyValueException;
 
 import hu.sztaki.lpds.information.local.PropertyLoader;
 
@@ -47,22 +48,30 @@ public class GUSEProvidedDatabaseConfiguration implements DatabaseConfiguration 
 
 	@Override
 	public String getDriver() {
-		return properties.getUnchecked(GUSE_KEY_DATABASE_DRIVER);
+		return getAndValidateProperty(GUSE_KEY_DATABASE_DRIVER);
 	}
 
 	@Override
 	public String getURL() {
-		return properties.getUnchecked(GUSE_KEY_DATABASE_URL);
+		return getAndValidateProperty(GUSE_KEY_DATABASE_URL);
 	}
 
 	@Override
 	public String getUsername() {
-		return properties.getUnchecked(GUSE_KEY_DATABASE_USER);
+		return getAndValidateProperty(GUSE_KEY_DATABASE_USER);
 	}
 
 	@Override
 	public String getPassword() {
-		return properties.getUnchecked(GUSE_KEY_DATABASE_PASSWORD);
+		return getAndValidateProperty(GUSE_KEY_DATABASE_PASSWORD);
+	}
+
+	private String getAndValidateProperty(final String property) {
+		final String value = properties.getUnchecked(property);
+		if (StringUtils.isBlank(value)) {
+			throw new InvalidPropertyValueException("The property " + property + " has an invalid blank value.");
+		}
+		return value;
 	}
 
 	/**

@@ -18,6 +18,7 @@ import com.vaadin.Application;
 import com.vaadin.terminal.gwt.server.PortletRequestListener;
 import com.vaadin.ui.Window;
 import com.workflowconversion.importer.guse.Settings;
+import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
 import com.workflowconversion.importer.guse.user.PortletUser;
@@ -41,13 +42,28 @@ public class WorkflowImporterApplication extends Application implements PortletR
 	// a simple key for logging MDC
 	private static final String MDC_REFERENCE_KEY = "reference";
 
-	protected final static Logger LOG = LoggerFactory.getLogger(WorkflowImporterApplication.class);
+	private final static Logger LOG = LoggerFactory.getLogger(WorkflowImporterApplication.class);
 
 	private PortletUser currentUser;
 
 	@Override
 	public void init() {
 		LOG.info("initializing WorkflowImporterApplication");
+		// init any app provider that needs initialization
+		LOG.info("initializing ApplicationProviders");
+		for (final ApplicationProvider provider : Settings.getInstance().getApplicationProviders()) {
+			if (provider.needsInit()) {
+				if (LOG.isInfoEnabled()) {
+					LOG.info("initializing " + provider.getClass());
+				}
+				provider.init();
+			} else {
+				if (LOG.isInfoEnabled()) {
+					LOG.info("ApplicationProvider " + provider.getClass()
+							+ " does not require initialization or has already been initialized.");
+				}
+			}
+		}
 		final String vaadinTheme = Settings.getInstance().getVaadinTheme();
 		setTheme(vaadinTheme);
 		final Window mainWindow;
@@ -56,8 +72,7 @@ public class WorkflowImporterApplication extends Application implements PortletR
 			final DatabaseConfiguration dbConfig = Settings.getInstance().getDatabaseConfiguration();
 			if (dbConfig.isValid()) {
 				// happy path!
-				mainWindow = new WorkflowImporterMainWindow(currentUser,
-						Settings.getInstance().getPermissionManager(),
+				mainWindow = new WorkflowImporterMainWindow(currentUser, Settings.getInstance().getPermissionManager(),
 						Settings.getInstance().getVaadinTheme());
 			} else {
 				mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/lock.png")

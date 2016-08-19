@@ -10,12 +10,14 @@
 	<name>gUSE Workflow Importer</name>
 	<url>https://github.com/WorkflowConversion/WorkflowImporter</url>
 
+	<!-- these are likely to change if a different gUSE version is used -->
 	<properties>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
 		<liferay.version>6.2.0-ga2</liferay.version>
 		<asm.version>3.5</asm.version>
 		<vaadin.version>6.8.12</vaadin.version>
+		<tomcat.version>7.0.55</tomcat.version>
 	</properties>
 
 	<!-- other repositories -->
@@ -218,21 +220,56 @@
 			<artifactId>xstream</artifactId>
 			<version>1.3.1</version>
 		</dependency>
+		<!-- UNICORE dependencies -->
+		<dependency>
+			<groupId>eu.unicore</groupId>
+			<artifactId>uas-client</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>de.fzj.unicore.wsrflite</groupId>
+			<artifactId>wsrflite</artifactId>
+			<version>1.9.3</version>
+			<exclusions>
+				<!-- avoid transitory dependency on xmlbeans 2.2, since we're importing 
+					version 2.4 -->
+				<exclusion>
+					<groupId>org.apache.xmlbeans</groupId>
+					<artifactId>xmlbeans</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>eu.unicore.security</groupId>
+			<artifactId>securityLibrary</artifactId>
+			<version>2.0.4</version>
+		</dependency>
+		<!-- MySQL connector -->
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.32</version>
 		</dependency>
+		<!-- includes the PropertiesConfiguration, which allows us to automatically 
+			refresh properties based on properties files -->
 		<dependency>
 			<groupId>commons-configuration</groupId>
 			<artifactId>commons-configuration</artifactId>
 			<version>1.6</version>
 		</dependency>
+		<!-- includes a database connection pool -->
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jdbc</artifactId>
+			<version>${tomcat.version}</version>
+		</dependency>
+		<!-- for cache usage -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>19.0</version>
 		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -275,22 +312,17 @@
 					<execution>
 						<phase>install</phase>
 						<configuration>
-							<!-- we do a two-step deployment, first we upload the war file, but we give it a non-deployable extension
-								 in order to avoid the annoying 'java.util.zip.ZipException: error in opening zip file' error,
-								 then we change its name -->
+							<!-- we do a two-step deployment, first we upload the war file, but 
+								we give it a non-deployable extension in order to avoid the annoying 'java.util.zip.ZipException: 
+								error in opening zip file' error, then we change its name -->
 							<target>
 								<!-- portlet.name is defined in build.properties -->
-								<scp 
-									file="${project.build.directory}/${portlet.name}.war"
+								<scp file="${project.build.directory}/${portlet.name}.war"
 									remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
-									password="${remote.server.password}" 
-									trust="true" verbose="false" />
-								<sshexec 
-									host="${remote.server}" 
-									username="${remote.server.username}" 
-									password="${remote.server.password}" 
-									trust="true" verbose="false"
-									command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war"/>
+									password="${remote.server.password}" trust="true" verbose="false" />
+								<sshexec host="${remote.server}" username="${remote.server.username}"
+									password="${remote.server.password}" trust="true" verbose="false"
+									command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
 							</target>
 						</configuration>
 						<goals>
