@@ -65,13 +65,34 @@
     	<param-value>permissions.properties</param-value>
     </context-param>
     <context-param>
-    	<description>Implementations of application providers</description>
-    	<param-name>application.providers</param-name>
+    	<description>Internal application provider</description>
+    	<param-name>internal.applicationProvider.implementation</param-name>
     	<param-value>
-    		com.workflowconversion.importer.guse.appdb.impl.MySQLApplicationProvider,
+    		com.workflowconversion.importer.guse.appdb.impl.MySQLApplicationProvider	
+    	</param-value>
+    </context-param>
+    <context-param>
+    	<description>UNICORE application provider</description>
+    	<param-name>unicore.applicationProvider.implementation</param-name>
+    	<param-value>
     		com.workflowconversion.importer.guse.appdb.impl.UnicoreApplicationProvider	
     	</param-value>
     </context-param>
+    <context-param>
+    	<description>Middleware provider</description>
+    	<param-name>middlewareProvider.implementation</param-name>
+    	<param-value>com.workflowconversion.importer.guse.middleware.impl.WebServiceBasedMiddlewareProvider</param-value>
+    </context-param>
+    <context-param>
+    	<description>String similarity algorithm used</description>
+    	<param-name>stringSimilarityAlgorithm.implementation</param-name>
+    	<param-value>com.workflowconversion.importer.guse.text.impl.FuzzySimilarity</param-value>
+    </context-param>
+    <context-param>
+    	<description>Cut-off score to use when filtering applications</description>
+    	<param-name>cutOff.filter.value</param-name>
+    	<param-value>0.15</param-value>
+    </context-param>        
     
 	<!-- portlet.name property is defined in build.propeties --> 
     <!-- Vaadin specific entries -->

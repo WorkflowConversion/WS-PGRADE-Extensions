@@ -10,6 +10,7 @@ import org.apache.tomcat.jdbc.pool.PoolProperties;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.permission.PermissionManager;
+import com.workflowconversion.importer.guse.text.StringSimilaritySettings;
 
 /**
  * Simple class that provides application settings that are configured when the application is started up.
@@ -24,6 +25,7 @@ public class Settings {
 	private final DatabaseConfiguration databaseConfiguration;
 	private final PermissionManager permissionManager;
 	private final Collection<ApplicationProvider> applicationProviders;
+	private final StringSimilaritySettings stringSimilaritySettings;
 	private static Settings INSTANCE;
 
 	/**
@@ -97,15 +99,22 @@ public class Settings {
 	}
 
 	/**
-	 * @return the poolProperties
+	 * @return the connection pool properties
 	 */
 	public PoolProperties getPoolProperties() {
 		return poolProperties;
 	}
 
+	/**
+	 * @return the string similarity settings.
+	 */
+	public StringSimilaritySettings getStringSimilaritySettings() {
+		return stringSimilaritySettings;
+	}
+
 	private Settings(final String vaadinTheme, final DatabaseConfiguration databaseConfiguration,
 			final PermissionManager permissionManager, final Collection<ApplicationProvider> applicationProviders,
-			final PoolProperties poolProperties) {
+			final PoolProperties poolProperties, final StringSimilaritySettings stringSimilaritySettings) {
 		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
 				"vaadinTheme cannot be null or empty, please use the Builder.setVaadinTheme() method to set a non-blank value");
 		Validate.notNull(databaseConfiguration,
@@ -115,12 +124,15 @@ public class Settings {
 		Validate.notEmpty(applicationProviders,
 				"applicationProviders cannot be null or empty, please use the Builder.setApplicationProviders() method to set a proper value");
 		Validate.notNull(poolProperties,
-				"poolProperties cannot be null, please use the Builder.setPoolProperties() methd to set a non-null value");
+				"poolProperties cannot be null, please use the Builder.setPoolProperties() method to set a non-null value");
+		Validate.notNull(stringSimilaritySettings,
+				"stringSimilaritySettings cannot be null, please use the Builder.setStringSimilaritySettings() method to set a non-null value");
 		this.vaadinTheme = vaadinTheme;
 		this.databaseConfiguration = databaseConfiguration;
 		this.permissionManager = permissionManager;
 		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
 		this.poolProperties = poolProperties;
+		this.stringSimilaritySettings = stringSimilaritySettings;
 	}
 
 	/**
@@ -135,6 +147,7 @@ public class Settings {
 		private PermissionManager permissionManager;
 		private Collection<ApplicationProvider> applicationProviders;
 		private PoolProperties poolProperties;
+		private StringSimilaritySettings stringSimilaritySettings;
 
 		/**
 		 * Sets the vaadin theme.
@@ -144,7 +157,6 @@ public class Settings {
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
 		public Builder setVaadinTheme(final String vaadinTheme) {
-			Validate.isTrue(StringUtils.isNotBlank(vaadinTheme), "vaadinTheme cannot be blank, null or empty.");
 			this.vaadinTheme = vaadinTheme;
 			return this;
 		}
@@ -157,7 +169,6 @@ public class Settings {
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
 		public Builder setDatabaseConfiguration(final DatabaseConfiguration databaseConfiguration) {
-			Validate.notNull(databaseConfiguration, "databaseConfiguration cannot be null.");
 			this.databaseConfiguration = databaseConfiguration;
 			return this;
 		}
@@ -170,7 +181,6 @@ public class Settings {
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
 		public Builder setPermissionManager(final PermissionManager permissionManager) {
-			Validate.notNull(permissionManager, "permissionManager cannot be null.");
 			this.permissionManager = permissionManager;
 			return this;
 		}
@@ -183,7 +193,6 @@ public class Settings {
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
 		public Builder setApplicationProviders(final Collection<ApplicationProvider> applicationProviders) {
-			Validate.notEmpty(applicationProviders, "applicationProviders cannot be null or empty.");
 			this.applicationProviders = applicationProviders;
 			return this;
 		}
@@ -196,8 +205,19 @@ public class Settings {
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
 		public Builder setPoolProperties(final PoolProperties poolProperties) {
-			Validate.notNull(poolProperties, "poolProperties cannot be null");
 			this.poolProperties = poolProperties;
+			return this;
+		}
+
+		/**
+		 * Sets the string similarity settings.
+		 * 
+		 * @param stringSimilaritySettings
+		 *            The string similarity settings.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder setStringSimilaritySettings(final StringSimilaritySettings stringSimilaritySettings) {
+			this.stringSimilaritySettings = stringSimilaritySettings;
 			return this;
 		}
 
@@ -206,9 +226,9 @@ public class Settings {
 		 * 
 		 * @return a new instance of an {@link Settings}.
 		 */
-		public Settings newApplicationSettings() {
+		public Settings newSettings() {
 			return new Settings(vaadinTheme, databaseConfiguration, permissionManager, applicationProviders,
-					poolProperties);
+					poolProperties, stringSimilaritySettings);
 		}
 	}
 }

@@ -29,9 +29,8 @@ import com.workflowconversion.importer.guse.exception.NotEditableApplicationProv
 public class MySQLApplicationProvider implements ApplicationProvider {
 
 	private final static String SQL_SP_VIEW = "{CALL wfip_sp_get_all_applications()}";
-	private final static String SQL_SP_SEARCH = "{CALL wfip_sp_search_applications(?)}";
-	private final static String SQL_SP_UPDATE = "{CALL wfip_sp_update_application(?, ?, ?, ?, ?, ?)}";
-	private final static String SQL_SP_ADD = "{CALL wfip_sp_add_application(?, ?, ?, ?, ?)}";
+	private final static String SQL_SP_UPDATE = "{CALL wfip_sp_update_application(?, ?, ?, ?, ?, ?, ?)}";
+	private final static String SQL_SP_ADD = "{CALL wfip_sp_add_application(?, ?, ?, ?, ?, ?)}";
 
 	private final static int SQL_ERROR_DUPLICATE_ENTRY = 1062;
 	private final static int SQL_ERROR_COLUMN_CANNOT_BE_NULL = 1048;
@@ -40,6 +39,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	private final static String SQL_COLUMN_NAME = "name";
 	private final static String SQL_COLUMN_VERSION = "version";
 	private final static String SQL_COLUMN_RESOURCE = "resource";
+	private final static String SQL_COLUMN_RESOURCE_TYPE = "resource_type";
 	private final static String SQL_COLUMN_DESCRIPTION = "description";
 	private final static String SQL_COLUMN_PATH = "path";
 
@@ -47,6 +47,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	private final static String SQL_SP_PARAM_NAME = "param_name";
 	private final static String SQL_SP_PARAM_VERSION = "param_version";
 	private final static String SQL_SP_PARAM_RESOURCE = "param_resource";
+	private final static String SQL_SP_PARAM_RESOURCE_TYPE = "param_resource_type";
 	private final static String SQL_SP_PARAM_DESCRIPTION = "param_description";
 	private final static String SQL_SP_PARAM_PATH = "param_path";
 
@@ -82,32 +83,13 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 		return apps;
 	}
 
-	@Override
-	public Collection<Application> searchApplicationsByName(final String name) {
-		final Collection<Application> apps = new LinkedList<Application>();
-		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_SEARCH, true) {
-
-			@Override
-			void prepareStatement(CallableStatement statement) throws SQLException {
-				statement.setString(SQL_SP_PARAM_NAME, name);
-			}
-
-			@Override
-			void processRow(final ResultSet resultSet) throws SQLException {
-				apps.add(createApplicationFromResultSet(resultSet));
-			}
-
-		};
-		call.performCall();
-		return apps;
-	}
-
 	private Application createApplicationFromResultSet(final ResultSet resultSet) throws SQLException {
 		final Application app = new Application();
 		app.setId(resultSet.getInt(SQL_COLUMN_ID));
 		app.setName(resultSet.getString(SQL_COLUMN_NAME));
 		app.setVersion(resultSet.getString(SQL_COLUMN_VERSION));
 		app.setResource(resultSet.getString(SQL_COLUMN_RESOURCE));
+		app.setResourceType(resultSet.getString(SQL_COLUMN_RESOURCE_TYPE));
 		app.setDescription(resultSet.getString(SQL_COLUMN_DESCRIPTION));
 		app.setPath(resultSet.getString(SQL_COLUMN_PATH));
 		return app;
@@ -145,6 +127,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 		statement.setString(SQL_SP_PARAM_NAME, app.getName());
 		statement.setString(SQL_SP_PARAM_VERSION, app.getVersion());
 		statement.setString(SQL_SP_PARAM_RESOURCE, app.getResource());
+		statement.setString(SQL_SP_PARAM_RESOURCE_TYPE, app.getResourceType());
 		statement.setString(SQL_SP_PARAM_DESCRIPTION, app.getDescription());
 		statement.setString(SQL_SP_PARAM_PATH, app.getPath());
 	}

@@ -10,7 +10,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.axis.utils.StringUtils;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,10 @@ import com.workflowconversion.importer.guse.Settings;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
+import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
 import com.workflowconversion.importer.guse.permission.PermissionManager;
+import com.workflowconversion.importer.guse.text.StringSimilarityAlgorithm;
+import com.workflowconversion.importer.guse.text.StringSimilaritySettings;
 
 /**
  * Class that deals with cleaning/init up of this webapp.
@@ -43,16 +45,17 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 		final PermissionManager permissionManager = newInstance(
 				extractInitParam("permissionManager.implementation", servletContextEvent), PermissionManager.class,
 				extractInitParam("permissions.location", servletContextEvent));
-		final Collection<ApplicationProvider> applicationProviders = newInstances(
-				StringUtils.split(extractInitParam("application.providers", servletContextEvent), ','),
-				ApplicationProvider.class);
+		final Collection<ApplicationProvider> applicationProviders = extractApplicationProviders(servletContextEvent);
 		final String vaadinTheme = extractInitParam("vaadinTheme", servletContextEvent);
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 		final PoolProperties poolProperties = extractPoolProperties(servletContextEvent.getServletContext());
+		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
+				servletContextEvent.getServletContext());
+
 		settingsBuilder.setVaadinTheme(vaadinTheme).setDatabaseConfiguration(dbConfig)
 				.setPermissionManager(permissionManager).setApplicationProviders(applicationProviders)
-				.setPoolProperties(poolProperties);
-		Settings.setInstance(settingsBuilder.newApplicationSettings());
+				.setPoolProperties(poolProperties).setStringSimilaritySettings(stringSimilaritySettings);
+		Settings.setInstance(settingsBuilder.newSettings());
 	}
 
 	private String extractInitParam(final String paramName, final ServletContextEvent servletContextEvent) {
@@ -90,12 +93,28 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 		}
 	}
 
-	private <T> Collection<T> newInstances(final String[] classNames, final Class<T> interfaceClass) {
-		final Collection<T> implementations = new LinkedList<T>();
-		for (final String className : classNames) {
-			implementations.add(newInstance(className, interfaceClass));
-		}
-		return implementations;
+	private Collection<ApplicationProvider> extractApplicationProviders(final ServletContextEvent servletContextEvent) {
+		final Collection<ApplicationProvider> applicationProviders = new LinkedList<ApplicationProvider>();
+		// first, the internal application provider
+		applicationProviders
+				.add(newInstance(extractInitParam("internal.applicationProvider.implementation", servletContextEvent),
+						ApplicationProvider.class));
+		// the unicore application provider needs a middleware provider to query middleware/items from gUSE
+		final MiddlewareProvider middlewareProvider = newInstance(
+				extractInitParam("middlewareProvider.implementation", servletContextEvent), MiddlewareProvider.class);
+		applicationProviders
+				.add(newInstance(extractInitParam("unicore.applicationProvider.implementation", servletContextEvent),
+						ApplicationProvider.class, middlewareProvider));
+		return applicationProviders;
+	}
+
+	// extracts cut-off score and StringSimilarity algorithm to use
+	private StringSimilaritySettings extractStringSimilaritySettings(ServletContext servletContext) {
+		final StringSimilaritySettings.Builder builder = new StringSimilaritySettings.Builder();
+		builder.setCutOffValue(Double.parseDouble(servletContext.getInitParameter("cutOff.filter.value")))
+				.setAlgorithm(newInstance(servletContext.getInitParameter("stringSimilarityAlgorithm.implementation"),
+						StringSimilarityAlgorithm.class));
+		return builder.newStringSimilaritySettings();
 	}
 
 	// extracts pool properties from web.xml
