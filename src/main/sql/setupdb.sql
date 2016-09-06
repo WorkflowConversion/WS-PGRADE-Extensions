@@ -10,11 +10,12 @@ CREATE TABLE wfip_tbl_application (
     name			VARCHAR(256) 	NOT NULL,
     version			VARCHAR(16) 	NOT NULL,
     resource		VARCHAR(256)	NOT NULL,
+    resource_type	VARCHAR(64)		NOT NULL,
     description		VARCHAR(512),
     path			VARCHAR(512) 	NOT NULL,
         
     PRIMARY KEY (id),
-    UNIQUE KEY wfip_idx_application (name, version, resource)
+    UNIQUE KEY wfip_idx_application (name, version, resource, resource_type)
 ) AUTO_INCREMENT = 0;
 
 -- create the view stored procedure
@@ -22,19 +23,7 @@ DROP PROCEDURE IF EXISTS wfip_sp_get_all_applications;
 DELIMITER $$
 CREATE PROCEDURE wfip_sp_get_all_applications()
 	BEGIN
-		SELECT id, name, version, resource, description, path FROM wfip_tbl_application;
-	END $$
-DELIMITER ;
-
--- create the search stored procedure
-DROP PROCEDURE IF EXISTS wfip_sp_search_applications;
-DELIMITER $$
-CREATE PROCEDURE wfip_sp_search_applications(
-	IN param_name 	VARCHAR(256)
-)
-	BEGIN
-		SELECT id, name, version, resource, description, path FROM wfip_tbl_application
-		WHERE LOWER(name) LIKE CONCAT('%', LOWER(param_name), '%');
+		SELECT id, name, version, resource, resource_type, description, path FROM wfip_tbl_application;
 	END $$
 DELIMITER ;
 
@@ -45,12 +34,13 @@ CREATE PROCEDURE wfip_sp_add_application (
 	IN param_name 			VARCHAR(256),
 	IN param_version 		VARCHAR(16),
 	IN param_resource		VARCHAR(256),
+	IN param_resource_type	VARCHAR(64),
 	IN param_description	VARCHAR(512),
 	IN param_path			VARCHAR(512)
 )
 	BEGIN
-		INSERT INTO wfip_tbl_application (name, version, resource, description, path) 
-		VALUES (param_name, param_version, param_resource, param_description, param_path);
+		INSERT INTO wfip_tbl_application (name, version, resource, resource_type, description, path) 
+		VALUES (param_name, param_version, param_resource, param_resource_type, param_description, param_path);
 	END $$
 DELIMITER ;
 
@@ -62,6 +52,7 @@ CREATE PROCEDURE wfip_sp_update_application (
 	IN param_name	 		VARCHAR(256),
 	IN param_version 		VARCHAR(16),
 	IN param_resource		VARCHAR(256),
+	IN param_resource_type	VARCHAR(64),
 	IN param_description	VARCHAR(512),
 	IN param_path			VARCHAR(512)
 )
@@ -70,6 +61,7 @@ CREATE PROCEDURE wfip_sp_update_application (
 			name=param_name, 
 			version=param_version,
 			resource=param_resource,
+			resource_type=param_resource_type,
 			description=param_description,
 			path=param_path
 		WHERE 

@@ -4,22 +4,29 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.unigrids.x2006.x04.services.tss.ApplicationResourceType;
+import org.w3.x2005.x08.addressing.EndpointReferenceType;
 
 import com.workflowconversion.importer.guse.appdb.Application;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
 import com.workflowconversion.importer.guse.exception.NotEditableApplicationProviderException;
+import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
 
 import dci.data.Item;
 import dci.data.Item.Unicore;
-import dci.data.Middleware;
-import hu.sztaki.lpds.dcibridge.client.ResourceConfigurationFace;
-import hu.sztaki.lpds.information.local.InformationBase;
+import de.fzj.unicore.uas.TargetSystemFactory;
+import de.fzj.unicore.uas.client.TSFClient;
+import de.fzj.unicore.uas.security.ClientProperties;
+import de.fzj.unicore.wsrflite.security.ISecurityProperties;
+import de.fzj.unicore.wsrflite.xmlbeans.client.RegistryClient;
 
 /**
- * Application provider that interacts with UNICORE. This is not editable.
+ * Application provider that interacts with UNICORE. This is not editable. It uses UNICORE's Java API to query the
+ * Incarnation Database (IDB) of each of the configured UNICORE instances.
  * 
  * @author delagarza
  *
@@ -28,8 +35,20 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 
 	private final static Logger LOG = LoggerFactory.getLogger(UnicoreApplicationProvider.class);
 
-	public UnicoreApplicationProvider() {
-		// TODO Auto-generated constructor stub
+	private final static String UNICORE_RESOURCE_TYPE = "unicore";
+
+	private final MiddlewareProvider middlewareProvider;
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param middlewareProvider
+	 *            the middleware provider to query gUSE for available middlewares/items.
+	 */
+	public UnicoreApplicationProvider(final MiddlewareProvider middlewareProvider) {
+		Validate.notNull(middlewareProvider,
+				"middlewareProvider cannot be null, this is probably a bug and should be reported.");
+		this.middlewareProvider = middlewareProvider;
 	}
 
 	@Override
@@ -39,47 +58,78 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 
 	@Override
 	public Collection<Application> getApplications() {
+		// get the available unicore items
+		final Collection<Item> unicoreItems = middlewareProvider.getAvailableItems(UNICORE_RESOURCE_TYPE);
+
+		// extract the applications from each item
 		final Collection<Application> applications = new LinkedList<Application>();
-		try {
-			// get the list of middlewares, as found in dci-bridge.xml
-			final ResourceConfigurationFace rc = (ResourceConfigurationFace) InformationBase.getI()
-					.getServiceClient("resourceconfigure", "portal");
-			// the Middleware class maps the <middleware> elements in dci-bridge.xml
-			final List<Middleware> middlewares = rc.get();
-			// find the unicore middleware
-			Middleware unicoreMiddleware = null;
-			for (final Middleware m : middlewares) {
-				if ("unicore".equals(m.getType())) {
-					unicoreMiddleware = m;
-				}
-			}
-			if (unicoreMiddleware == null) {
-				if (LOG.isInfoEnabled()) {
-					LOG.info("The dci_bridge_service has not been configured to interact with UNICORE");
-				}
-			} else {
-				// go through all of <item> entries
-				final List<Item> unicoreItems = unicoreMiddleware.getItem();
-				for (final Item item : unicoreItems) {
-					if (item.isEnabled()) {
-						extractAppsFromUnicoreInstance(item, applications);
-					} else {
-						if (LOG.isInfoEnabled()) {
-							LOG.info("UNICORE instance " + item.getName()
-									+ " found, but it is inactive, so it will be ignored.");
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new ApplicationException("An error occurred while retrieving UNICORE applications", e);
+		for (final Item item : unicoreItems) {
+			extractAppsFromUnicoreInstance(item, applications);
 		}
+
 		return applications;
 	}
 
 	private void extractAppsFromUnicoreInstance(final Item item, final Collection<Application> applications) {
-		final Unicore unicore = item.getUnicore();
+		try {
+			final Unicore unicoreConfigItem = item.getUnicore();
+			final ClientProperties securityProperties = createClientProperties(unicoreConfigItem);
+			final String resource = item.getName().trim();
+			final RegistryClient registryClient = initRegistryClient(resource, unicoreConfigItem);
+			final List<EndpointReferenceType> tsfEPRs = registryClient
+					.listAccessibleServices(TargetSystemFactory.TSF_PORT);
 
+			for (final EndpointReferenceType epr : tsfEPRs) {
+				final String serverUrl = epr.getAddress().getStringValue().trim();
+				final TSFClient tsf = new TSFClient(serverUrl, epr, securityProperties);
+				if (tsf != null && tsf.getResourcePropertiesDocument() != null) {
+					for (final ApplicationResourceType unicoreApp : tsf.getResourcePropertiesDocument()
+							.getTargetSystemFactoryProperties().getApplicationResourceArray()) {
+						final Application app = new Application();
+						// set some id, since we don't get any from UNICORE
+						app.setId(0);
+						app.setName(unicoreApp.getApplicationName());
+						app.setVersion(unicoreApp.getApplicationVersion());
+						app.setDescription(unicoreApp.getDescription());
+						app.setResource(resource);
+						app.setResourceType(UNICORE_RESOURCE_TYPE);
+						// UNICORE hides application details such as its path
+						app.setPath("not available");
+						applications.add(app);
+					}
+				}
+
+			}
+		} catch (Exception e) {
+			LOG.error("Could not retrieve UNICORE applications from " + item.getName());
+			throw new ApplicationException("Could not retrieve the applicatons for " + item.getName(), e);
+		}
+	}
+
+	private RegistryClient initRegistryClient(final String resource, final Unicore unicoreConfigItem) throws Exception {
+		final String url = "https://" + resource + "/REGISTRY/services/Registry?res=default_registry";
+		final EndpointReferenceType epr = EndpointReferenceType.Factory.newInstance();
+		epr.addNewAddress().setStringValue(url);
+		return new RegistryClient(url, epr, createClientProperties(unicoreConfigItem));
+	}
+
+	// Adapted from hu.sztaki.lpds.pgportal.util.resource.UnicoreIDBToolHandler, see:
+	// https://sourceforge.net/p/guse/git/ci/master/tree/wspgrade/src/main/java/hu/sztaki/lpds/pgportal/util/resource/UnicoreIDBToolHandler.java
+	private ClientProperties createClientProperties(final Unicore unicoreConfigItem) {
+		final ClientProperties clientProperties = new ClientProperties();
+
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL, "true");
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_CLIENTAUTH, "true");
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_KEYSTORE, unicoreConfigItem.getKeystore());
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_KEYTYPE, "pkcs12");
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_KEYPASS, unicoreConfigItem.getKeypass());
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_KEYALIAS, unicoreConfigItem.getKeyalias());
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_TRUSTSTORE, unicoreConfigItem.getTruststore());
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_TRUSTPASS, unicoreConfigItem.getTrustpass());
+		clientProperties.setProperty(ISecurityProperties.WSRF_SSL_TRUSTTYPE, "JKS");
+		clientProperties.setSignMessage(true);
+
+		return clientProperties;
 	}
 
 	@Override
@@ -92,11 +142,6 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	public void saveApplication(Application app) throws NotEditableApplicationProviderException {
 		throw new NotEditableApplicationProviderException(
 				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
-	}
-
-	@Override
-	public Collection<Application> searchApplicationsByName(String name) {
-		return null;
 	}
 
 	@Override

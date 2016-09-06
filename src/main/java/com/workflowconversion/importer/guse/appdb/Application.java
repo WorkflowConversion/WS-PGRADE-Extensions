@@ -7,14 +7,17 @@ import java.io.Serializable;
  * 
  * @author delagarza
  */
-public class Application implements Serializable, Comparable<Application> {
+public class Application implements Serializable {
 
 	private static final long serialVersionUID = -8200132807492156967L;
 
 	private int id;
 	private String name;
 	private String version;
+	// i.e., the DNS name of the headnode of a cluster
 	private String resource;
+	// e.g., unicore, moab
+	private String resourceType;
 	private String description;
 	private String path;
 
@@ -108,48 +111,19 @@ public class Application implements Serializable, Comparable<Application> {
 		this.resource = resource;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
+	/**
+	 * @return the resourceType
 	 */
-	@Override
-	public int hashCode() {
-		return generateKey().hashCode();
+	public String getResourceType() {
+		return resourceType;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
+	/**
+	 * @param resourceType
+	 *            the resourceType to set
 	 */
-	@Override
-	public boolean equals(final Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		final Application other = (Application) obj;
-		return this.generateKey().equals(other.generateKey());
-
-	}
-
-	@Override
-	public int compareTo(final Application other) {
-		return generateKey().compareTo(other.generateKey());
-	}
-
-	// name and version are the attributes that define an application, path and description are optional attributes
-	private String generateKey() {
-		final StringBuilder key = new StringBuilder("name=");
-		key.append(name).append(",version=");
-		key.append(version);
-		return key.toString();
+	public void setResourceType(String resourceType) {
+		this.resourceType = resourceType;
 	}
 
 	/*
@@ -160,7 +134,6 @@ public class Application implements Serializable, Comparable<Application> {
 	@Override
 	public String toString() {
 		return "Application [id=" + id + ", name=" + name + ", version=" + version + ", resource=" + resource
-				+ ", description=" + description + ", path=" + path + "]";
+				+ ", resourceType=" + resourceType + ", description=" + description + ", path=" + path + "]";
 	}
-
 }

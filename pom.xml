@@ -269,7 +269,13 @@
 			<artifactId>guava</artifactId>
 			<version>19.0</version>
 		</dependency>
-
+		<!-- for string comparison (there doesn't seem to be a deployed version in any public maven
+		     repository, so this file is included in the lib/mvnrepo folder --> 
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>0.1-SNAPSHOT</version>
+		</dependency>		
 	</dependencies>
 
 	<build>

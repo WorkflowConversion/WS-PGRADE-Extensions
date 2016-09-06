@@ -3,7 +3,6 @@ package com.workflowconversion.importer.guse.appdb;
 import java.util.Collection;
 
 import com.workflowconversion.importer.guse.exception.NotEditableApplicationProviderException;
-import com.workflowconversion.importer.guse.user.PortletUser;
 
 /**
  * Interface for application databases. So far, there are a couple of implementations, the custom gUSE application
@@ -37,12 +36,9 @@ public interface ApplicationProvider {
 	/**
 	 * Returns all applications for the user.
 	 * 
-	 * @param user
-	 *            The user requesting this operation.
-	 * 
 	 * @return All applications.
 	 */
-	public Collection<Application> getApplications(final PortletUser user);
+	public Collection<Application> getApplications();
 
 	/**
 	 * Adds application. If this database provider is not editable (i.e., {@link #isEditable()} returns {@code false}),
@@ -65,14 +61,4 @@ public interface ApplicationProvider {
 	 *             if this provider is not editable.
 	 */
 	public void saveApplication(final Application app) throws NotEditableApplicationProviderException;
-
-	/**
-	 * Searches applications by name.
-	 * 
-	 * @param name
-	 *            The name.
-	 * @return A collection of applications whose name resembles the given {@code name}.
-	 */
-	public Collection<Application> searchApplicationsByName(final String name);
-
 }
