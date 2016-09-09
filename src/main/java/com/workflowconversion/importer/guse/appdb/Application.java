@@ -11,7 +11,7 @@ public class Application implements Serializable {
 
 	private static final long serialVersionUID = -8200132807492156967L;
 
-	private int id;
+	private String id;
 	private String name;
 	private String version;
 	// i.e., the DNS name of the headnode of a cluster
@@ -24,7 +24,7 @@ public class Application implements Serializable {
 	/**
 	 * @return the id
 	 */
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
@@ -32,7 +32,7 @@ public class Application implements Serializable {
 	 * @param id
 	 *            the id to set
 	 */
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 

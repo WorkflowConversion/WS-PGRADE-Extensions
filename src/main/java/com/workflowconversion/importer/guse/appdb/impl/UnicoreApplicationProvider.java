@@ -35,7 +35,10 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 
 	private final static Logger LOG = LoggerFactory.getLogger(UnicoreApplicationProvider.class);
 
-	private final static String UNICORE_RESOURCE_TYPE = "unicore";
+	/**
+	 * Since it is not possible to add UNICORE applications, some classes might find this constant useful.
+	 */
+	public final static String UNICORE_RESOURCE_TYPE = "unicore";
 
 	private final MiddlewareProvider middlewareProvider;
 
@@ -82,12 +85,13 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 			for (final EndpointReferenceType epr : tsfEPRs) {
 				final String serverUrl = epr.getAddress().getStringValue().trim();
 				final TSFClient tsf = new TSFClient(serverUrl, epr, securityProperties);
+				int nApplications = 0;
 				if (tsf != null && tsf.getResourcePropertiesDocument() != null) {
 					for (final ApplicationResourceType unicoreApp : tsf.getResourcePropertiesDocument()
 							.getTargetSystemFactoryProperties().getApplicationResourceArray()) {
 						final Application app = new Application();
 						// set some id, since we don't get any from UNICORE
-						app.setId(0);
+						app.setId(resource + "_app_id_" + nApplications++);
 						app.setName(unicoreApp.getApplicationName());
 						app.setVersion(unicoreApp.getApplicationVersion());
 						app.setDescription(unicoreApp.getDescription());
@@ -152,6 +156,11 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	@Override
 	public void init() {
 		// nop
+	}
+
+	@Override
+	public String getName() {
+		return "UNICORE application database (read-only)";
 	}
 
 }
