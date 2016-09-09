@@ -21,6 +21,13 @@ public interface ApplicationProvider {
 	public boolean isEditable();
 
 	/**
+	 * Returns the name of this application provider.
+	 * 
+	 * @return the name of this application provider.
+	 */
+	public String getName();
+
+	/**
 	 * Whether the provider needs to be initialized.
 	 * 
 	 * @return {@code true} if this provider needs to be initialized, {@code false} otherwise.
@@ -45,7 +52,8 @@ public interface ApplicationProvider {
 	 * implementations should throw an exception.
 	 * 
 	 * @param app
-	 *            An application to add.
+	 *            An application to add. After adding the application, the id will be modified to reflect the id given
+	 *            by the storage.
 	 * @throws NotEditableApplicationProviderException
 	 *             if this provider is not editable.
 	 */

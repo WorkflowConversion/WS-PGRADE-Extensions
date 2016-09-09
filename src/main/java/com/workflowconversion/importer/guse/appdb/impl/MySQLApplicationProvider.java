@@ -4,8 +4,10 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
@@ -51,6 +53,8 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	private final static String SQL_SP_PARAM_DESCRIPTION = "param_description";
 	private final static String SQL_SP_PARAM_PATH = "param_path";
 
+	private final static String ID_PREFIX = "internal_app_db_id_";
+
 	private final static Logger LOG = LoggerFactory.getLogger(MySQLApplicationProvider.class);
 
 	// we could use an entry in context.xml to configure the data source, but we get the db attributes
@@ -65,6 +69,11 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	@Override
 	public boolean isEditable() {
 		return true;
+	}
+
+	@Override
+	public String getName() {
+		return "Local gUSE application database";
 	}
 
 	@Override
@@ -85,7 +94,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	private Application createApplicationFromResultSet(final ResultSet resultSet) throws SQLException {
 		final Application app = new Application();
-		app.setId(resultSet.getInt(SQL_COLUMN_ID));
+		app.setId(toApplicationId(resultSet.getInt(SQL_COLUMN_ID)));
 		app.setName(resultSet.getString(SQL_COLUMN_NAME));
 		app.setVersion(resultSet.getString(SQL_COLUMN_VERSION));
 		app.setResource(resultSet.getString(SQL_COLUMN_RESOURCE));
@@ -97,15 +106,26 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	@Override
 	public void addApplication(final Application app) throws NotEditableApplicationProviderException {
+		// using atomic integer in order to use a final object on which the id can be stored
+		final AtomicInteger id = new AtomicInteger();
 		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_ADD, false) {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
+				statement.registerOutParameter(SQL_SP_PARAM_ID, Types.INTEGER);
 				setCommonAddUpdateStoredProcedureParameters(statement, app);
+			}
+
+			@Override
+			void afterExecution(final CallableStatement statement) throws SQLException {
+				id.set(statement.getInt(SQL_SP_PARAM_ID));
 			}
 		};
 
 		call.performCall();
+
+		final String applicationId = toApplicationId(id.get());
+		app.setId(applicationId);
 	}
 
 	@Override
@@ -114,12 +134,20 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
-				statement.setInt(SQL_SP_PARAM_ID, app.getId());
+				statement.setInt(SQL_SP_PARAM_ID, toDatabaseId(app));
 				setCommonAddUpdateStoredProcedureParameters(statement, app);
 			}
 		};
 
 		call.performCall();
+	}
+
+	private int toDatabaseId(final Application application) {
+		return Integer.valueOf(application.getId().substring(ID_PREFIX.length()));
+	}
+
+	private String toApplicationId(final int id) {
+		return ID_PREFIX + id;
 	}
 
 	private void setCommonAddUpdateStoredProcedureParameters(final CallableStatement statement, final Application app)
@@ -208,6 +236,11 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 		}
 
+		// invoked at the end, useful to obtain output parameters
+		void afterExecution(final CallableStatement statement) throws SQLException {
+
+		}
+
 		final void performCall() {
 			try (final Connection connection = this.dataSource.getConnection();
 					final CallableStatement statement = connection.prepareCall(this.jdbcCall)) {
@@ -220,6 +253,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 						}
 					}
 				}
+				afterExecution(statement);
 			} catch (SQLException e) {
 				switch (e.getErrorCode()) {
 				case SQL_ERROR_COLUMN_CANNOT_BE_NULL:

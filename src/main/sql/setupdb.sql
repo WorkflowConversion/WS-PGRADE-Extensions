@@ -31,16 +31,19 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS wfip_sp_add_application;
 DELIMITER $$
 CREATE PROCEDURE wfip_sp_add_application (
-	IN param_name 			VARCHAR(256),
-	IN param_version 		VARCHAR(16),
-	IN param_resource		VARCHAR(256),
-	IN param_resource_type	VARCHAR(64),
-	IN param_description	VARCHAR(512),
-	IN param_path			VARCHAR(512)
+	IN 	param_name 			VARCHAR(256),
+	IN 	param_version 		VARCHAR(16),
+	IN 	param_resource		VARCHAR(256),
+	IN 	param_resource_type	VARCHAR(64),
+	IN 	param_description	VARCHAR(512),
+	IN 	param_path			VARCHAR(512),
+	OUT	param_id			INT UNSIGNED
 )
 	BEGIN
 		INSERT INTO wfip_tbl_application (name, version, resource, resource_type, description, path) 
 		VALUES (param_name, param_version, param_resource, param_resource_type, param_description, param_path);
+		
+		SET param_id = LAST_INSERT_ID();
 	END $$
 DELIMITER ;
 

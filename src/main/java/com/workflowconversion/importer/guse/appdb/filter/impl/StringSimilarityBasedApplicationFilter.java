@@ -11,8 +11,8 @@ import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.importer.guse.Settings;
 import com.workflowconversion.importer.guse.appdb.Application;
-import com.workflowconversion.importer.guse.appdb.filter.ApplicationField;
-import com.workflowconversion.importer.guse.exception.ApplicationException;
+import com.workflowconversion.importer.guse.appdb.ApplicationField;
+import com.workflowconversion.importer.guse.exception.InvalidApplicationFieldException;
 import com.workflowconversion.importer.guse.filter.Filter;
 import com.workflowconversion.importer.guse.text.StringSimilarityAlgorithm;
 
@@ -67,8 +67,7 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 				case Version:
 					return application.getVersion();
 				default:
-					throw new ApplicationException("Invalid application field [" + field
-							+ "]. This is most probably a bug, please report it to your portal administrator.");
+					throw new InvalidApplicationFieldException(field);
 
 				}
 			}

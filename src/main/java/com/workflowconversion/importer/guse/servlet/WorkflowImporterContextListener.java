@@ -47,10 +47,11 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 				extractInitParam("permissions.location", servletContextEvent));
 		final Collection<ApplicationProvider> applicationProviders = extractApplicationProviders(servletContextEvent);
 		final String vaadinTheme = extractInitParam("vaadinTheme", servletContextEvent);
-		final Settings.Builder settingsBuilder = new Settings.Builder();
 		final PoolProperties poolProperties = extractPoolProperties(servletContextEvent.getServletContext());
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
+
+		final Settings.Builder settingsBuilder = new Settings.Builder();
 
 		settingsBuilder.setVaadinTheme(vaadinTheme).setDatabaseConfiguration(dbConfig)
 				.setPermissionManager(permissionManager).setApplicationProviders(applicationProviders)

@@ -49,6 +49,35 @@ public class WorkflowImporterApplication extends Application implements PortletR
 	@Override
 	public void init() {
 		LOG.info("initializing WorkflowImporterApplication");
+		final String vaadinTheme = Settings.getInstance().getVaadinTheme();
+		setTheme(vaadinTheme);
+		final Window mainWindow;
+
+		if (currentUser.isAuthenticated()) {
+			final DatabaseConfiguration dbConfig = Settings.getInstance().getDatabaseConfiguration();
+			if (dbConfig.isValid()) {
+				// happy path!
+				initApplicationProviders();
+				mainWindow = new WorkflowImporterMainWindow(currentUser, Settings.getInstance().getPermissionManager(),
+						Settings.getInstance().getVaadinTheme());
+			} else {
+				mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/lock.png")
+						.setLongDescription(
+								"This portlet has not been properly initialized. If the problem persists after restarting gUSE, please check the logs and report the problem, for this might be caused by a bug or a configuration error.")
+						.setTheme(vaadinTheme).newWarningWindow();
+			}
+		} else {
+			mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/attention.png")
+					.setTheme(vaadinTheme).setLongDescription("You need to be logged-in to access this portlet.")
+					.newWarningWindow();
+		}
+		setMainWindow(mainWindow);
+	}
+
+	/**
+	 * 
+	 */
+	private void initApplicationProviders() {
 		// init any app provider that needs initialization
 		LOG.info("initializing ApplicationProviders");
 		for (final ApplicationProvider provider : Settings.getInstance().getApplicationProviders()) {
@@ -64,28 +93,6 @@ public class WorkflowImporterApplication extends Application implements PortletR
 				}
 			}
 		}
-		final String vaadinTheme = Settings.getInstance().getVaadinTheme();
-		setTheme(vaadinTheme);
-		final Window mainWindow;
-
-		if (currentUser.isAuthenticated()) {
-			final DatabaseConfiguration dbConfig = Settings.getInstance().getDatabaseConfiguration();
-			if (dbConfig.isValid()) {
-				// happy path!
-				mainWindow = new WorkflowImporterMainWindow(currentUser, Settings.getInstance().getPermissionManager(),
-						Settings.getInstance().getVaadinTheme());
-			} else {
-				mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/lock.png")
-						.setLongDescription(
-								"This portlet has not been properly initialized. You probably need to restart gUSE.")
-						.setTheme(vaadinTheme).newWarningWindow();
-			}
-		} else {
-			mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/attention.png")
-					.setTheme(vaadinTheme).setLongDescription("You need to be logged-in to access this portlet.")
-					.newWarningWindow();
-		}
-		setMainWindow(mainWindow);
 	}
 
 	private PortletUser extractCurrentUser(final PortletRequest request) {
