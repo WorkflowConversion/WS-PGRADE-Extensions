@@ -71,3 +71,14 @@ CREATE PROCEDURE wfip_sp_update_application (
 			id=param_id;
 	END $$
 DELIMITER ;
+
+-- create the delete stored procedure
+DROP PROCEDURE IF EXISTS wfip_sp_delete_application;
+DELIMITER $$
+CREATE PROCEDURE wfip_sp_delete_application (
+	IN param_id				INT
+)
+	BEGIN
+		DELETE FROM wfip_tbl_application WHERE id=param_id;
+	END $$
+DELIMITER ;

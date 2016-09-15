@@ -1,4 +1,4 @@
-package com.workflowconversion.importer.guse.config.impl;
+package com.workflowconversion.importer.guse.appdb.config.impl;
 
 import java.util.concurrent.TimeUnit;
 
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
+import com.workflowconversion.importer.guse.appdb.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.exception.InvalidPropertyValueException;
 
 import hu.sztaki.lpds.information.local.PropertyLoader;

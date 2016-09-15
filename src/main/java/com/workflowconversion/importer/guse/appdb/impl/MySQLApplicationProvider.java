@@ -33,6 +33,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	private final static String SQL_SP_VIEW = "{CALL wfip_sp_get_all_applications()}";
 	private final static String SQL_SP_UPDATE = "{CALL wfip_sp_update_application(?, ?, ?, ?, ?, ?, ?)}";
 	private final static String SQL_SP_ADD = "{CALL wfip_sp_add_application(?, ?, ?, ?, ?, ?)}";
+	private final static String SQL_SP_DELETE = "{CALL wfip_sp_delete_application(?)}";
 
 	private final static int SQL_ERROR_DUPLICATE_ENTRY = 1062;
 	private final static int SQL_ERROR_COLUMN_CANNOT_BE_NULL = 1048;
@@ -136,6 +137,19 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 			void prepareStatement(final CallableStatement statement) throws SQLException {
 				statement.setInt(SQL_SP_PARAM_ID, toDatabaseId(app));
 				setCommonAddUpdateStoredProcedureParameters(statement, app);
+			}
+		};
+
+		call.performCall();
+	}
+
+	@Override
+	public void removeApplication(final Application app) throws NotEditableApplicationProviderException {
+		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_DELETE, false) {
+
+			@Override
+			void prepareStatement(final CallableStatement statement) throws SQLException {
+				statement.setInt(SQL_SP_PARAM_ID, toDatabaseId(app));
 			}
 		};
 
@@ -270,5 +284,4 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 			}
 		}
 	}
-
 }

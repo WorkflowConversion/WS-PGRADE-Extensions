@@ -17,7 +17,7 @@
     <context-param>
     	<description>DB Configuration implementation used</description>
     	<param-name>databaseConfiguration.implementation</param-name>
-    	<param-value>com.workflowconversion.importer.guse.config.impl.GUSEProvidedDatabaseConfiguration</param-value>
+    	<param-value>com.workflowconversion.importer.guse.appdb.config.impl.GUSEProvidedDatabaseConfiguration</param-value>
     </context-param>
     <context-param>
     	<description>Connection Pool settings: validation interval</description>
@@ -65,17 +65,11 @@
     	<param-value>permissions.properties</param-value>
     </context-param>
     <context-param>
-    	<description>Internal application provider</description>
-    	<param-name>internal.applicationProvider.implementation</param-name>
+    	<description>Application providers</description>
+    	<param-name>internal.applicationProviders.implementations</param-name>
     	<param-value>
-    		com.workflowconversion.importer.guse.appdb.impl.MySQLApplicationProvider	
-    	</param-value>
-    </context-param>
-    <context-param>
-    	<description>UNICORE application provider</description>
-    	<param-name>unicore.applicationProvider.implementation</param-name>
-    	<param-value>
-    		com.workflowconversion.importer.guse.appdb.impl.UnicoreApplicationProvider	
+    		com.workflowconversion.importer.guse.appdb.impl.MySQLApplicationProvider,
+    		com.workflowconversion.importer.guse.appdb.impl.UnicoreApplicationProvider
     	</param-value>
     </context-param>
     <context-param>

@@ -1,7 +1,11 @@
 package com.workflowconversion.importer.guse.vaadin.ui;
 
+import java.util.Set;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.Validate;
 
+import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -11,64 +15,83 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
+import com.vaadin.ui.Window.Notification;
 import com.workflowconversion.importer.guse.appdb.Application;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
-import com.workflowconversion.importer.guse.permission.PermissionManager;
-import com.workflowconversion.importer.guse.user.PortletUser;
 
 /**
  * Panel containing the applications to be displayed in a table, plus controls to add/save applications.
  */
-class ApplicationsViewPanel extends Panel {
+class ApplicationsViewPanel extends Panel implements ApplicationCommittedListener {
 
 	private static final long serialVersionUID = -5169354278787921392L;
 
-	private Window parentWindow;
+	static final String COLUMN_ID = "Id";
+	static final String COLUMN_NAME = "Name";
+	static final String COLUMN_VERSION = "Version";
+	static final String COLUMN_RESOURCE_TYPE = "Resource Type";
+	static final String COLUMN_RESOURCE = "Resource";
+	static final String COLUMN_DESCRIPTION = "Description";
+	static final String COLUMN_PATH = "Path";
+
 	private final Table table;
 	private final ApplicationTableContainer containerDataSource;
+	private final AddApplicationDialog addApplicationDialog;
 
 	/**
-	 * Constructor.
+	 * Builds a new instance.
 	 * 
-	 * @param parentWindow
-	 *            the parent UI window that contains this control.
-	 * @param user
-	 *            the user accessing this view.
-	 * @param permissionManager
-	 *            the permission manager.
 	 * @param middlewareProvider
 	 *            the middleware provider.
 	 * @param applicationProvider
 	 *            the application provider to interact with the local storage.
+	 * @param editable
+	 *            whether the table with applications will be editable.
 	 */
-	ApplicationsViewPanel(final Window parentWindow, final PortletUser user, final PermissionManager permissionManager,
-			final MiddlewareProvider middlewareProvider, final ApplicationProvider applicationProvider) {
-		Validate.notNull(parentWindow, "parentWindow cannot be null");
-		Validate.notNull(user, "user cannot be null");
-		Validate.notNull(permissionManager, "permissionManager cannot be null");
+	ApplicationsViewPanel(final MiddlewareProvider middlewareProvider, final ApplicationProvider applicationProvider,
+			final boolean editable) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		Validate.notNull(applicationProvider, "applicationProvider cannot be null");
-		this.parentWindow = parentWindow;
 		this.containerDataSource = new ApplicationTableContainer(middlewareProvider, applicationProvider);
 		this.table = new Table(applicationProvider.getName(), containerDataSource);
-		setUpUiElements(permissionManager.hasWriteAccess(user) && applicationProvider.isEditable());
+		setUpBasicUi();
+		if (editable) {
+			setUpEditControls();
+			this.addApplicationDialog = new AddApplicationDialog(middlewareProvider);
+		} else {
+			// not used at all
+			this.addApplicationDialog = null;
+		}
+		this.table.setEditable(editable);
+		this.containerDataSource.setEditable(editable);
 	}
 
-	private void setUpUiElements(final boolean withEditControls) {
+	private void setUpBasicUi() {
 		setUpTable();
 		final Layout layout = new VerticalLayout();
 		// add the table
 		layout.addComponent(table);
-		// add the controls based on permissions and the application provider
-		if (withEditControls) {
-			setUpEditControls(layout);
-		}
 		this.setContent(layout);
 	}
 
-	private void setUpEditControls(final Layout parentLayout) {
+	private void setUpTable() {
+		// make sure the ID column is hidden
+		table.setVisibleColumns(new String[] { COLUMN_NAME, COLUMN_VERSION, COLUMN_DESCRIPTION, COLUMN_RESOURCE,
+				COLUMN_RESOURCE_TYPE, COLUMN_PATH });
+		table.setSelectable(true);
+		table.setMultiSelect(false);
+		table.setWriteThrough(true);
+		table.setReadThrough(true);
+		table.setEditable(false);
+		table.setSortDisabled(false);
+		table.setImmediate(true);
+	}
+
+	private void setUpEditControls() {
+		// allow multiple selection when editing
+		table.setMultiSelect(false);
+
 		final Button saveButton = createButton("Save", "Save changes");
 		saveButton.addListener(new ClickListener() {
 			private static final long serialVersionUID = 600552795794561068L;
@@ -96,6 +119,15 @@ class ApplicationsViewPanel extends Panel {
 				}
 			}
 		});
+		// make sure the delete button is enabled only if there is something selected
+		table.addListener(new Table.ValueChangeListener() {
+			private static final long serialVersionUID = -139252210775992808L;
+
+			@Override
+			public void valueChange(final ValueChangeEvent event) {
+				deleteButton.setEnabled(event.getProperty().getValue() != null);
+			}
+		});
 
 		final Button addButton = createButton("Add", "Add application");
 		addButton.addListener(new ClickListener() {
@@ -120,6 +152,7 @@ class ApplicationsViewPanel extends Panel {
 			public void buttonClick(final ClickEvent event) {
 				final boolean enabled = event.getButton().booleanValue();
 				table.setEditable(enabled);
+				containerDataSource.setEditable(enabled);
 				saveButton.setEnabled(enabled);
 				deleteButton.setEnabled(enabled);
 			}
@@ -131,10 +164,11 @@ class ApplicationsViewPanel extends Panel {
 		layout.addComponent(addButton);
 		layout.addComponent(deleteButton);
 
-		parentLayout.addComponent(layout);
+		// append to existing content
+		this.getContent().addComponent(layout);
 	}
 
-	protected Button createButton(final String caption, final String description) {
+	private Button createButton(final String caption, final String description) {
 		final Button button = new Button(caption);
 		button.setDescription(description);
 		button.setEnabled(false);
@@ -142,60 +176,42 @@ class ApplicationsViewPanel extends Panel {
 		return button;
 	}
 
-	protected void addButtonClicked() {
+	private void addButtonClicked() {
 		// display a window with the application fields
-		final Window addApplicationDialog = new Window("Add application");
-		addApplicationDialog.setModal(true);
-
-		parentWindow.addWindow(addApplicationDialog);
-
-		this.addComponent(addApplicationDialog);
+		if (addApplicationDialog.getParent() != null) {
+			getWindow().showNotification(
+					"Add Application Dialog is already open. Please complete the form and then click on the 'Add' button to add a new application.",
+					Notification.TYPE_WARNING_MESSAGE);
+		} else {
+			addApplicationDialog.setNewApplicationListener(this);
+			getWindow().addWindow(addApplicationDialog);
+		}
 	}
 
-	protected void deleteButtonClicked() {
-
+	// deletes the selected application
+	private void deleteButtonClicked() {
+		// since multiselect is enabled, we get a set of the selected values
+		final Set<?> selectedRowIds = (Set<?>) table.getValue();
+		if (CollectionUtils.isNotEmpty(selectedRowIds)) {
+			// the app will be deleted from the container via callbacks
+			for (final Object selectedRowId : selectedRowIds) {
+				table.removeItem(selectedRowId.toString());
+			}
+		} else {
+			getWindow().showNotification("Please select at least one application to delete",
+					Notification.TYPE_WARNING_MESSAGE);
+		}
 	}
 
-	protected void saveButtonClicked() {
-
+	// saves all changes
+	private void saveButtonClicked() {
+		// the container will figure out which rows are dirty
+		containerDataSource.saveDirtyItems();
 	}
 
-	private void setUpTable() {
-		table.setSelectable(true);
-		table.setMultiSelect(false);
-		table.setEditable(false);
-		table.setSortDisabled(false);
-	}
-
-	/**
-	 * Inserts the given application at the end of the table.
-	 * 
-	 * @param application
-	 *            the application to insert.
-	 */
-	void insertApplication(final Application application) {
-
-	}
-
-	/**
-	 * Edits the application on the given index.
-	 * 
-	 * @param application
-	 *            the application that will remain in the table.
-	 * @param index
-	 *            the index on which the application is located.
-	 */
-	void editApplication(final Application application, final int index) {
-
-	}
-
-	/**
-	 * Removes the application at the given index.
-	 * 
-	 * @param index
-	 *            the index of the application to delete.
-	 */
-	void removeApplication(final int index) {
-
+	@Override
+	public void applicationCommitted(final Application application) {
+		// the app will be added via callbacks
+		containerDataSource.addApplication(application);
 	}
 }

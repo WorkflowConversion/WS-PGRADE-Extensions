@@ -19,7 +19,7 @@ import com.vaadin.terminal.gwt.server.PortletRequestListener;
 import com.vaadin.ui.Window;
 import com.workflowconversion.importer.guse.Settings;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
-import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
+import com.workflowconversion.importer.guse.appdb.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
 import com.workflowconversion.importer.guse.user.PortletUser;
 import com.workflowconversion.importer.guse.vaadin.ui.SimpleWarningWindow;

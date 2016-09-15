@@ -3,7 +3,9 @@ package com.workflowconversion.importer.guse.vaadin.ui;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
+import com.vaadin.data.Buffered.SourceException;
 import com.vaadin.data.Item;
+import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.validator.AbstractValidator;
 import com.vaadin.data.validator.StringLengthValidator;
@@ -30,14 +32,17 @@ import dci.data.Middleware;
  * @author delagarza
  *
  */
-class AddApplicationWindow extends Window {
+class AddApplicationDialog extends Window {
 
 	private static final long serialVersionUID = 2514225841272484511L;
 
-	private final Window parent;
+	private static final String LARGE_FIELD_WIDTH = "20em";
+	private static final String COMMON_FIELD_WIDTH = "12em";
+
 	private final Form applicationForm;
 	private final Application application;
 	private final MiddlewareProvider middlewareProvider;
+	private ApplicationCommittedListener applicationCommittedListener;
 
 	/**
 	 * Constructor.
@@ -45,10 +50,8 @@ class AddApplicationWindow extends Window {
 	 * @param parent
 	 *            the parent window.
 	 */
-	AddApplicationWindow(final Window parent, final MiddlewareProvider middlewareProvider) {
-		Validate.notNull(parent, "parent cannot be null");
+	AddApplicationDialog(final MiddlewareProvider middlewareProvider) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
-		this.parent = parent;
 		this.middlewareProvider = middlewareProvider;
 		super.setVisible(false);
 		super.setCaption("Add application");
@@ -56,71 +59,79 @@ class AddApplicationWindow extends Window {
 
 		this.application = new Application();
 		this.applicationForm = new Form();
-
 		setUpForm();
 	}
 
 	void setUpForm() {
+		// adapted from: http://demo.vaadin.com/sampler-for-vaadin6#FormBasic
 		applicationForm.setCaption("New application");
 		applicationForm.setWriteThrough(false);
 		applicationForm.setInvalidCommitted(false);
 		applicationForm.setFormFieldFactory(new ApplicationFieldFactory());
 		applicationForm.setItemDataSource(new BeanItem<Application>(application));
 		applicationForm.setVisibleItemProperties(
-				new ApplicationField[] { ApplicationField.Name, ApplicationField.Version, ApplicationField.Path,
-						ApplicationField.Description, ApplicationField.ResourceType, ApplicationField.Resource });
+				new String[] { ApplicationField.Name.getMemberName(), ApplicationField.Version.getMemberName(),
+						ApplicationField.Path.getMemberName(), ApplicationField.Description.getMemberName(),
+						ApplicationField.ResourceType.getMemberName(), ApplicationField.Resource.getMemberName() });
 		final Button addApplicationButton = new Button("Add", new Button.ClickListener() {
 			private static final long serialVersionUID = -2999251588313488770L;
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				applicationForm.commit();
+				try {
+					applicationForm.commit();
+					// notify the listener
+					if (applicationCommittedListener != null) {
+						applicationCommittedListener.applicationCommitted(application);
+					}
+					// close the dialog iff every step was successful
+					getWindow().removeWindow(AddApplicationDialog.this);
+				} catch (SourceException | InvalidValueException e) {
+					// ignore
+				}
 			}
 		});
+		addApplicationButton.setDescription("Add application");
 		applicationForm.getFooter().addComponent(addApplicationButton);
 		applicationForm.getFooter().setMargin(true, false, true, true);
 
 		addComponent(applicationForm);
 	}
 
-	@Override
-	public void setVisible(boolean visible) {
-		super.setVisible(visible);
-		if (visible) {
-			parent.addWindow(this);
-		}
+	void setNewApplicationListener(final ApplicationCommittedListener listener) {
+		this.applicationCommittedListener = listener;
 	}
 
 	private class ApplicationFieldFactory extends DefaultFieldFactory {
 
 		private static final long serialVersionUID = 1952414851060513902L;
-		private static final String COMMON_FIELD_WIDTH = "12em";
 
 		@Override
 		public Field createField(final Item item, final Object propertyId, final Component uiContext) {
-			final ApplicationField applicationField = (ApplicationField) propertyId;
-			switch (applicationField) {
-			case Name:
-				return createRequiredTextField("Application name:", "Please enter a name for the application",
-						applicationField.getMaxLength());
-			case Version:
-				return createRequiredTextField("Version:", "Please enter a valid version",
-						applicationField.getMaxLength());
-			case Path:
-				return createRequiredTextField("Executable path:", "Please enter a valid application path",
-						applicationField.getMaxLength());
-			case Description:
-				return createOptionalTextArea("Description:", applicationField.getMaxLength());
-			case Resource:
-				return createRequiredTextField("Resource:",
+			final String applicationField = (String) propertyId;
+			final Field field;
+			// yes, we could have used a switch statement, but case extensions must be constant expressions
+			if (applicationField.equals(ApplicationField.Name.getMemberName())) {
+				field = createRequiredTextField("Application name:", "Please enter a name for the application",
+						ApplicationField.Name.getMaxLength());
+			} else if (applicationField.equals(ApplicationField.Version.getMemberName())) {
+				field = createRequiredTextField("Version:", "Please enter a valid version",
+						ApplicationField.Version.getMaxLength());
+			} else if (applicationField.equals(ApplicationField.Path.getMemberName())) {
+				field = createRequiredTextField("Executable path:", "Please enter a valid application path",
+						ApplicationField.Path.getMaxLength());
+			} else if (applicationField.equals(ApplicationField.Description.getMemberName())) {
+				field = createOptionalTextArea("Description:", ApplicationField.Description.getMaxLength());
+			} else if (applicationField.equals(ApplicationField.Resource.getMemberName())) {
+				field = createRequiredTextField("Resource:",
 						"Please enter a valid resource (i.e., IP address, DNS name of resource)",
-						applicationField.getMaxLength());
-			case ResourceType:
-				return createResourceTypeComboBox();
-			default:
+						ApplicationField.Resource.getMaxLength());
+			} else if (applicationField.equals(ApplicationField.ResourceType.getMemberName())) {
+				field = createResourceTypeComboBox();
+			} else {
 				throw new InvalidApplicationFieldException(applicationField);
-
 			}
+			return field;
 		}
 
 		private Field createResourceTypeComboBox() {
@@ -153,7 +164,7 @@ class AddApplicationWindow extends Window {
 			textArea.addValidator(new StringLengthValidator(
 					"Please enter a description no longer than " + maxLength + " characters.", -1, maxLength, true));
 			textArea.setRequired(false);
-			textArea.setWidth("20em");
+			textArea.setWidth(LARGE_FIELD_WIDTH);
 			return textArea;
 		}
 	}

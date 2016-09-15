@@ -1,4 +1,4 @@
-package com.workflowconversion.importer.guse.config;
+package com.workflowconversion.importer.guse.appdb.config;
 
 /**
  * Interface to obtain database configuration values.
