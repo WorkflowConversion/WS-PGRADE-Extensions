@@ -15,13 +15,21 @@ public class InvalidApplicationFieldException extends ApplicationException {
 	/**
 	 * Constructor.
 	 * 
-	 * @param message
-	 *            a message.
 	 * @param field
 	 *            the invalid field.
 	 */
 	public InvalidApplicationFieldException(final ApplicationField field) {
 		super("Invalid application field: " + field.toString());
+	}
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param field
+	 *            the invalid field
+	 */
+	public InvalidApplicationFieldException(final String field) {
+		super("Invalid application field: " + field);
 	}
 
 }

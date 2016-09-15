@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
 import com.workflowconversion.importer.guse.Settings;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
-import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
+import com.workflowconversion.importer.guse.appdb.config.DatabaseConfiguration;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
 import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
 import com.workflowconversion.importer.guse.permission.PermissionManager;
@@ -50,12 +50,15 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 		final PoolProperties poolProperties = extractPoolProperties(servletContextEvent.getServletContext());
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
+		final MiddlewareProvider middlewareProvider = newInstance(
+				extractInitParam("middlewareProvider.implementation", servletContextEvent), MiddlewareProvider.class);
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
 		settingsBuilder.setVaadinTheme(vaadinTheme).setDatabaseConfiguration(dbConfig)
 				.setPermissionManager(permissionManager).setApplicationProviders(applicationProviders)
-				.setPoolProperties(poolProperties).setStringSimilaritySettings(stringSimilaritySettings);
+				.setPoolProperties(poolProperties).setStringSimilaritySettings(stringSimilaritySettings)
+				.setMiddlewareProvider(middlewareProvider);
 		Settings.setInstance(settingsBuilder.newSettings());
 	}
 
@@ -96,16 +99,11 @@ public class WorkflowImporterContextListener implements ServletContextListener {
 
 	private Collection<ApplicationProvider> extractApplicationProviders(final ServletContextEvent servletContextEvent) {
 		final Collection<ApplicationProvider> applicationProviders = new LinkedList<ApplicationProvider>();
-		// first, the internal application provider
-		applicationProviders
-				.add(newInstance(extractInitParam("internal.applicationProvider.implementation", servletContextEvent),
-						ApplicationProvider.class));
-		// the unicore application provider needs a middleware provider to query middleware/items from gUSE
-		final MiddlewareProvider middlewareProvider = newInstance(
-				extractInitParam("middlewareProvider.implementation", servletContextEvent), MiddlewareProvider.class);
-		applicationProviders
-				.add(newInstance(extractInitParam("unicore.applicationProvider.implementation", servletContextEvent),
-						ApplicationProvider.class, middlewareProvider));
+		final String[] providerClassNames = extractInitParam("internal.applicationProviders.implementations",
+				servletContextEvent).trim().split(",");
+		for (final String providerClassName : providerClassNames) {
+			applicationProviders.add(newInstance(providerClassName.trim(), ApplicationProvider.class));
+		}
 		return applicationProviders;
 	}
 

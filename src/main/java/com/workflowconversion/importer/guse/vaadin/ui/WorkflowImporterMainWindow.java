@@ -1,9 +1,16 @@
 package com.workflowconversion.importer.guse.vaadin.ui;
 
+import java.util.Collection;
+
+import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.workflowconversion.importer.guse.Settings;
+import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.exception.UserNotAuthenticatedException;
+import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
 import com.workflowconversion.importer.guse.permission.PermissionManager;
 import com.workflowconversion.importer.guse.user.PortletUser;
 
@@ -49,7 +56,7 @@ public class WorkflowImporterMainWindow extends Window {
 	private void initComponents() {
 		if (permissionManager.hasReadAccess(user) || permissionManager.hasWriteAccess(user)) {
 			final TabSheet tabSheet = new TabSheet();
-			tabSheet.setCaption("Workflow Importer Portlet");
+			tabSheet.setCaption(CAPTION);
 			addEndUserContent(tabSheet);
 			addAdminContent(tabSheet);
 			setContent(tabSheet);
@@ -63,19 +70,26 @@ public class WorkflowImporterMainWindow extends Window {
 		}
 	}
 
-	// adds content that every user can access
+	// adds content that every user can access, namely, importing WFs
 	private void addEndUserContent(final TabSheet tabSheet) {
 		if (permissionManager.hasReadAccess(user)) {
-			final Panel a = new Panel("Readable Content");
-			tabSheet.addTab(a, "First tab");
+			final Panel a = new Panel("Import Workflows");
+			tabSheet.addTab(a, "Import Workflows");
 		}
 	}
 
-	// adds admin-only content
+	// adds admin-only content, namely, the Application DB in edit mode
 	private void addAdminContent(final TabSheet tabSheet) {
 		if (permissionManager.hasWriteAccess(user)) {
-			final Panel a = new Panel("Editable Content");
-			tabSheet.addTab(a, "Second tab");
+			final Layout layout = new VerticalLayout();
+			final MiddlewareProvider middlewareProvider = Settings.getInstance().getMiddlewareProvider();
+			final Collection<ApplicationProvider> applicationProviders = Settings.getInstance()
+					.getApplicationProviders();
+			// add one panel for each provider
+			for (final ApplicationProvider applicationProvider : applicationProviders) {
+				layout.addComponent(new ApplicationsViewPanel(middlewareProvider, applicationProvider, true));
+			}
+			tabSheet.addTab(layout, "Available Applications");
 		}
 	}
 }

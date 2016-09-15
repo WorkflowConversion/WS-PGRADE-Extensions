@@ -8,7 +8,8 @@ import org.apache.commons.lang.Validate;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
-import com.workflowconversion.importer.guse.config.DatabaseConfiguration;
+import com.workflowconversion.importer.guse.appdb.config.DatabaseConfiguration;
+import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
 import com.workflowconversion.importer.guse.permission.PermissionManager;
 import com.workflowconversion.importer.guse.text.StringSimilaritySettings;
 
@@ -26,6 +27,7 @@ public class Settings {
 	private final PermissionManager permissionManager;
 	private final Collection<ApplicationProvider> applicationProviders;
 	private final StringSimilaritySettings stringSimilaritySettings;
+	private final MiddlewareProvider middlewareProvider;
 	private static Settings INSTANCE;
 
 	/**
@@ -112,9 +114,17 @@ public class Settings {
 		return stringSimilaritySettings;
 	}
 
+	/**
+	 * @return the middleware provider.
+	 */
+	public MiddlewareProvider getMiddlewareProvider() {
+		return middlewareProvider;
+	}
+
 	private Settings(final String vaadinTheme, final DatabaseConfiguration databaseConfiguration,
 			final PermissionManager permissionManager, final Collection<ApplicationProvider> applicationProviders,
-			final PoolProperties poolProperties, final StringSimilaritySettings stringSimilaritySettings) {
+			final PoolProperties poolProperties, final StringSimilaritySettings stringSimilaritySettings,
+			final MiddlewareProvider middlewareProvider) {
 		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
 				"vaadinTheme cannot be null or empty, please use the Builder.setVaadinTheme() method to set a non-blank value");
 		Validate.notNull(databaseConfiguration,
@@ -127,12 +137,15 @@ public class Settings {
 				"poolProperties cannot be null, please use the Builder.setPoolProperties() method to set a non-null value");
 		Validate.notNull(stringSimilaritySettings,
 				"stringSimilaritySettings cannot be null, please use the Builder.setStringSimilaritySettings() method to set a non-null value");
+		Validate.notNull(middlewareProvider,
+				"middlewareProvider cannot be null, please use the Builder.setMiddlewareProvider() method to set a non-null value");
 		this.vaadinTheme = vaadinTheme;
 		this.databaseConfiguration = databaseConfiguration;
 		this.permissionManager = permissionManager;
 		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
 		this.poolProperties = poolProperties;
 		this.stringSimilaritySettings = stringSimilaritySettings;
+		this.middlewareProvider = middlewareProvider;
 	}
 
 	/**
@@ -148,6 +161,7 @@ public class Settings {
 		private Collection<ApplicationProvider> applicationProviders;
 		private PoolProperties poolProperties;
 		private StringSimilaritySettings stringSimilaritySettings;
+		private MiddlewareProvider middlewareProvider;
 
 		/**
 		 * Sets the vaadin theme.
@@ -222,13 +236,25 @@ public class Settings {
 		}
 
 		/**
+		 * Sets the middleware provider.
+		 * 
+		 * @param middlewareProvider
+		 *            the middleware provider.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder setMiddlewareProvider(final MiddlewareProvider middlewareProvider) {
+			this.middlewareProvider = middlewareProvider;
+			return this;
+		}
+
+		/**
 		 * Builds a new {@link Settings}.
 		 * 
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newSettings() {
 			return new Settings(vaadinTheme, databaseConfiguration, permissionManager, applicationProviders,
-					poolProperties, stringSimilaritySettings);
+					poolProperties, stringSimilaritySettings, middlewareProvider);
 		}
 	}
 }

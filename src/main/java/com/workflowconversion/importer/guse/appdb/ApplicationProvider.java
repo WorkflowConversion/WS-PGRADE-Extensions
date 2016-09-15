@@ -48,7 +48,7 @@ public interface ApplicationProvider {
 	public Collection<Application> getApplications();
 
 	/**
-	 * Adds application. If this database provider is not editable (i.e., {@link #isEditable()} returns {@code false}),
+	 * Adds application. If this provider is not editable (i.e., {@link #isEditable()} returns {@code false}),
 	 * implementations should throw an exception.
 	 * 
 	 * @param app
@@ -60,7 +60,7 @@ public interface ApplicationProvider {
 	public void addApplication(final Application app) throws NotEditableApplicationProviderException;
 
 	/**
-	 * Saves application. If this database provider is not editable (i.e., {@link #isEditable()} returns {@code false}),
+	 * Saves application. If this provider is not editable (i.e., {@link #isEditable()} returns {@code false}),
 	 * implementations should throw an exception.
 	 * 
 	 * @param app
@@ -69,4 +69,14 @@ public interface ApplicationProvider {
 	 *             if this provider is not editable.
 	 */
 	public void saveApplication(final Application app) throws NotEditableApplicationProviderException;
+
+	/**
+	 * Removes an application. If this provider is not editable, implementations should throw an exception.
+	 * 
+	 * @param app
+	 *            the application to remove.
+	 * @throws NotEditableApplicationProviderException
+	 *             if this provider is not editable.
+	 */
+	public void removeApplication(final Application app) throws NotEditableApplicationProviderException;
 }

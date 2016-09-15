@@ -4,12 +4,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.unigrids.x2006.x04.services.tss.ApplicationResourceType;
 import org.w3.x2005.x08.addressing.EndpointReferenceType;
 
+import com.workflowconversion.importer.guse.Settings;
 import com.workflowconversion.importer.guse.appdb.Application;
 import com.workflowconversion.importer.guse.appdb.ApplicationProvider;
 import com.workflowconversion.importer.guse.exception.ApplicationException;
@@ -40,20 +40,6 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	 */
 	public final static String UNICORE_RESOURCE_TYPE = "unicore";
 
-	private final MiddlewareProvider middlewareProvider;
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param middlewareProvider
-	 *            the middleware provider to query gUSE for available middlewares/items.
-	 */
-	public UnicoreApplicationProvider(final MiddlewareProvider middlewareProvider) {
-		Validate.notNull(middlewareProvider,
-				"middlewareProvider cannot be null, this is probably a bug and should be reported.");
-		this.middlewareProvider = middlewareProvider;
-	}
-
 	@Override
 	public boolean isEditable() {
 		return false;
@@ -62,6 +48,7 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	@Override
 	public Collection<Application> getApplications() {
 		// get the available unicore items
+		final MiddlewareProvider middlewareProvider = Settings.getInstance().getMiddlewareProvider();
 		final Collection<Item> unicoreItems = middlewareProvider.getAvailableItems(UNICORE_RESOURCE_TYPE);
 
 		// extract the applications from each item
@@ -161,6 +148,12 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	@Override
 	public String getName() {
 		return "UNICORE application database (read-only)";
+	}
+
+	@Override
+	public void removeApplication(Application app) throws NotEditableApplicationProviderException {
+		throw new NotEditableApplicationProviderException(
+				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
 	}
 
 }
