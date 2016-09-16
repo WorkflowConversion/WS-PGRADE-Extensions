@@ -1,5 +1,6 @@
 package com.workflowconversion.importer.guse.vaadin.ui;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -12,7 +13,6 @@ import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
@@ -23,7 +23,7 @@ import com.workflowconversion.importer.guse.middleware.MiddlewareProvider;
 /**
  * Panel containing the applications to be displayed in a table, plus controls to add/save applications.
  */
-class ApplicationsViewPanel extends Panel implements ApplicationCommittedListener {
+class ApplicationsViewPanel extends VerticalLayout implements ApplicationCommittedListener {
 
 	private static final long serialVersionUID = -5169354278787921392L;
 
@@ -46,16 +46,17 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 	 *            the middleware provider.
 	 * @param applicationProvider
 	 *            the application provider to interact with the local storage.
-	 * @param editable
-	 *            whether the table with applications will be editable.
+	 * @param editableWhenPossible
+	 *            whether the table with applications will be editable, provided the application provider is not
+	 *            read-only.
 	 */
 	ApplicationsViewPanel(final MiddlewareProvider middlewareProvider, final ApplicationProvider applicationProvider,
-			final boolean editable) {
+			final boolean editableWhenPossible) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		Validate.notNull(applicationProvider, "applicationProvider cannot be null");
 		this.containerDataSource = new ApplicationTableContainer(middlewareProvider, applicationProvider);
 		this.table = new Table(applicationProvider.getName(), containerDataSource);
-		setUpBasicUi();
+		final boolean editable = editableWhenPossible && applicationProvider.isEditable();
 		if (editable) {
 			setUpEditControls();
 			this.addApplicationDialog = new AddApplicationDialog(middlewareProvider);
@@ -63,16 +64,13 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 			// not used at all
 			this.addApplicationDialog = null;
 		}
-		this.table.setEditable(editable);
-		this.containerDataSource.setEditable(editable);
+		setUpBasicUi();
 	}
 
 	private void setUpBasicUi() {
 		setUpTable();
 		final Layout layout = new VerticalLayout();
-		// add the table
-		layout.addComponent(table);
-		this.setContent(layout);
+		super.addComponent(table);
 	}
 
 	private void setUpTable() {
@@ -86,12 +84,12 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 		table.setEditable(false);
 		table.setSortDisabled(false);
 		table.setImmediate(true);
+		// we always start with a non editable table
+		this.table.setEditable(false);
+		this.containerDataSource.setEditable(false);
 	}
 
 	private void setUpEditControls() {
-		// allow multiple selection when editing
-		table.setMultiSelect(false);
-
 		final Button saveButton = createButton("Save", "Save changes");
 		saveButton.addListener(new ClickListener() {
 			private static final long serialVersionUID = 600552795794561068L;
@@ -145,16 +143,20 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 
 		final CheckBox editableCheckBox = new CheckBox("Editable", false);
 		editableCheckBox.setDescription("Enable edition");
+		editableCheckBox.setImmediate(true);
 		editableCheckBox.addListener(new ClickListener() {
 			private static final long serialVersionUID = 6802078670856773823L;
 
 			@Override
 			public void buttonClick(final ClickEvent event) {
 				final boolean enabled = event.getButton().booleanValue();
+				// allow multi selection when editing
+				table.setMultiSelect(enabled);
 				table.setEditable(enabled);
 				containerDataSource.setEditable(enabled);
 				saveButton.setEnabled(enabled);
 				deleteButton.setEnabled(enabled);
+				addButton.setEnabled(enabled);
 			}
 		});
 
@@ -165,7 +167,7 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 		layout.addComponent(deleteButton);
 
 		// append to existing content
-		this.getContent().addComponent(layout);
+		super.addComponent(layout);
 	}
 
 	private Button createButton(final String caption, final String description) {
@@ -173,6 +175,7 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 		button.setDescription(description);
 		button.setEnabled(false);
 		button.setDisableOnClick(true);
+		button.setImmediate(true);
 		return button;
 	}
 
@@ -189,13 +192,18 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 	}
 
 	// deletes the selected application
-	private void deleteButtonClicked() {
+	private synchronized void deleteButtonClicked() {
 		// since multiselect is enabled, we get a set of the selected values
 		final Set<?> selectedRowIds = (Set<?>) table.getValue();
 		if (CollectionUtils.isNotEmpty(selectedRowIds)) {
 			// the app will be deleted from the container via callbacks
-			for (final Object selectedRowId : selectedRowIds) {
-				table.removeItem(selectedRowId.toString());
+			try {
+				for (final Object selectedRowId : selectedRowIds) {
+					table.removeItem(selectedRowId.toString());
+				}
+			} catch (Exception e) {
+				getWindow().showNotification("Could not delete applications", e.getMessage(),
+						Notification.TYPE_ERROR_MESSAGE);
 			}
 		} else {
 			getWindow().showNotification("Please select at least one application to delete",
@@ -205,12 +213,38 @@ class ApplicationsViewPanel extends Panel implements ApplicationCommittedListene
 
 	// saves all changes
 	private void saveButtonClicked() {
-		// the container will figure out which rows are dirty
-		containerDataSource.saveDirtyItems();
+		final Collection<String> validationErrors;
+		synchronized (this) {
+			validationErrors = containerDataSource.getValidationErrors();
+			if (validationErrors.isEmpty()) {
+				try {
+					// the container will figure out which rows are dirty
+					containerDataSource.saveDirtyItems();
+				} catch (Exception e) {
+					getWindow().showNotification("Could not save changes", e.getMessage(),
+							Notification.TYPE_ERROR_MESSAGE);
+				}
+			}
+		}
+		// check if we need to display something
+		if (!validationErrors.isEmpty()) {
+			displayValidationErrors(validationErrors);
+		}
+	}
+
+	private void displayValidationErrors(final Collection<String> validationErrors) {
+		final StringBuilder errorDisplay = new StringBuilder();
+		errorDisplay.append("The following errors occured while validating your changes:<br><ul>");
+		for (final String validationError : validationErrors) {
+			errorDisplay.append("<li>").append(validationError);
+		}
+		errorDisplay.append("</ul>");
+		getWindow().showNotification("Could not save changes", errorDisplay.toString(), Notification.TYPE_ERROR_MESSAGE,
+				true);
 	}
 
 	@Override
-	public void applicationCommitted(final Application application) {
+	public synchronized void applicationCommitted(final Application application) {
 		// the app will be added via callbacks
 		containerDataSource.addApplication(application);
 	}

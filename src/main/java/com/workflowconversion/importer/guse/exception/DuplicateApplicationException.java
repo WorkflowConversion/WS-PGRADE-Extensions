@@ -23,7 +23,6 @@ public class DuplicateApplicationException extends ApplicationException {
 	 */
 	public DuplicateApplicationException(final String message, final Application application) {
 		super(message + ", duplicate application: " + application);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -38,7 +37,6 @@ public class DuplicateApplicationException extends ApplicationException {
 	 */
 	public DuplicateApplicationException(final String message, final Application application, final Throwable cause) {
 		super(message + ", duplicate application: " + application, cause);
-		// TODO Auto-generated constructor stub
 	}
 
 }

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	private final static String SQL_SP_VIEW = "{CALL wfip_sp_get_all_applications()}";
 	private final static String SQL_SP_UPDATE = "{CALL wfip_sp_update_application(?, ?, ?, ?, ?, ?, ?)}";
-	private final static String SQL_SP_ADD = "{CALL wfip_sp_add_application(?, ?, ?, ?, ?, ?)}";
+	private final static String SQL_SP_ADD = "{CALL wfip_sp_add_application(?, ?, ?, ?, ?, ?, ?)}";
 	private final static String SQL_SP_DELETE = "{CALL wfip_sp_delete_application(?)}";
 
 	private final static int SQL_ERROR_DUPLICATE_ENTRY = 1062;
@@ -109,7 +110,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	public void addApplication(final Application app) throws NotEditableApplicationProviderException {
 		// using atomic integer in order to use a final object on which the id can be stored
 		final AtomicInteger id = new AtomicInteger();
-		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_ADD, false) {
+		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_ADD, false, app) {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
@@ -131,7 +132,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	@Override
 	public void saveApplication(final Application app) throws NotEditableApplicationProviderException {
-		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_UPDATE, false) {
+		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_UPDATE, false, app) {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
@@ -145,7 +146,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	@Override
 	public void removeApplication(final Application app) throws NotEditableApplicationProviderException {
-		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_DELETE, false) {
+		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_DELETE, false, app) {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
@@ -166,12 +167,22 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	private void setCommonAddUpdateStoredProcedureParameters(final CallableStatement statement, final Application app)
 			throws SQLException {
-		statement.setString(SQL_SP_PARAM_NAME, app.getName());
-		statement.setString(SQL_SP_PARAM_VERSION, app.getVersion());
-		statement.setString(SQL_SP_PARAM_RESOURCE, app.getResource());
-		statement.setString(SQL_SP_PARAM_RESOURCE_TYPE, app.getResourceType());
-		statement.setString(SQL_SP_PARAM_DESCRIPTION, app.getDescription());
-		statement.setString(SQL_SP_PARAM_PATH, app.getPath());
+		setNullIfNeeded(statement, SQL_SP_PARAM_NAME, app.getName());
+		setNullIfNeeded(statement, SQL_SP_PARAM_VERSION, app.getVersion());
+		setNullIfNeeded(statement, SQL_SP_PARAM_RESOURCE, app.getResource());
+		setNullIfNeeded(statement, SQL_SP_PARAM_RESOURCE_TYPE, app.getResourceType());
+		setNullIfNeeded(statement, SQL_SP_PARAM_DESCRIPTION, app.getDescription());
+		setNullIfNeeded(statement, SQL_SP_PARAM_PATH, app.getPath());
+	}
+
+	private void setNullIfNeeded(final CallableStatement statement, final String parameterName, final String value)
+			throws SQLException {
+		final String finalValue = StringUtils.trimToNull(value);
+		if (finalValue == null) {
+			statement.setNull(parameterName, Types.VARCHAR);
+		} else {
+			statement.setString(parameterName, finalValue);
+		}
 	}
 
 	@Override
@@ -225,7 +236,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 		private final String jdbcCall;
 		// whether rows should be processed and processRow be invoked for each row
 		private final boolean needsRowProcessing;
-		// the app that is to be updated/added
+		// the app that is to be updated/added/removed
 		private final Application app;
 
 		MySQLStoredProcedureCall(final DataSource dataSource, final String jdbcCall, final boolean needsRowProcessing) {
@@ -269,6 +280,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 				}
 				afterExecution(statement);
 			} catch (SQLException e) {
+				LOG.error("An error occurred while accessing the database", e);
 				switch (e.getErrorCode()) {
 				case SQL_ERROR_COLUMN_CANNOT_BE_NULL:
 					throw new InvalidApplicationException("Cannot update/insert an application with NULL values",
