@@ -8,6 +8,10 @@ package com.workflowconversion.importer.guse.appdb;
  */
 public enum ApplicationField {
 	/**
+	 * Id.
+	 */
+	Id(256, "id"),
+	/**
 	 * Name of the application.
 	 */
 	Name(256, "name"),

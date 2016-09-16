@@ -9,6 +9,7 @@ import static com.workflowconversion.importer.guse.vaadin.ui.ApplicationsViewPan
 import static com.workflowconversion.importer.guse.vaadin.ui.ApplicationsViewPanel.COLUMN_VERSION;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -22,6 +23,7 @@ import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.importer.guse.appdb.Application;
@@ -67,7 +69,7 @@ class ApplicationTableContainer extends IndexedContainer {
 	}
 
 	private void setUpProperties() {
-		addContainerProperty(COLUMN_ID, String.class, null);
+		addContainerProperty(COLUMN_ID, Label.class, null);
 		addContainerProperty(COLUMN_NAME, TextField.class, null);
 		addContainerProperty(COLUMN_VERSION, TextField.class, null);
 		addContainerProperty(COLUMN_RESOURCE_TYPE, ComboBox.class, null);
@@ -91,7 +93,7 @@ class ApplicationTableContainer extends IndexedContainer {
 	 *            the application to add, it must contain a valid ID.
 	 * @returns the added item.
 	 */
-	synchronized void addApplication(final Application application) {
+	void addApplication(final Application application) {
 		validateApplicationBeforeUpdate(application);
 		// add first in the container, for it will update the id field
 		applicationProvider.addApplication(application);
@@ -130,7 +132,7 @@ class ApplicationTableContainer extends IndexedContainer {
 	}
 
 	@Override
-	public synchronized boolean removeItem(final Object itemId) {
+	public boolean removeItem(final Object itemId) {
 		// remove from the application provider
 		applicationProvider.removeApplication(toApplication(itemId.toString()));
 		// just in case, remove from the dirty items
@@ -140,9 +142,10 @@ class ApplicationTableContainer extends IndexedContainer {
 	}
 
 	/**
-	 * Saves dirty items on the provider.
+	 * Saves dirty items on the provider. It is assumed that client code checked for validation using the
+	 * {@link #getValidationErrors()} method.
 	 */
-	synchronized void saveDirtyItems() {
+	void saveDirtyItems() {
 		// save items
 		for (final String id : dirtyItemIds) {
 			final Application dirtyApplication = toApplication(id);
@@ -150,6 +153,17 @@ class ApplicationTableContainer extends IndexedContainer {
 		}
 		// clear dirty items
 		dirtyItemIds.clear();
+	}
+
+	/**
+	 * Returns validation errors that can be displayed in a UI.
+	 * 
+	 * @return the validation errors.
+	 */
+	Collection<String> getValidationErrors() {
+		final Collection<String> validationErrors = new LinkedList<String>();
+
+		return validationErrors;
 	}
 
 	private Application toApplication(final Item item) {
@@ -170,13 +184,19 @@ class ApplicationTableContainer extends IndexedContainer {
 	}
 
 	private void fillNewItemFields(final Application application, final Item item) {
-		item.getItemProperty(COLUMN_ID).setValue(application.getId().trim());
-		item.getItemProperty(COLUMN_NAME).setValue(newTextFieldWithValue(application.getName().trim()));
-		item.getItemProperty(COLUMN_VERSION).setValue(newTextFieldWithValue(application.getVersion().trim()));
-		item.getItemProperty(COLUMN_RESOURCE_TYPE).setValue(newResourceComboBox(application.getResourceType()));
-		item.getItemProperty(COLUMN_RESOURCE).setValue(newTextFieldWithValue(application.getResource().trim()));
-		item.getItemProperty(COLUMN_DESCRIPTION).setValue(newTextAreaWithValue(application.getDescription().trim()));
-		item.getItemProperty(COLUMN_PATH).setValue(newTextFieldWithValue(application.getPath().trim()));
+		item.getItemProperty(COLUMN_ID).setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getId())));
+		item.getItemProperty(COLUMN_NAME)
+				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getName())));
+		item.getItemProperty(COLUMN_VERSION)
+				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getVersion())));
+		item.getItemProperty(COLUMN_RESOURCE_TYPE)
+				.setValue(newResourceComboBox(StringUtils.trimToEmpty(application.getResourceType())));
+		item.getItemProperty(COLUMN_RESOURCE)
+				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getResource())));
+		item.getItemProperty(COLUMN_DESCRIPTION)
+				.setValue(newTextAreaWithValue(StringUtils.trimToEmpty(application.getDescription())));
+		item.getItemProperty(COLUMN_PATH)
+				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getPath())));
 		updateEditable(item);
 		setValueChangeListener(item);
 	}
@@ -184,13 +204,23 @@ class ApplicationTableContainer extends IndexedContainer {
 	private TextField newTextFieldWithValue(final String value) {
 		final TextField textField = new TextField();
 		textField.setValue(value);
+		textField.setImmediate(true);
+		textField.setWriteThrough(true);
 		return textField;
 	}
 
 	private TextArea newTextAreaWithValue(final String value) {
 		final TextArea textArea = new TextArea();
 		textArea.setValue(value);
+		textArea.setImmediate(true);
+		textArea.setWriteThrough(true);
 		return textArea;
+	}
+
+	private Label newLabelWithValue(final String value) {
+		final Label label = new Label();
+		label.setValue(value);
+		return label;
 	}
 
 	private ComboBox newResourceComboBox(final String resourceType) {
@@ -198,6 +228,8 @@ class ApplicationTableContainer extends IndexedContainer {
 		for (final Middleware middleware : middlewareProvider.getAllMiddlewares()) {
 			comboBox.addItem(middleware.getType());
 		}
+		comboBox.setImmediate(true);
+		comboBox.setWriteThrough(true);
 		comboBox.select(resourceType);
 		return comboBox;
 	}
@@ -218,9 +250,10 @@ class ApplicationTableContainer extends IndexedContainer {
 
 	private void updateEditable(final Item item) {
 		for (final Object propertyId : item.getItemPropertyIds()) {
-			final Object propertyValue = item.getItemProperty(propertyId);
+			final Object propertyValue = item.getItemProperty(propertyId).getValue();
 			if (propertyValue instanceof Component) {
 				((Component) propertyValue).setReadOnly(!editable);
+				((Component) propertyValue).setEnabled(editable);
 			}
 		}
 	}

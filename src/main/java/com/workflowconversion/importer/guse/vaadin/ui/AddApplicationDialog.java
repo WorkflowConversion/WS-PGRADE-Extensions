@@ -18,6 +18,7 @@ import com.vaadin.ui.Field;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.importer.guse.appdb.Application;
 import com.workflowconversion.importer.guse.appdb.ApplicationField;
@@ -53,16 +54,28 @@ class AddApplicationDialog extends Window {
 	AddApplicationDialog(final MiddlewareProvider middlewareProvider) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		this.middlewareProvider = middlewareProvider;
-		super.setVisible(false);
 		super.setCaption("Add application");
 		super.setModal(true);
 
-		this.application = new Application();
+		this.application = newEmptyApplication();
 		this.applicationForm = new Form();
 		setUpForm();
+		setUpLayout();
 	}
 
-	void setUpForm() {
+	private Application newEmptyApplication() {
+		final Application app = new Application();
+		app.setId("automatically generated");
+		app.setName("");
+		app.setDescription("");
+		app.setPath("");
+		app.setResource("");
+		app.setResourceType("");
+		app.setVersion("");
+		return app;
+	}
+
+	private void setUpForm() {
 		// adapted from: http://demo.vaadin.com/sampler-for-vaadin6#FormBasic
 		applicationForm.setCaption("New application");
 		applicationForm.setWriteThrough(false);
@@ -73,6 +86,7 @@ class AddApplicationDialog extends Window {
 				new String[] { ApplicationField.Name.getMemberName(), ApplicationField.Version.getMemberName(),
 						ApplicationField.Path.getMemberName(), ApplicationField.Description.getMemberName(),
 						ApplicationField.ResourceType.getMemberName(), ApplicationField.Resource.getMemberName() });
+
 		final Button addApplicationButton = new Button("Add", new Button.ClickListener() {
 			private static final long serialVersionUID = -2999251588313488770L;
 
@@ -85,9 +99,12 @@ class AddApplicationDialog extends Window {
 						applicationCommittedListener.applicationCommitted(application);
 					}
 					// close the dialog iff every step was successful
-					getWindow().removeWindow(AddApplicationDialog.this);
+					removeFromParentWindow();
 				} catch (SourceException | InvalidValueException e) {
 					// ignore
+				} catch (Exception e) {
+					getWindow().showNotification("Could not add application", e.getMessage(),
+							Notification.TYPE_ERROR_MESSAGE);
 				}
 			}
 		});
@@ -96,6 +113,17 @@ class AddApplicationDialog extends Window {
 		applicationForm.getFooter().setMargin(true, false, true, true);
 
 		addComponent(applicationForm);
+	}
+
+	void removeFromParentWindow() {
+		getParent().removeWindow(this);
+	}
+
+	void setUpLayout() {
+		final VerticalLayout layout = (VerticalLayout) getContent();
+		layout.setMargin(true);
+		layout.setSpacing(true);
+		layout.setSizeUndefined();
 	}
 
 	void setNewApplicationListener(final ApplicationCommittedListener listener) {
@@ -128,6 +156,11 @@ class AddApplicationDialog extends Window {
 						ApplicationField.Resource.getMaxLength());
 			} else if (applicationField.equals(ApplicationField.ResourceType.getMemberName())) {
 				field = createResourceTypeComboBox();
+			} else if (applicationField.equals(ApplicationField.Id.getMemberName())) {
+				field = createRequiredTextField("Id:", "Unique ID of the application (automatically generated)",
+						ApplicationField.Id.getMaxLength());
+				field.setReadOnly(true);
+				field.setEnabled(false);
 			} else {
 				throw new InvalidApplicationFieldException(applicationField);
 			}
@@ -139,6 +172,7 @@ class AddApplicationDialog extends Window {
 			resourceTypeComboBox.setInputPrompt("Please select a resource type");
 			resourceTypeComboBox.setWidth(COMMON_FIELD_WIDTH);
 			setRequired(resourceTypeComboBox, "Plese select a resource type");
+			resourceTypeComboBox.addValidator(new NonBlankStringValidator("Please select a resource type"));
 			// add all of the possible resource types
 			for (final Middleware middleware : middlewareProvider.getAllMiddlewares()) {
 				resourceTypeComboBox.addItem(middleware.getType());
@@ -174,9 +208,13 @@ class AddApplicationDialog extends Window {
 		private static final long serialVersionUID = 8476005512295626122L;
 		private final int maxLength;
 
-		public NonBlankMaxLengthStringValidator(final int maxLength) {
-			super("The field cannot be empty, blank, contain only whitespaces or contain more than " + maxLength
-					+ " characters.");
+		private NonBlankMaxLengthStringValidator(final int maxLength) {
+			this("The field cannot be empty, blank, contain only whitespaces or contain more than " + maxLength
+					+ " characters.", maxLength);
+		}
+
+		private NonBlankMaxLengthStringValidator(final String errorMessage, final int maxLength) {
+			super(errorMessage);
 			this.maxLength = maxLength;
 		}
 
@@ -186,6 +224,19 @@ class AddApplicationDialog extends Window {
 				return false;
 			}
 			return StringUtils.isNotBlank(value.toString()) && value.toString().length() <= maxLength;
+		}
+	}
+
+	private static class NonBlankStringValidator extends NonBlankMaxLengthStringValidator {
+
+		private static final long serialVersionUID = 1584625763507132085L;
+
+		private NonBlankStringValidator() {
+			super("The field cannot be empty, blank or contain only whitespaces.", Integer.MAX_VALUE);
+		}
+
+		private NonBlankStringValidator(final String message) {
+			super(message, Integer.MAX_VALUE);
 		}
 	}
 
