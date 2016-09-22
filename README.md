@@ -28,8 +28,16 @@ There are two ways in which you can deploy the portlets on a [WS-PGRADE] instanc
 ### Manually deploying the portlets
 Once you've built the portlets, `ApplicationManager.war`, `WorkflowImporter.war`, you will need to log-in to your [WS-PGRADE] instance as an administrator, then, go through the following steps:
 
-* Access the control panel ![Alt "Control Panel"][deploy1]
-* Locate the _App Manager_ in the control panel bar: ![Alt "Locating the App Manager"][deploy2]
+* Access the control panel 
+
+![Alt "Control Panel"][deploy1]
+
+
+* Locate the _App Manager_ in the control panel bar: 
+
+![Alt "Locating the App Manager"][deploy2]
+
+
 * Click on _Install_: ![Alt "Clicking on Install in the App Manager"][deploy3]
 * Select _File upload_ and then click on the _Choose file_ button: ![Alt "Uploading a portlet"][deploy4]
 * Navigate to the folder on which the portlets were built (typically, under the `target` folder), select one of the portlets and click on the _Install_ button. You will need to repeat this step for each portlet.
