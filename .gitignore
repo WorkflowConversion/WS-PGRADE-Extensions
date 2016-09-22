@@ -8,3 +8,6 @@ target/
 
 # ignore any changes done on the scrapbook
 scrapbook.jpage
+
+# do not upload password information
+deployment.properties
