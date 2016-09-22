@@ -4,13 +4,13 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.workflowconversion</groupId>
-	<artifactId>WS-PGRADE-WorkflowImporter</artifactId>
-	<packaging>war</packaging>
+	<artifactId>WS-PGRADE-Portlets</artifactId>
+	<packaging>pom</packaging>
 	<version>1.0.0-SNAPSHOT</version>
-	<name>gUSE Workflow Importer</name>
-	<url>https://github.com/WorkflowConversion/WorkflowImporter</url>
+	<name>WS-PGRADE Workflow Conversion Portlets</name>
+	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
 
-	<!-- these are likely to change if a different gUSE version is used -->
+	<!-- these are likely to change if a different WS-PGRADE version is used -->
 	<properties>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
@@ -19,6 +19,12 @@
 		<vaadin.version>6.8.12</vaadin.version>
 		<tomcat.version>7.0.55</tomcat.version>
 	</properties>
+
+	<modules>
+		<module>core</module>
+		<module>application-management</module>
+		<module>workflow-import</module>
+	</modules>
 
 	<!-- other repositories -->
 	<repositories>
