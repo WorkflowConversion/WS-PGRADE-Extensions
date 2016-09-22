@@ -10,6 +10,14 @@
     </listener>
     
     <context-param>
+    	<description>
+    		Using UI development mode enables developers to test changes without having to restart
+    		the portal because resources depending on gUSE will be simple mocks.
+    	</description>
+    	<param-name>ui.development.mode</param-name>
+    	<param-value>true</param-value>
+    </context-param>
+    <context-param>
     	<description>Vaadin Theme used</description>
     	<param-name>vaadinTheme</param-name>
     	<param-value>liferay</param-value>
