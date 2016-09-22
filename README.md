@@ -1,8 +1,45 @@
-# Workflow Importer Portlet
-## What is this portlet?
+# WS-PGRADE Workflow Conversion Portlets
+## What are these portlets?
+### The `WorkflowImporter` portlet
+This portlet lets users to import workflows created in [KNIME]. 
+
+Imagine a user that has completed a test workflow in [KNIME] and wants to export it to a [WS-PGRADE] instance by using the [KNIME2gUSE] extension. Let's see a simple example to fully understand the problem that this portlet tries to solve.
+
+A scientist has designed a simple [KNIME] workflow, comprised of two applications: _App1_ and _App2_. Our scientist would like to execute her workflow on a local cluster visible on a [WS-PGRADE] instance. On the scientists computer both applications are located on `/usr/bin`, but this is not necessarily true for the clusters available in the [WS-PGRADE] instance. In fact, _App1_ is accessible only to _cluster1_, while _App2_ is accessible only through _cluster2_.
+
+Our scientist could very well design the same workflow again in [WS-PGRADE], but this is where `WorfklowImporter` comes to save the day, since she would take the exported workflow that was generaded by the [KNIME2gUSE] extension and upload it via the `WorkflowImporter` portlet.
+
+The portlet would then notice that there are two applications, _App1_ and _App2_ being used in the imported workflow and will then display the available applications. Our scientist would select the appropriate version of _App1_ and _App2_, finalize the import and then be able to execute the workflow on a distributed environment, _as if_ she had designed the workflow directly in [WS-PGRADE].
+
+### The `ApplicationManager` portlet
+[WS-PGRADE] is able to communicate with several resource managers, and these managers often lack an application database of sorts. [UNICORE] excels in this aspect and keeps all applications registered in an _incarnation database_, but this seems to be the exception.
+
+This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_.
 
 
-## How can I install the portlet?
+## How can I build the portlets?
+You will need [maven] to build the portlets. After you've installed maven, run the following command to build the portlets:
+
+    $ mvn package
+
+## How can I install the portlets?
+There are two ways in which you can deploy the portlets on a [WS-PGRADE] instance:
+
+### Manually deploying the portlets
+Once you've built the portlets, `ApplicationManager.war`, `WorkflowImporter.war`, you will need to log-in to your [WS-PGRADE] instance as an administrator, then, go through the following steps:
+
+* Access the control panel ![Alt](https://github.com/WorkflowConversion/WorkflowConversion.github.io/blob/master/images/portlets/deploy1.png "Control Panel").
+* Locate the _App Manager_ in the control panel bar ![Alt](https://github.com/WorkflowConversion/WorkflowConversion.github.io/blob/master/images/portlets/deploy2.png "Locating the App Manager").
+* Click on _Install_ ![Alt](https://github.com/WorkflowConversion/WorkflowConversion.github.io/blob/master/images/portlets/deploy3.png "Clicking on Install in the App Manager").
+* Select _File upload_ and then click on the _Choose file_ button ![Alt](https://github.com/WorkflowConversion/WorkflowConversion.github.io/blob/master/images/portlets/deploy4.png "Uploading a portlet").
+* Navigate to the folder on which the portlets were built (typically, under the `target` folder), select one of the portlets and click on the _Install_ button. You will need to repeat this step for each portlet.
+
+### Deploy the portlets as part of the build process
+[maven] can deploy the portlets for you as part of the build process. You will need to create a file, `deployment.properties` (use `deployment.properties.example` as a guide) and then execute [maven] like so:
+
+    $ mvn install
+    
+This command will build the portlets and deploy them for you by copying them into the `deploy` folder of your [WS-PGRADE] instance. 
 
 ## A note about certificates
 As already discussed, this portlet allows you to access a [UNICORE] instance and query its incarnation database (IDB). As you might know, [UNICORE] relies on the use of certificates. Chances are that if your [WS-PGRADE] instance, on which you will install this portlet, can submit jobs on a [UNICORE] grid, then you're good to go. However, we think there is some value in documenting the followed process in order to connect a [WS-PGRADE] instance to a [UNICORE] grid.
@@ -101,3 +138,6 @@ After clicking on the `Save` button, click on the `Middleware settings` tab and 
 [PKCS12]: https://en.wikipedia.org/wiki/PKCS_12
 [PEM]: https://en.wikipedia.org/wiki/Privacy-enhanced_Electronic_Mail
 [keytool]: https://docs.oracle.com/javase/8/docs/technotes/tools/unix/keytool.html
+[maven]: https://maven.apache.org/
+[KNIME]: https://knime.org
+[KNIME2gUSE]: https://github.com/WorkflowConversion/KNIME2gUSE
