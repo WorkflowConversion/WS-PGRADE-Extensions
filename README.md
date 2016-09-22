@@ -32,14 +32,18 @@ Once you've built the portlets, `ApplicationManager.war`, `WorkflowImporter.war`
 
 ![Alt "Control Panel"][deploy1]
 
-
 * Locate the _App Manager_ in the control panel bar: 
 
 ![Alt "Locating the App Manager"][deploy2]
 
+* Click on _Install_: 
 
-* Click on _Install_: ![Alt "Clicking on Install in the App Manager"][deploy3]
-* Select _File upload_ and then click on the _Choose file_ button: ![Alt "Uploading a portlet"][deploy4]
+![Alt "Clicking on Install in the App Manager"][deploy3]
+
+* Select _File upload_ and then click on the _Choose file_ button: 
+
+![Alt "Uploading a portlet"][deploy4]
+
 * Navigate to the folder on which the portlets were built (typically, under the `target` folder), select one of the portlets and click on the _Install_ button. You will need to repeat this step for each portlet.
 
 ### Deploy the portlets as part of the build process
