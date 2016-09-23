@@ -1,0 +1,40 @@
+<project name="WS-PGRADE-Portlets" default="deploy" basedir=".">
+	<description>
+		Script to deploy portlets to a remote liferay instance.
+	</description>
+	<property name="deployment.properties.file" value="deployment.properties"/>
+	
+	<!-- checks that deployment.properties exists -->
+	<target name="resource-check">
+		<available file="${deployment.properties.file}" property="deployment.properties.present"/>
+	</target>
+
+	<!-- if deployment.properties is not found, then this task will terminate the execution of this script -->
+	<target name="fail-if-missing-resources" depends="resource-check" unless="deployment.properties.present">
+		<fail message="Cannot deploy to remote liferay instance! Missing file: ${deployment.properties.file}; Use ${deployment.properties.file}.example as a guide."/>
+	</target>
+
+	<!-- copies a single portlet to the liferay instance -->
+	<target name="copy-portlet">
+		<property file="${deployment.properties.file}"/>
+		<property file="${portlet.dir}/portlet.properties"/>
+		<echo>Deploying ${portlet.name}.war from ${portlet.dir}/target</echo>
+		<scp 
+			file="${portlet.dir}/target/${portlet.name}.war"
+			remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
+			password="${remote.server.password}" trust="true" verbose="false" />
+		<sshexec host="${remote.server}" username="${remote.server.username}"
+			password="${remote.server.password}" trust="true" verbose="false"
+			command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
+	</target>
+
+  	<target name="deploy" depends="fail-if-missing-resources" if="deployment.properties.present">
+		<antcall target="copy-portlet">
+			<param name="portlet.dir" value="application-manager" />
+		</antcall>
+		<antcall target="copy-portlet">
+			<param name="portlet.dir" value="workflow-importer" />
+		</antcall>
+  	</target>
+  	
+</project>

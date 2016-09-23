@@ -10,7 +10,7 @@
 	<name>WS-PGRADE Workflow Conversion Portlets</name>
 	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
 
-	<!-- these are likely to change if a different WS-PGRADE version is used -->
+	<!-- some of these are likely to change if a different WS-PGRADE version is used -->
 	<properties>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
@@ -18,12 +18,15 @@
 		<asm.version>3.5</asm.version>
 		<vaadin.version>6.8.12</vaadin.version>
 		<tomcat.version>7.0.55</tomcat.version>
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
 	</properties>
 
 	<modules>
-		<module>core</module>
-		<module>application-management</module>
-		<module>workflow-import</module>
+		<module>core-lib</module>
+		<module>ui-components</module>
+		<module>application-manager</module>
+		<module>workflow-importer</module>
 	</modules>
 
 	<!-- other repositories -->
@@ -37,13 +40,12 @@
 			was not found in the public maven repositories, so a in-project repository 
 			was created containing the needed jar file -->
 		<repository>
-			<id>WorkflowImporterPortlet_local_repo</id>
+			<id>WorkflowConversion_local_repo</id>
 			<name>Local project Maven repository</name>
 			<url>${project.basedir}/lib/mvnrepo/</url>
 		</repository>
 	</repositories>
 
-	<!-- NOTE: All properties have been defined in build.properties -->
 	<dependencies>
 		<!-- from our in-project maven repository -->
 		<dependency>
@@ -285,64 +287,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>${portlet.name}</finalName>
 		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>properties-maven-plugin</artifactId>
-				<version>1.0.0</version>
-				<executions>
-					<execution>
-						<phase>initialize</phase>
-						<goals>
-							<goal>read-project-properties</goal>
-						</goals>
-						<configuration>
-							<files>
-								<file>${project.basedir}/build.properties</file>
-							</files>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<dependencies>
-					<dependency>
-						<groupId>com.jcraft</groupId>
-						<artifactId>jsch</artifactId>
-						<version>0.1.53</version>
-					</dependency>
-					<dependency>
-						<groupId>org.apache.ant</groupId>
-						<artifactId>ant-jsch</artifactId>
-						<version>1.8.1</version>
-					</dependency>
-				</dependencies>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
-				<executions>
-					<execution>
-						<phase>install</phase>
-						<configuration>
-							<!-- we do a two-step deployment, first we upload the war file, but 
-								we give it a non-deployable extension in order to avoid the annoying 'java.util.zip.ZipException: 
-								error in opening zip file' error, then we change its name -->
-							<target>
-								<!-- portlet.name is defined in build.properties -->
-								<scp file="${project.build.directory}/${portlet.name}.war"
-									remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
-									password="${remote.server.password}" trust="true" verbose="false" />
-								<sshexec host="${remote.server}" username="${remote.server.username}"
-									password="${remote.server.password}" trust="true" verbose="false"
-									command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
-							</target>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -352,14 +297,12 @@
 					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
+			<!-- make sure portlets (war files) get resource filtering -->
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.4</version>
 				<configuration>
 					<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar</packagingExcludes>
-					<filters>
-						<filter>build.properties</filter>
-					</filters>
 					<webResources>
 						<resource>
 							<filtering>true</filtering>

@@ -1,0 +1,192 @@
+package com.workflowconversion.portlet.core.servlet;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.apache.tomcat.jdbc.pool.PoolProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.mysql.jdbc.AbandonedConnectionCleanupThread;
+import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.impl.MockApplicationProvider;
+import com.workflowconversion.portlet.core.app.impl.MySQLApplicationProvider;
+import com.workflowconversion.portlet.core.app.impl.UnicoreApplicationProvider;
+import com.workflowconversion.portlet.core.dbconfig.DatabaseConfigurationProvider;
+import com.workflowconversion.portlet.core.dbconfig.impl.MockDatabaseConfigurationProvider;
+import com.workflowconversion.portlet.core.dbconfig.impl.GUSEDatabaseConfigurationProvider;
+import com.workflowconversion.portlet.core.exception.ApplicationException;
+import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
+import com.workflowconversion.portlet.core.middleware.impl.GUSEMiddlewareProvider;
+import com.workflowconversion.portlet.core.middleware.impl.MockMiddlewareProvider;
+import com.workflowconversion.portlet.core.settings.Settings;
+import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
+import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
+import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
+import com.workflowconversion.portlet.core.validation.impl.GUSEPortletSanityCheck;
+import com.workflowconversion.portlet.core.validation.impl.MockPortletSanityCheck;
+
+/**
+ * Class that deals with cleaning/init up of webapps by reading configuration values from the servlet descriptor
+ * ({@code web.xml}).
+ * 
+ * @author delagarza
+ *
+ */
+public class WorkflowConversionContextListener implements ServletContextListener {
+
+	private static final Logger LOG = LoggerFactory.getLogger(WorkflowConversionContextListener.class);
+
+	@Override
+	public void contextInitialized(final ServletContextEvent servletContextEvent) {
+		LOG.info("Performing initialization tasks for WorkflowImporterPortlet");
+
+		final DatabaseConfigurationProvider databaseConfigurationProvider = extractDatabaseConfigurationProvider(
+				servletContextEvent);
+		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent);
+		final Collection<ApplicationProvider> applicationProviders = extractApplicationProviders(servletContextEvent,
+				databaseConfigurationProvider, middlewareProvider);
+		final String vaadinTheme = extractInitParam("vaadinTheme", servletContextEvent);
+		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
+				servletContextEvent.getServletContext());
+		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
+
+		final Settings.Builder settingsBuilder = new Settings.Builder();
+
+		settingsBuilder.setVaadinTheme(vaadinTheme).setDatabaseConfigurationProvider(databaseConfigurationProvider)
+				.setApplicationProviders(applicationProviders).setStringSimilaritySettings(stringSimilaritySettings)
+				.setMiddlewareProvider(middlewareProvider).setPortletSanityCheck(portletSanityCheck);
+		Settings.setInstance(settingsBuilder.newSettings());
+	}
+
+	private String extractInitParam(final String paramName, final ServletContextEvent servletContextEvent) {
+		return servletContextEvent.getServletContext().getInitParameter(paramName);
+	}
+
+	private <T> T newInstance(final String className, final Class<T> interfaceClass,
+			final Object... constructorParams) {
+		try {
+			// find the class
+			@SuppressWarnings("unchecked")
+			final Class<? extends T> implClass = (Class<T>) Class.forName(className.trim());
+			// find the constructor
+			final Constructor<? extends T> constructor;
+			if (constructorParams.length == 0) {
+				// default constructor
+				constructor = implClass.getConstructor();
+			} else {
+				final Class<?>[] constructorParameterClasses = new Class<?>[constructorParams.length];
+				for (int i = 0; i < constructorParams.length; i++) {
+					constructorParameterClasses[i] = constructorParams[i].getClass();
+				}
+				constructor = implClass.getConstructor(constructorParameterClasses);
+			}
+			if (LOG.isInfoEnabled()) {
+				LOG.info("Obtaining a new instance of " + implClass.getName() + " using the constructor "
+						+ constructor.toGenericString() + " and the following parameters "
+						+ Arrays.toString(constructorParams));
+			}
+			return constructor.newInstance(constructorParams);
+		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException
+				| NoSuchMethodException e) {
+			// make it all fail, it's not safe to keep going
+			throw new ApplicationException("Could not instantiate class with class name " + className, e);
+		}
+	}
+
+	private DatabaseConfigurationProvider extractDatabaseConfigurationProvider(
+			final ServletContextEvent servletContextEvent) {
+		final DatabaseConfigurationProvider databaseConfigurationProvider;
+		if (useMocks(servletContextEvent)) {
+			databaseConfigurationProvider = new MockDatabaseConfigurationProvider();
+		} else {
+			// get an initial pool properties
+			final PoolProperties initialProperties = extractInitialPoolProperties(
+					servletContextEvent.getServletContext());
+			// use the real db config provider
+			databaseConfigurationProvider = new GUSEDatabaseConfigurationProvider(initialProperties);
+		}
+		return databaseConfigurationProvider;
+	}
+
+	private Collection<ApplicationProvider> extractApplicationProviders(final ServletContextEvent servletContextEvent,
+			final DatabaseConfigurationProvider databaseConfigurationProvider,
+			final MiddlewareProvider middlewareProvider) {
+		// find out if we are using mocks
+		final Collection<ApplicationProvider> applicationProviders = new LinkedList<ApplicationProvider>();
+		if (useMocks(servletContextEvent)) {
+			applicationProviders.add(new MockApplicationProvider("Editable mock app provider", true));
+			applicationProviders.add(new MockApplicationProvider("Read-only mock app provider", false));
+		} else {
+			applicationProviders.add(new MySQLApplicationProvider(databaseConfigurationProvider));
+			applicationProviders.add(new UnicoreApplicationProvider(middlewareProvider));
+		}
+		return Collections.unmodifiableCollection(applicationProviders);
+	}
+
+	private PortletSanityCheck extractPortletSanityCheck(final ServletContextEvent servletContextEvent) {
+		final PortletSanityCheck portletSanityCheck;
+		if (useMocks(servletContextEvent)) {
+			portletSanityCheck = new MockPortletSanityCheck();
+		} else {
+			portletSanityCheck = new GUSEPortletSanityCheck();
+		}
+		return portletSanityCheck;
+	}
+
+	private boolean useMocks(final ServletContextEvent servletContextEvent) {
+		return Boolean.parseBoolean(extractInitParam("ui.development.mode", servletContextEvent));
+	}
+
+	private MiddlewareProvider extractMiddlewareProvider(final ServletContextEvent servletContextEvent) {
+		if (useMocks(servletContextEvent)) {
+			return new MockMiddlewareProvider();
+		} else {
+			return new GUSEMiddlewareProvider();
+		}
+	}
+
+	// extracts cut-off score and StringSimilarity algorithm to use
+	private StringSimilaritySettings extractStringSimilaritySettings(ServletContext servletContext) {
+		final StringSimilaritySettings.Builder builder = new StringSimilaritySettings.Builder();
+		builder.setCutOffValue(Double.parseDouble(servletContext.getInitParameter("cutOff.filter.value")))
+				.setAlgorithm(newInstance(servletContext.getInitParameter("stringSimilarityAlgorithm.implementation"),
+						StringSimilarityAlgorithm.class));
+		return builder.newStringSimilaritySettings();
+	}
+
+	// extracts pool properties from web.xml
+	private PoolProperties extractInitialPoolProperties(final ServletContext servletContext) {
+		final PoolProperties poolProperties = new PoolProperties();
+		poolProperties.setValidationInterval(Long.valueOf(servletContext.getInitParameter("pool.validationInterval")));
+		poolProperties.setTimeBetweenEvictionRunsMillis(
+				Integer.valueOf(servletContext.getInitParameter("pool.timeBetweenEviction")));
+		poolProperties.setMaxActive(Integer.valueOf(servletContext.getInitParameter("pool.maxActive")));
+		poolProperties.setMaxIdle(Integer.valueOf(servletContext.getInitParameter("pool.maxIdle")));
+		poolProperties.setMinIdle(Integer.valueOf(servletContext.getInitParameter("pool.minIdle")));
+		poolProperties.setInitialSize(Integer.valueOf(servletContext.getInitParameter("pool.initialSize")));
+		poolProperties.setMaxWait(Integer.valueOf(servletContext.getInitParameter("pool.maxWait")));
+		return poolProperties;
+	}
+
+	@Override
+	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+		LOG.info("Performing cleanup tasks for WorkflowImporterPortlet");
+		Settings.clearInstance();
+		// shutdown mysql cleanup thread
+		try {
+			AbandonedConnectionCleanupThread.shutdown();
+		} catch (InterruptedException e) {
+			LOG.error("could not shutdown MySQL's Cleanup Thread: " + e.getMessage());
+			// but there's not much we can do anyway...
+		}
+	}
+}
