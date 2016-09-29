@@ -12,6 +12,7 @@ import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
  */
 public class JaroWrinklerDistanceBasedSimilarity implements StringSimilarityAlgorithm {
 
+	private static final long serialVersionUID = -3436763044536887161L;
 	private final JaroWrinklerDistance algorithm;
 
 	/**

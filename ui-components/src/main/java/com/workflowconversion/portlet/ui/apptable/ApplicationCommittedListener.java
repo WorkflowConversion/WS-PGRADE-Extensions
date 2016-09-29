@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.custom.apptable;
+package com.workflowconversion.portlet.ui.apptable;
 
 import com.workflowconversion.portlet.core.app.Application;
 

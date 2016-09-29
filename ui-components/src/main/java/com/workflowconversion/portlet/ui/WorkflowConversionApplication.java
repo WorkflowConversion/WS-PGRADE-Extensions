@@ -45,9 +45,9 @@ public abstract class WorkflowConversionApplication extends Application implemen
 	private final static Logger LOG = LoggerFactory.getLogger(WorkflowConversionApplication.class);
 
 	protected PortletUser currentUser;
-	private final String vaadinTheme;
-	private final Collection<ApplicationProvider> applicationProviders;
-	private final PortletSanityCheck portletSanityCheck;
+	protected final String vaadinTheme;
+	protected final Collection<ApplicationProvider> applicationProviders;
+	protected final PortletSanityCheck portletSanityCheck;
 
 	/**
 	 * Constructor.

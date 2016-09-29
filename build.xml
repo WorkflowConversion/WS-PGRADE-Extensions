@@ -1,4 +1,5 @@
-<project name="WS-PGRADE-Portlets" default="deploy" basedir=".">
+
+<project name="WS-PGRADE-Portlets" default="deploy-all" basedir=".">
 	<description>
 		Script to deploy portlets to a remote liferay instance.
 	</description>
@@ -8,15 +9,39 @@
 	<target name="resource-check">
 		<available file="${deployment.properties.file}" property="deployment.properties.present"/>
 	</target>
-
-	<!-- if deployment.properties is not found, then this task will terminate the execution of this script -->
-	<target name="fail-if-missing-resources" depends="resource-check" unless="deployment.properties.present">
+	
+	<!-- if deployment.properties is not found, this task will terminate the execution of this script -->
+	<target name="fail-if-missing-properties-file" depends="resource-check" unless="deployment.properties.present">
 		<fail message="Cannot deploy to remote liferay instance! Missing file: ${deployment.properties.file}; Use ${deployment.properties.file}.example as a guide."/>
+	</target>
+	
+	<!-- stops execution of the script if the given property is not defined -->
+	<target name="fail-if-missing-property" unless="${required.property}">
+		<fail message="Cannot deploy to remote liferay instance! Missing property: ${required.property}; Use ${deployment.properties.file}.example as a guide."/>
+	</target>
+
+	<!-- if any of the required properties is missing, this task will terminate the execution of this script  -->
+	<target name="fail-if-missing-properties" depends="fail-if-missing-properties-file">
+		<property file="${deployment.properties.file}"/>
+		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="remote.server" />
+		</antcall>
+		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="remote.server.username" />
+		</antcall>
+		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="remote.server.password" />
+		</antcall>
+		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="remote.server.deploy.path" />
+		</antcall>
+		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="remote.server.tomcat.path" />
+		</antcall>
 	</target>
 
 	<!-- copies a single portlet to the liferay instance -->
-	<target name="copy-portlet">
-		<property file="${deployment.properties.file}"/>
+	<target name="deploy-portlet" depends="fail-if-missing-properties">
 		<property file="${portlet.dir}/portlet.properties"/>
 		<echo>Deploying ${portlet.name}.war from ${portlet.dir}/target</echo>
 		<scp 
@@ -28,13 +53,31 @@
 			command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
 	</target>
 
-  	<target name="deploy" depends="fail-if-missing-resources" if="deployment.properties.present">
-		<antcall target="copy-portlet">
-			<param name="portlet.dir" value="application-manager" />
+	<!-- deploys all portlets -->
+  	<target name="deploy-all" depends="deploy-application-manager, deploy-workflow-importer" />
+	
+	<!-- deploys the application-manager portlet -->
+  	<target name="deploy-application-manager" depends="deploy-theme">
+  		<antcall target="deploy-portlet">
+  			<param name="portlet.dir" value="application-manager"/>
+  		</antcall>
+	</target>
+	
+	<!-- deploys the workflow-importer portlet -->
+	<target name="deploy-workflow-importer" depends="deploy-theme">
+	  	<antcall target="deploy-portlet">
+	  		<param name="portlet.dir" value="workflow-importer" />
 		</antcall>
-		<antcall target="copy-portlet">
-			<param name="portlet.dir" value="workflow-importer" />
-		</antcall>
-  	</target>
-  	
+	</target>
+	
+	<!-- deploys the vaadin theme -->
+	<target name="deploy-theme" depends="fail-if-missing-properties">
+		<echo>Deploying workflowconfersion Vaadin theme</echo>
+		<scp 
+			remoteTodir="${remote.server.username}@${remote.server}:${remote.server.tomcat.path}/webapps/ROOT/html/VAADIN/themes"
+			password="${remote.server.password}" trust="true" verbose="false">
+			<fileset dir="themes"/>
+		</scp>
+	</target>
+	
 </project>

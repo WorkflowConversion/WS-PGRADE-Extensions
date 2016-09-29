@@ -1,5 +1,7 @@
 package com.workflowconversion.portlet.core.text;
 
+import java.io.Serializable;
+
 /**
  * Interface for classes that want to implement a more sophisticated string comparison.
  * 
@@ -8,7 +10,7 @@ package com.workflowconversion.portlet.core.text;
  * @author delagarza
  *
  */
-public interface StringSimilarityAlgorithm {
+public interface StringSimilarityAlgorithm extends Serializable {
 
 	/**
 	 * Compares the two given strings. The score varies between {@code 0} (no similarities) and {@code 1.0} (total

@@ -1,5 +1,6 @@
 package com.workflowconversion.portlet.core.app;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import com.workflowconversion.portlet.core.exception.NotEditableApplicationProviderException;
@@ -11,7 +12,7 @@ import com.workflowconversion.portlet.core.exception.NotEditableApplicationProvi
  * @author delagarza
  *
  */
-public interface ApplicationProvider {
+public interface ApplicationProvider extends Serializable {
 
 	/**
 	 * Whether the provider allows changes.

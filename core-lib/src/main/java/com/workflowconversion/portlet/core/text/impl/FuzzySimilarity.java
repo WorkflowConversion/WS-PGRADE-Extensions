@@ -14,6 +14,7 @@ import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
  */
 public class FuzzySimilarity implements StringSimilarityAlgorithm {
 
+	private static final long serialVersionUID = 1479707721960408L;
 	private final FuzzyScore algorithm;
 
 	/**

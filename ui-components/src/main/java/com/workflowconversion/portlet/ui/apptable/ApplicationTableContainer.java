@@ -1,12 +1,12 @@
-package com.workflowconversion.portlet.ui.custom.apptable;
+package com.workflowconversion.portlet.ui.apptable;
 
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_DESCRIPTION;
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_ID;
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_NAME;
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_PATH;
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_RESOURCE;
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_RESOURCE_TYPE;
-import static com.workflowconversion.portlet.ui.custom.apptable.ApplicationsViewComponent.COLUMN_VERSION;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_DESCRIPTION;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_ID;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_NAME;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_PATH;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_RESOURCE;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_RESOURCE_TYPE;
+import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_VERSION;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -263,6 +263,7 @@ class ApplicationTableContainer extends IndexedContainer {
 		for (final Middleware middleware : middlewareProvider.getAllMiddlewares()) {
 			comboBox.addItem(middleware.getType());
 		}
+		comboBox.setNullSelectionAllowed(false);
 		comboBox.setImmediate(true);
 		comboBox.setWriteThrough(true);
 		comboBox.select(resourceType);

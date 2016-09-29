@@ -1,5 +1,7 @@
 package com.workflowconversion.portlet.core.dbconfig;
 
+import java.io.Serializable;
+
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 
 /**
@@ -9,7 +11,7 @@ import org.apache.tomcat.jdbc.pool.PoolProperties;
  * @author delagarza
  *
  */
-public interface DatabaseConfigurationProvider {
+public interface DatabaseConfigurationProvider extends Serializable {
 
 	/**
 	 * Obtains a fully configured pool properties.

@@ -31,6 +31,7 @@ import com.workflowconversion.portlet.core.exception.NotEditableApplicationProvi
  */
 public class MySQLApplicationProvider implements ApplicationProvider {
 
+	private static final long serialVersionUID = 4763135714882557243L;
 	private final static String SQL_SP_VIEW = "{CALL wfip_sp_get_all_applications()}";
 	private final static String SQL_SP_UPDATE = "{CALL wfip_sp_update_application(?, ?, ?, ?, ?, ?, ?)}";
 	private final static String SQL_SP_ADD = "{CALL wfip_sp_add_application(?, ?, ?, ?, ?, ?, ?)}";
@@ -54,8 +55,6 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	private final static String SQL_SP_PARAM_RESOURCE_TYPE = "param_resource_type";
 	private final static String SQL_SP_PARAM_DESCRIPTION = "param_description";
 	private final static String SQL_SP_PARAM_PATH = "param_path";
-
-	private final static String ID_PREFIX = "internal_app_db_id_";
 
 	private final static Logger LOG = LoggerFactory.getLogger(MySQLApplicationProvider.class);
 
@@ -105,7 +104,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 	private Application createApplicationFromResultSet(final ResultSet resultSet) throws SQLException {
 		final Application app = new Application();
-		app.setId(toApplicationId(resultSet.getInt(SQL_COLUMN_ID)));
+		app.setId(Integer.toString(resultSet.getInt(SQL_COLUMN_ID)));
 		app.setName(resultSet.getString(SQL_COLUMN_NAME));
 		app.setVersion(resultSet.getString(SQL_COLUMN_VERSION));
 		app.setResource(resultSet.getString(SQL_COLUMN_RESOURCE));
@@ -135,8 +134,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 		call.performCall();
 
-		final String applicationId = toApplicationId(id.get());
-		app.setId(applicationId);
+		app.setId(Integer.toString(id.get()));
 	}
 
 	@Override
@@ -145,7 +143,7 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
-				statement.setInt(SQL_SP_PARAM_ID, toDatabaseId(app));
+				statement.setInt(SQL_SP_PARAM_ID, Integer.valueOf(app.getId()));
 				setCommonAddUpdateStoredProcedureParameters(statement, app);
 			}
 		};
@@ -159,19 +157,11 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 			@Override
 			void prepareStatement(final CallableStatement statement) throws SQLException {
-				statement.setInt(SQL_SP_PARAM_ID, toDatabaseId(app));
+				statement.setInt(SQL_SP_PARAM_ID, Integer.valueOf(app.getId()));
 			}
 		};
 
 		call.performCall();
-	}
-
-	private int toDatabaseId(final Application application) {
-		return Integer.valueOf(application.getId().substring(ID_PREFIX.length()));
-	}
-
-	private String toApplicationId(final int id) {
-		return ID_PREFIX + id;
 	}
 
 	private void setCommonAddUpdateStoredProcedureParameters(final CallableStatement statement, final Application app)

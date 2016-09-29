@@ -33,6 +33,8 @@ import de.fzj.unicore.wsrflite.xmlbeans.client.RegistryClient;
  */
 public class UnicoreApplicationProvider implements ApplicationProvider {
 
+	private static final long serialVersionUID = 6542266373514172909L;
+
 	private final static Logger LOG = LoggerFactory.getLogger(UnicoreApplicationProvider.class);
 
 	/**

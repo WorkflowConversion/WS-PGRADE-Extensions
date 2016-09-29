@@ -10,6 +10,8 @@ import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
  */
 public class MockPortletSanityCheck implements PortletSanityCheck {
 
+	private static final long serialVersionUID = -8007378101653490710L;
+
 	@Override
 	public boolean isPortletProperlyInitialized() {
 		return true;

@@ -12,6 +12,8 @@ import hu.sztaki.lpds.information.local.PropertyLoader;
  */
 public class GUSEPortletSanityCheck implements PortletSanityCheck {
 
+	private static final long serialVersionUID = 5287735747687486057L;
+
 	@Override
 	public boolean isPortletProperlyInitialized() {
 		// invoke one of gUSE's web services that we know should always return a non-null value

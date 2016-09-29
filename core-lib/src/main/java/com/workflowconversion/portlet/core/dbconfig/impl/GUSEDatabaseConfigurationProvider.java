@@ -24,6 +24,7 @@ import hu.sztaki.lpds.information.local.PropertyLoader;
  */
 public class GUSEDatabaseConfigurationProvider implements DatabaseConfigurationProvider {
 
+	private static final long serialVersionUID = -7720187686401812914L;
 	private static final String GUSE_KEY_DATABASE_DRIVER = "guse.system.database.driver";
 	private static final String GUSE_KEY_DATABASE_URL = "guse.system.database.url";
 	private static final String GUSE_KEY_DATABASE_USER = "guse.system.database.user";

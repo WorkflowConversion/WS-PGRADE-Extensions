@@ -1,5 +1,7 @@
 package com.workflowconversion.portlet.core.text;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang.Validate;
 
 /**
@@ -8,8 +10,9 @@ import org.apache.commons.lang.Validate;
  * @author delagarza
  *
  */
-public class StringSimilaritySettings {
+public class StringSimilaritySettings implements Serializable {
 
+	private static final long serialVersionUID = -9030620585528042849L;
 	private final double cutOffValue;
 	private final StringSimilarityAlgorithm algorithm;
 

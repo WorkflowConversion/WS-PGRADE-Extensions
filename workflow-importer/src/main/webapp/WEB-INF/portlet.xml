@@ -11,7 +11,7 @@
 		<portlet-class>com.vaadin.terminal.gwt.server.ApplicationPortlet2</portlet-class>
 		<init-param>
 			<name>application</name>
-			<value>TBD</value>
+			<value>com.workflowconversion.portlet.workflowimporter.WorkflowImporterApplication</value>
 		</init-param>
 		<expiration-cache>0</expiration-cache>
 		<supports>

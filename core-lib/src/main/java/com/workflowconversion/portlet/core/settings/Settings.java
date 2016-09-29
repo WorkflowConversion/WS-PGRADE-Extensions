@@ -1,5 +1,6 @@
 package com.workflowconversion.portlet.core.settings;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -7,7 +8,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
-import com.workflowconversion.portlet.core.dbconfig.DatabaseConfigurationProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
@@ -18,10 +18,10 @@ import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
  * @author delagarza
  *
  */
-public class Settings {
+public class Settings implements Serializable {
 
+	private static final long serialVersionUID = -1344935177312215690L;
 	private final String vaadinTheme;
-	private final DatabaseConfigurationProvider databaseConfigurationProvider;
 	private final PortletSanityCheck portletSanityCheck;
 	private final Collection<ApplicationProvider> applicationProviders;
 	private final StringSimilaritySettings stringSimilaritySettings;
@@ -72,15 +72,6 @@ public class Settings {
 	}
 
 	/**
-	 * Obtains the database configuration provider.
-	 * 
-	 * @return The database configuration provider.
-	 */
-	public DatabaseConfigurationProvider getDatabaseConfigurationProvider() {
-		return databaseConfigurationProvider;
-	}
-
-	/**
 	 * Obtains the application providers.
 	 * 
 	 * @return The application providers.
@@ -110,13 +101,11 @@ public class Settings {
 		return portletSanityCheck;
 	}
 
-	private Settings(final String vaadinTheme, final DatabaseConfigurationProvider databaseConfigurationProvider,
-			final PortletSanityCheck portletSanityCheck, final Collection<ApplicationProvider> applicationProviders,
+	private Settings(final String vaadinTheme, final PortletSanityCheck portletSanityCheck,
+			final Collection<ApplicationProvider> applicationProviders,
 			final StringSimilaritySettings stringSimilaritySettings, final MiddlewareProvider middlewareProvider) {
 		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
 				"vaadinTheme cannot be null or empty, please use the Builder.setVaadinTheme() method to set a non-blank value");
-		Validate.notNull(databaseConfigurationProvider,
-				"databaseConfigurationProvider cannot be null, please use the Builder.setDatabaseConfigurationProvider() method to set a non-null value");
 		Validate.notNull(portletSanityCheck,
 				"portletSanityCheck cannot be null, please use the Builder.setPortletSanityCheck() method to set a non-null value");
 		Validate.notEmpty(applicationProviders,
@@ -126,7 +115,6 @@ public class Settings {
 		Validate.notNull(middlewareProvider,
 				"middlewareProvider cannot be null, please use the Builder.setMiddlewareProvider() method to set a non-null value");
 		this.vaadinTheme = vaadinTheme;
-		this.databaseConfigurationProvider = databaseConfigurationProvider;
 		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
 		this.portletSanityCheck = portletSanityCheck;
 		this.stringSimilaritySettings = stringSimilaritySettings;
@@ -141,7 +129,6 @@ public class Settings {
 	 */
 	public static class Builder {
 		private String vaadinTheme;
-		private DatabaseConfigurationProvider databaseConfigurationProvider;
 		private Collection<ApplicationProvider> applicationProviders;
 		private PortletSanityCheck portletSanityCheck;
 		private StringSimilaritySettings stringSimilaritySettings;
@@ -156,19 +143,6 @@ public class Settings {
 		 */
 		public Builder setVaadinTheme(final String vaadinTheme) {
 			this.vaadinTheme = vaadinTheme;
-			return this;
-		}
-
-		/**
-		 * Sets the database configuration provider.
-		 * 
-		 * @param databaseConfigurationProvider
-		 *            The database configuration provider.
-		 * @return the instance of {@code this} {@link Builder}.
-		 */
-		public Builder setDatabaseConfigurationProvider(
-				final DatabaseConfigurationProvider databaseConfigurationProvider) {
-			this.databaseConfigurationProvider = databaseConfigurationProvider;
 			return this;
 		}
 
@@ -226,8 +200,8 @@ public class Settings {
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newSettings() {
-			return new Settings(vaadinTheme, databaseConfigurationProvider, portletSanityCheck, applicationProviders,
-					stringSimilaritySettings, middlewareProvider);
+			return new Settings(vaadinTheme, portletSanityCheck, applicationProviders, stringSimilaritySettings,
+					middlewareProvider);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.custom.apptable;
+package com.workflowconversion.portlet.ui.apptable;
 
 import java.util.Collection;
 import java.util.Set;
@@ -28,7 +28,7 @@ import com.workflowconversion.portlet.ui.HorizontalSeparator;
  * Clients are responsible of validating that instances of this class based on a read-only {@link ApplicationProvider}
  * are not editable.
  */
-public class ApplicationsViewComponent extends VerticalLayout implements ApplicationCommittedListener {
+public class ApplicationsTable extends VerticalLayout implements ApplicationCommittedListener {
 
 	private static final long serialVersionUID = -5169354278787921392L;
 
@@ -51,16 +51,24 @@ public class ApplicationsViewComponent extends VerticalLayout implements Applica
 	 *            the application provider to interact with the local storage.
 	 * @param middlewareProvider
 	 *            the middleware provider.
-	 * @param editable
+	 * @param withEditControls
 	 *            whether the table with applications will be editable, regardless whether the passed application
 	 *            provider is editable or not.
 	 */
-	public ApplicationsViewComponent(final ApplicationProvider applicationProvider,
-			final MiddlewareProvider middlewareProvider, final boolean editable) {
+	ApplicationsTable(final ApplicationProvider applicationProvider, final MiddlewareProvider middlewareProvider,
+			final boolean withEditControls) {
 		Validate.notNull(applicationProvider, "applicationProvider cannot be null");
-		this.containerDataSource = new ApplicationTableContainer(applicationProvider, middlewareProvider, editable);
-		this.table = new Table(applicationProvider.getName(), containerDataSource);
-		if (editable) {
+		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
+		// be defensive
+		if (withEditControls && !applicationProvider.isEditable()) {
+			throw new UnsupportedOperationException(
+					"Invalid Parameters: edit controls should not be available in tables displaying applications from a read-only ApplicationProvider.");
+		}
+
+		this.containerDataSource = new ApplicationTableContainer(applicationProvider, middlewareProvider,
+				withEditControls);
+		this.table = new Table();
+		if (withEditControls) {
 			setUpEditControls();
 			this.addApplicationDialog = new AddApplicationDialog(middlewareProvider);
 		} else {
@@ -76,15 +84,18 @@ public class ApplicationsViewComponent extends VerticalLayout implements Applica
 	}
 
 	private void setUpTable() {
+		table.setContainerDataSource(containerDataSource);
 		// make sure the ID column is hidden
 		table.setVisibleColumns(new String[] { COLUMN_NAME, COLUMN_VERSION, COLUMN_DESCRIPTION, COLUMN_RESOURCE,
 				COLUMN_RESOURCE_TYPE, COLUMN_PATH });
+		table.setWidth(100, UNITS_PERCENTAGE);
+		table.setHeight(450, UNITS_PIXELS);
 		table.setSelectable(true);
 		table.setMultiSelect(false);
 		table.setWriteThrough(true);
 		table.setReadThrough(true);
 		table.setEditable(false);
-		table.setSortDisabled(false);
+		table.setSortDisabled(true);
 		table.setImmediate(true);
 		containerDataSource.setEditable(false);
 	}
@@ -132,7 +143,18 @@ public class ApplicationsViewComponent extends VerticalLayout implements Applica
 			}
 		});
 
+		final Button bulkUploadButton = createButton("Bulk upload", "Click to upload a CSV file with applications");
+		bulkUploadButton.addListener(new Button.ClickListener() {
+			private static final long serialVersionUID = 47556748874175883L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				bulkUploadButtonClicked();
+			}
+		});
+
 		final CheckBox editableCheckBox = new CheckBox("Editable", false);
+		editableCheckBox.setWidth(15, UNITS_EM);
 		editableCheckBox.setDescription("Enable edition");
 		editableCheckBox.setImmediate(true);
 		editableCheckBox.addListener(new ClickListener() {
@@ -148,6 +170,7 @@ public class ApplicationsViewComponent extends VerticalLayout implements Applica
 				saveButton.setEnabled(enabled);
 				deleteButton.setEnabled(enabled);
 				addButton.setEnabled(enabled);
+				bulkUploadButton.setEnabled(enabled);
 			}
 		});
 
@@ -162,15 +185,24 @@ public class ApplicationsViewComponent extends VerticalLayout implements Applica
 			}
 		});
 
-		final Layout layout = new HorizontalLayout();
-		layout.addComponent(editableCheckBox);
-		layout.addComponent(saveButton);
-		layout.addComponent(addButton);
-		layout.addComponent(deleteButton);
+		final Layout buttonLayout = new HorizontalLayout();
+		buttonLayout.setHeight(45, UNITS_PIXELS);
+		buttonLayout.addComponent(editableCheckBox);
+		buttonLayout.addComponent(saveButton);
+		buttonLayout.addComponent(addButton);
+		buttonLayout.addComponent(deleteButton);
+		buttonLayout.addComponent(bulkUploadButton);
+
+		final Layout layout = new VerticalLayout();
+		layout.addComponent(buttonLayout);
 		layout.addComponent(new HorizontalSeparator());
 
 		// append to existing content
 		super.addComponent(layout);
+	}
+
+	private void bulkUploadButtonClicked() {
+		// TODO:
 	}
 
 	private Button createButton(final String caption, final String description) {

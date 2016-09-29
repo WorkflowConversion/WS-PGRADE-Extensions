@@ -17,16 +17,15 @@ import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
-import com.workflowconversion.portlet.core.app.impl.MockApplicationProvider;
+import com.workflowconversion.portlet.core.app.impl.InMemoryMockApplicationProvider;
 import com.workflowconversion.portlet.core.app.impl.MySQLApplicationProvider;
 import com.workflowconversion.portlet.core.app.impl.UnicoreApplicationProvider;
 import com.workflowconversion.portlet.core.dbconfig.DatabaseConfigurationProvider;
-import com.workflowconversion.portlet.core.dbconfig.impl.MockDatabaseConfigurationProvider;
 import com.workflowconversion.portlet.core.dbconfig.impl.GUSEDatabaseConfigurationProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.GUSEMiddlewareProvider;
-import com.workflowconversion.portlet.core.middleware.impl.MockMiddlewareProvider;
+import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
@@ -47,13 +46,24 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 	@Override
 	public void contextInitialized(final ServletContextEvent servletContextEvent) {
-		LOG.info("Performing initialization tasks for WorkflowImporterPortlet");
+		LOG.info("Performing initialization tasks for a com.workflowconversion portlet");
+		// warn about using mocks
+		if (useMocks(servletContextEvent)) {
+			LOG.warn("#############################===WARNING===#############################");
+			LOG.warn(
+					"############################# THIS PORTLET HAS BEEN SET IN DEVELOPMENT MODE! #############################");
+			LOG.warn(
+					"############################# MAKE SURE THIS IS NOT A PRODUCTION INSTANCE! #############################");
+			LOG.warn(
+					"############################# UPDATE THE 'ui.development.mode' PARAMETER IN THE SERVLET DESCRIPTOR (web.xml) TO CHANGE THIS PORTLET'S BEHAVIOR #############################");
+			LOG.warn(
+					"############################# A RESTART OF THE WS-PGRADE INSTANCE IS REQUIRED FOR THE CHANGE TO TAKE EFFECT #############################");
+			LOG.warn("#############################################################");
+		}
 
-		final DatabaseConfigurationProvider databaseConfigurationProvider = extractDatabaseConfigurationProvider(
-				servletContextEvent);
 		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent);
 		final Collection<ApplicationProvider> applicationProviders = extractApplicationProviders(servletContextEvent,
-				databaseConfigurationProvider, middlewareProvider);
+				middlewareProvider);
 		final String vaadinTheme = extractInitParam("vaadinTheme", servletContextEvent);
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
@@ -61,9 +71,9 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
-		settingsBuilder.setVaadinTheme(vaadinTheme).setDatabaseConfigurationProvider(databaseConfigurationProvider)
-				.setApplicationProviders(applicationProviders).setStringSimilaritySettings(stringSimilaritySettings)
-				.setMiddlewareProvider(middlewareProvider).setPortletSanityCheck(portletSanityCheck);
+		settingsBuilder.setVaadinTheme(vaadinTheme).setApplicationProviders(applicationProviders)
+				.setStringSimilaritySettings(stringSimilaritySettings).setMiddlewareProvider(middlewareProvider)
+				.setPortletSanityCheck(portletSanityCheck);
 		Settings.setInstance(settingsBuilder.newSettings());
 	}
 
@@ -102,30 +112,22 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		}
 	}
 
-	private DatabaseConfigurationProvider extractDatabaseConfigurationProvider(
-			final ServletContextEvent servletContextEvent) {
-		final DatabaseConfigurationProvider databaseConfigurationProvider;
+	private Collection<ApplicationProvider> extractApplicationProviders(final ServletContextEvent servletContextEvent,
+			final MiddlewareProvider middlewareProvider) {
+		// find out if we are using mocks
+		final Collection<ApplicationProvider> applicationProviders = new LinkedList<ApplicationProvider>();
 		if (useMocks(servletContextEvent)) {
-			databaseConfigurationProvider = new MockDatabaseConfigurationProvider();
+			applicationProviders
+					.add(new InMemoryMockApplicationProvider("Editable mock app provider", middlewareProvider, true));
+			applicationProviders
+					.add(new InMemoryMockApplicationProvider("Read-only mock app provider", middlewareProvider, false));
 		} else {
 			// get an initial pool properties
 			final PoolProperties initialProperties = extractInitialPoolProperties(
 					servletContextEvent.getServletContext());
 			// use the real db config provider
-			databaseConfigurationProvider = new GUSEDatabaseConfigurationProvider(initialProperties);
-		}
-		return databaseConfigurationProvider;
-	}
-
-	private Collection<ApplicationProvider> extractApplicationProviders(final ServletContextEvent servletContextEvent,
-			final DatabaseConfigurationProvider databaseConfigurationProvider,
-			final MiddlewareProvider middlewareProvider) {
-		// find out if we are using mocks
-		final Collection<ApplicationProvider> applicationProviders = new LinkedList<ApplicationProvider>();
-		if (useMocks(servletContextEvent)) {
-			applicationProviders.add(new MockApplicationProvider("Editable mock app provider", true));
-			applicationProviders.add(new MockApplicationProvider("Read-only mock app provider", false));
-		} else {
+			final DatabaseConfigurationProvider databaseConfigurationProvider = new GUSEDatabaseConfigurationProvider(
+					initialProperties);
 			applicationProviders.add(new MySQLApplicationProvider(databaseConfigurationProvider));
 			applicationProviders.add(new UnicoreApplicationProvider(middlewareProvider));
 		}
@@ -148,7 +150,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 	private MiddlewareProvider extractMiddlewareProvider(final ServletContextEvent servletContextEvent) {
 		if (useMocks(servletContextEvent)) {
-			return new MockMiddlewareProvider();
+			return new InMemoryMockMiddlewareProvider();
 		} else {
 			return new GUSEMiddlewareProvider();
 		}
@@ -179,7 +181,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 	@Override
 	public void contextDestroyed(ServletContextEvent servletContextEvent) {
-		LOG.info("Performing cleanup tasks for WorkflowImporterPortlet");
+		LOG.info("Performing cleanup tasks for a com.workflowconversion portlet");
 		Settings.clearInstance();
 		// shutdown mysql cleanup thread
 		try {

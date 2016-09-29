@@ -20,7 +20,7 @@
     <context-param>
     	<description>Vaadin Theme used</description>
     	<param-name>vaadinTheme</param-name>
-    	<param-value>liferay</param-value>
+    	<param-value>workflowconversion</param-value>
     </context-param>
     <context-param>
     	<description>Connection Pool settings: validation interval</description>
@@ -60,7 +60,7 @@
     <context-param>
     	<description>String similarity algorithm used</description>
     	<param-name>stringSimilarityAlgorithm.implementation</param-name>
-    	<param-value>com.workflowconversion.importer.guse.text.impl.FuzzySimilarity</param-value>
+    	<param-value>com.workflowconversion.portlet.core.text.impl.FuzzySimilarity</param-value>
     </context-param>
     <context-param>
     	<description>Cut-off score to use when filtering applications</description>
@@ -81,7 +81,7 @@
 		<init-param>
 			<description>Vaadin application class to start</description>
 			<param-name>application</param-name>
-			<param-value>com.workflowconversion.importer.guse.vaadin.WorkflowImporterApplication</param-value>
+			<param-value>com.workflowconversion.portlet.appmanager.ApplicationManagerApplication</param-value>
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>

@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.custom.apptable;
+package com.workflowconversion.portlet.ui.apptable;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -37,8 +37,8 @@ class AddApplicationDialog extends Window {
 
 	private static final long serialVersionUID = 2514225841272484511L;
 
-	private static final String LARGE_FIELD_WIDTH = "20em";
-	private static final String COMMON_FIELD_WIDTH = "12em";
+	private static final String LARGE_FIELD_WIDTH = "15em";
+	private static final String COMMON_FIELD_WIDTH = "10em";
 
 	private final Form applicationForm;
 	private final Application application;
@@ -170,6 +170,7 @@ class AddApplicationDialog extends Window {
 			final ComboBox resourceTypeComboBox = new ComboBox("Resource type:");
 			resourceTypeComboBox.setInputPrompt("Please select a resource type");
 			resourceTypeComboBox.setWidth(COMMON_FIELD_WIDTH);
+			resourceTypeComboBox.setNullSelectionAllowed(false);
 			setRequired(resourceTypeComboBox, "Plese select a resource type");
 			resourceTypeComboBox.addValidator(new NonBlankStringValidator("Please select a resource type"));
 			// add all of the possible resource types

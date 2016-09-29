@@ -1,0 +1,37 @@
+@import "../runo/styles.css";
+
+/** 
+ * this combination of vaadin+liferay produces "flickering" if no specific height is given
+ * the name of the class must match v-app-[Portlet-Application-Classname] 
+ */
+ 
+.v-app-ApplicationManagerApplication {
+    height: 600px;
+}
+
+.v-app-WorkflowImporterApplication {
+    height: 600px;
+}
+
+.v-button .v-button-wrap,
+.v-disabled.v-button .v-button-wrap { 
+	height: 15px;
+}
+
+.v-disabled {
+	opacity: 0.75;
+	filter: alpha(opacity=75);
+}
+
+.v-app-ApplicationManagerApplication .v-table-cell-wrapper textarea.v-textarea {
+	height: 50px;
+}
+
+span.v-checkbox label {
+	display: inline;
+	padding-left: 5px;
+}
+
+span.v-checkbox input[type=checkbox] {
+	vertical-align: text-top;
+}

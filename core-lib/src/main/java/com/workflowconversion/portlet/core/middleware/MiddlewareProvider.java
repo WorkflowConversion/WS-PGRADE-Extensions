@@ -1,5 +1,6 @@
 package com.workflowconversion.portlet.core.middleware;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import dci.data.Item;
@@ -11,7 +12,7 @@ import dci.data.Middleware;
  * @author delagarza
  *
  */
-public interface MiddlewareProvider {
+public interface MiddlewareProvider extends Serializable {
 
 	/**
 	 * Returns a collection with all the enabled middlewares.

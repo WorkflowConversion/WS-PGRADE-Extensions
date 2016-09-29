@@ -1,20 +1,14 @@
 package com.workflowconversion.portlet.core.middleware.impl;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.workflowconversion.portlet.core.exception.ApplicationException;
-import com.workflowconversion.portlet.core.filter.Filter;
-import com.workflowconversion.portlet.core.filter.impl.FilterFactory;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
-import dci.data.Item;
 import dci.data.Middleware;
 import hu.sztaki.lpds.dcibridge.client.ResourceConfigurationFace;
 import hu.sztaki.lpds.information.local.InformationBase;
@@ -25,8 +19,9 @@ import hu.sztaki.lpds.information.local.InformationBase;
  * @author delagarza
  *
  */
-public class GUSEMiddlewareProvider implements MiddlewareProvider {
+public class GUSEMiddlewareProvider extends AbstractFilteredMiddlewareProvider {
 
+	private static final long serialVersionUID = -8805943511022013993L;
 	private final static Logger LOG = LoggerFactory.getLogger(GUSEMiddlewareProvider.class);
 
 	// this is that dci-bride.xml looks like
@@ -72,44 +67,6 @@ public class GUSEMiddlewareProvider implements MiddlewareProvider {
 	 </middleware>
 	 * </pre>
 	 */
-
-	@Override
-	public Collection<Middleware> getAvailableMiddlewares() {
-		// filter only using availability
-		final FilterFactory middlewareFilter = new FilterFactory();
-		middlewareFilter.setEnabled(true);
-		return middlewareFilter.newMiddlewareFilter().apply(getAllMiddlewares());
-	}
-
-	@Override
-	public Collection<Middleware> getAvailableMiddlewares(final String middlewareType) {
-		Validate.isTrue(StringUtils.isNotBlank(middlewareType),
-				"middlewareType cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
-		// filter using availability and type
-		final FilterFactory middlewareFilter = new FilterFactory();
-		middlewareFilter.setEnabled(true).setType(middlewareType);
-		return middlewareFilter.newMiddlewareFilter().apply(getAllMiddlewares());
-	}
-
-	@Override
-	public Collection<Item> getAvailableItems(final String middlewareType) {
-		// get the middlewares first
-		Validate.isTrue(StringUtils.isNotBlank(middlewareType),
-				"middlewareType cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
-		// filter using availability and type
-		final Filter<Middleware> middlewareFilter = new FilterFactory().setEnabled(true).setType(middlewareType)
-				.newMiddlewareFilter();
-		final Collection<Middleware> availableMiddlewares = middlewareFilter.apply(getAllMiddlewares());
-
-		// filter the available items for each of the available middlewares
-		final Collection<Item> availableItems = new LinkedList<Item>();
-		final Filter<Item> itemFilter = new FilterFactory().setEnabled(true).newItemFilter();
-		for (final Middleware availableMiddleware : availableMiddlewares) {
-			availableItems.addAll(itemFilter.apply(availableMiddleware.getItem()));
-		}
-
-		return availableItems;
-	}
 
 	@Override
 	public Collection<Middleware> getAllMiddlewares() {
