@@ -32,6 +32,14 @@ span.v-checkbox label {
 	padding-left: 5px;
 }
 
+div.v-select-optiongroup {
+	display: inline;
+}
+
 span.v-checkbox input[type=checkbox] {
 	vertical-align: text-top;
+}
+
+.v-table-row-odd {
+	background-color: rgba(186, 214, 236, 0.68);
 }

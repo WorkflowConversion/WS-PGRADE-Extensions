@@ -2,6 +2,8 @@ package com.workflowconversion.portlet.core.middleware.impl;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -60,5 +62,14 @@ public abstract class AbstractFilteredMiddlewareProvider implements MiddlewarePr
 		}
 
 		return availableItems;
+	}
+
+	@Override
+	public Set<String> getAllMiddlewareTypes() {
+		final Set<String> middlewareTypes = new TreeSet<String>();
+		for (final Middleware middleware : getAllMiddlewares()) {
+			middlewareTypes.add(middleware.getType());
+		}
+		return middlewareTypes;
 	}
 }

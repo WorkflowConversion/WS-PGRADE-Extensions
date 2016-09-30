@@ -283,7 +283,12 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>0.1-SNAPSHOT</version>
-		</dependency>		
+		</dependency>
+		<dependency>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-csv</artifactId>
+    		<version>1.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>

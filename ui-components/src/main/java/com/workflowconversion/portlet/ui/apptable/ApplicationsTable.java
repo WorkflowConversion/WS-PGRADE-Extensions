@@ -42,7 +42,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 
 	private final Table table;
 	private final ApplicationTableContainer containerDataSource;
-	private final AddApplicationDialog addApplicationDialog;
+	private final MiddlewareProvider middlewareProvider;
 
 	/**
 	 * Builds a new instance.
@@ -64,16 +64,12 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			throw new UnsupportedOperationException(
 					"Invalid Parameters: edit controls should not be available in tables displaying applications from a read-only ApplicationProvider.");
 		}
-
+		this.middlewareProvider = middlewareProvider;
 		this.containerDataSource = new ApplicationTableContainer(applicationProvider, middlewareProvider,
 				withEditControls);
 		this.table = new Table();
 		if (withEditControls) {
 			setUpEditControls();
-			this.addApplicationDialog = new AddApplicationDialog(middlewareProvider);
-		} else {
-			// not used at all
-			this.addApplicationDialog = null;
 		}
 		setUpBasicUi();
 	}
@@ -129,7 +125,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			}
 		});
 
-		final Button addButton = createButton("Add", "Add application");
+		final Button addButton = createButton("Add...", "Add application");
 		addButton.addListener(new ClickListener() {
 			private static final long serialVersionUID = 9030768358959635995L;
 
@@ -143,18 +139,29 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			}
 		});
 
-		final Button bulkUploadButton = createButton("Bulk upload", "Click to upload a CSV file with applications");
+		final Button bulkUploadButton = createButton("Bulk upload...", "Click to upload a CSV file with applications");
 		bulkUploadButton.addListener(new Button.ClickListener() {
 			private static final long serialVersionUID = 47556748874175883L;
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				bulkUploadButtonClicked();
+				try {
+					bulkUploadButtonClicked();
+				} finally {
+					bulkUploadButton.setEnabled(true);
+				}
 			}
 		});
 
+		final Layout buttonLayout = new HorizontalLayout();
+		buttonLayout.addComponent(saveButton);
+		buttonLayout.addComponent(deleteButton);
+		buttonLayout.addComponent(addButton);
+		buttonLayout.addComponent(bulkUploadButton);
+		buttonLayout.setVisible(false);
+
 		final CheckBox editableCheckBox = new CheckBox("Editable", false);
-		editableCheckBox.setWidth(15, UNITS_EM);
+		editableCheckBox.setWidth(10, UNITS_EM);
 		editableCheckBox.setDescription("Enable edition");
 		editableCheckBox.setImmediate(true);
 		editableCheckBox.addListener(new ClickListener() {
@@ -171,6 +178,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 				deleteButton.setEnabled(enabled);
 				addButton.setEnabled(enabled);
 				bulkUploadButton.setEnabled(enabled);
+				buttonLayout.setVisible(enabled);
 			}
 		});
 
@@ -185,16 +193,13 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			}
 		});
 
-		final Layout buttonLayout = new HorizontalLayout();
-		buttonLayout.setHeight(45, UNITS_PIXELS);
-		buttonLayout.addComponent(editableCheckBox);
-		buttonLayout.addComponent(saveButton);
-		buttonLayout.addComponent(addButton);
-		buttonLayout.addComponent(deleteButton);
-		buttonLayout.addComponent(bulkUploadButton);
+		final Layout controlsLayout = new HorizontalLayout();
+		controlsLayout.setHeight(45, UNITS_PIXELS);
+		controlsLayout.addComponent(editableCheckBox);
+		controlsLayout.addComponent(buttonLayout);
 
 		final Layout layout = new VerticalLayout();
-		layout.addComponent(buttonLayout);
+		layout.addComponent(controlsLayout);
 		layout.addComponent(new HorizontalSeparator());
 
 		// append to existing content
@@ -202,7 +207,14 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 	}
 
 	private void bulkUploadButtonClicked() {
-		// TODO:
+		final BulkUploadApplicationsDialog bulkUploadDialog = new BulkUploadApplicationsDialog(middlewareProvider,
+				this);
+		if (bulkUploadDialog.getParent() != null) {
+			getWindow().showNotification("The 'Bulk Upload Dialog' is already open.",
+					Notification.TYPE_WARNING_MESSAGE);
+		} else {
+			getWindow().addWindow(bulkUploadDialog);
+		}
 	}
 
 	private Button createButton(final String caption, final String description) {
@@ -216,14 +228,12 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 
 	private void addButtonClicked() {
 		// display a window with the application fields
+		final AddApplicationDialog addApplicationDialog = new AddApplicationDialog(middlewareProvider, this);
 		if (addApplicationDialog.getParent() != null) {
 			getWindow().showNotification(
 					"The 'Add Application Dialog' is already open. Please complete the form and then click on the 'Add' button to add a new application.",
 					Notification.TYPE_WARNING_MESSAGE);
 		} else {
-			// register this instance in the application dialog, so we get notified whenever a
-			// valid application has been created
-			addApplicationDialog.setNewApplicationListener(this);
 			getWindow().addWindow(addApplicationDialog);
 		}
 	}

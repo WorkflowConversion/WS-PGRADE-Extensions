@@ -88,7 +88,7 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 		for (final ApplicationProvider applicationProvider : super.applicationProviders) {
 			final Item newItem = applicationProviderSelection.addItem(applicationProviderId);
 			newItem.getItemProperty(PROPERTY_NAME_CAPTION)
-					.setValue(applicationProvider.getName() + (applicationProvider.isEditable() ? "" : "(read-only)"));
+					.setValue(applicationProvider.getName() + (applicationProvider.isEditable() ? "" : " (read-only)"));
 			newItem.getItemProperty(PROPERTY_NAME_ICON)
 					.setValue(applicationProvider.isEditable() ? new ThemeResource("../runo/icons/16/settings.png")
 							: new ThemeResource("../runo/icons/16/lock.png"));

@@ -2,6 +2,7 @@ package com.workflowconversion.portlet.core.middleware;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Set;
 
 import dci.data.Item;
 import dci.data.Middleware;
@@ -47,4 +48,11 @@ public interface MiddlewareProvider extends Serializable {
 	 * @return All of the middlewares present in {@code dci-bridge.xml}.
 	 */
 	public Collection<Middleware> getAllMiddlewares();
+
+	/**
+	 * Obtains a set containing all the possible middleware types.
+	 * 
+	 * @return All of the middleware types.
+	 */
+	public Set<String> getAllMiddlewareTypes();
 }

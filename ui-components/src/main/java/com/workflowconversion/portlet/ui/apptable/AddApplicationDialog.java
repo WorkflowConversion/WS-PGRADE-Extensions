@@ -43,7 +43,7 @@ class AddApplicationDialog extends Window {
 	private final Form applicationForm;
 	private final Application application;
 	private final MiddlewareProvider middlewareProvider;
-	private ApplicationCommittedListener applicationCommittedListener;
+	private final ApplicationCommittedListener listener;
 
 	/**
 	 * Constructor.
@@ -51,14 +51,15 @@ class AddApplicationDialog extends Window {
 	 * @param middlewareProvider
 	 *            The middleware provider.
 	 */
-	AddApplicationDialog(final MiddlewareProvider middlewareProvider) {
+	AddApplicationDialog(final MiddlewareProvider middlewareProvider, final ApplicationCommittedListener listener) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
+		Validate.notNull(listener, "listener cannot be null");
 		super.setCaption("Add application");
 		super.setModal(true);
 		this.middlewareProvider = middlewareProvider;
 		this.application = newEmptyApplication();
 		this.applicationForm = new Form();
-		setUpForm();
+		this.listener = listener;
 		setUpLayout();
 	}
 
@@ -74,7 +75,11 @@ class AddApplicationDialog extends Window {
 		return app;
 	}
 
-	private void setUpForm() {
+	void removeFromParentWindow() {
+		getParent().removeWindow(this);
+	}
+
+	void setUpLayout() {
 		// adapted from: http://demo.vaadin.com/sampler-for-vaadin6#FormBasic
 		applicationForm.setCaption("New application");
 		applicationForm.setWriteThrough(false);
@@ -94,10 +99,8 @@ class AddApplicationDialog extends Window {
 				try {
 					applicationForm.commit();
 					try {
-						// notify the listener that there is a valid application available
-						if (applicationCommittedListener != null) {
-							applicationCommittedListener.applicationCommitted(application);
-						}
+						// notify listeners that there's a committed application
+						listener.applicationCommitted(application);
 					} finally {
 						// always close the dialog
 						removeFromParentWindow();
@@ -111,22 +114,11 @@ class AddApplicationDialog extends Window {
 		applicationForm.getFooter().addComponent(addApplicationButton);
 		applicationForm.getFooter().setMargin(true, false, true, true);
 
-		addComponent(applicationForm);
-	}
-
-	void removeFromParentWindow() {
-		getParent().removeWindow(this);
-	}
-
-	void setUpLayout() {
 		final VerticalLayout layout = (VerticalLayout) getContent();
 		layout.setMargin(true);
 		layout.setSpacing(true);
 		layout.setSizeUndefined();
-	}
-
-	void setNewApplicationListener(final ApplicationCommittedListener listener) {
-		this.applicationCommittedListener = listener;
+		layout.addComponent(applicationForm);
 	}
 
 	private class ApplicationFieldFactory extends DefaultFieldFactory {

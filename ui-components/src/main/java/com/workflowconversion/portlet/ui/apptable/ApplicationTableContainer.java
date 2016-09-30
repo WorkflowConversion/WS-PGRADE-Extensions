@@ -32,8 +32,6 @@ import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.exception.InvalidApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
-import dci.data.Middleware;
-
 /**
  * Data source for the application table. Interacts with an application provider.
  * 
@@ -44,7 +42,7 @@ class ApplicationTableContainer extends IndexedContainer {
 	private static final long serialVersionUID = -9169222187689135218L;
 
 	private final ApplicationProvider applicationProvider;
-	private final MiddlewareProvider middlewareProvider;
+	private final Set<String> validMiddlewareTypes;
 	private final Set<String> dirtyItemIds;
 	// whether it is possible to edit fields
 	private boolean editable;
@@ -66,13 +64,18 @@ class ApplicationTableContainer extends IndexedContainer {
 		Validate.notNull(applicationProvider, "applicationProvider cannot be null");
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		this.applicationProvider = applicationProvider;
-		this.middlewareProvider = middlewareProvider;
 		this.dirtyItemIds = new TreeSet<String>();
+		this.validMiddlewareTypes = middlewareProvider.getAllMiddlewareTypes();
 		this.editable = editable;
 		this.editMode = false;
 
+		fillValidMiddlewareTypes();
 		setUpProperties();
 		setInitialApplications(applicationProvider.getApplications());
+	}
+
+	private void fillValidMiddlewareTypes() {
+
 	}
 
 	private void setUpProperties() {
@@ -131,14 +134,7 @@ class ApplicationTableContainer extends IndexedContainer {
 		Validate.isTrue(StringUtils.isNotBlank(application.getResourceType()),
 				"the resource type of the application cannot be null, empty or contain only whitespace; this is probably a bug and should be reported");
 		final String resourceType = application.getResourceType().toLowerCase().trim();
-		boolean found = false;
-		for (final Middleware middleware : middlewareProvider.getAllMiddlewares()) {
-			if (resourceType.equals(middleware.getType())) {
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
+		if (!validMiddlewareTypes.contains(resourceType)) {
 			throw new InvalidApplicationException("Unrecognized middleware type", application);
 		}
 		Validate.isTrue(StringUtils.isNotBlank(application.getName()),
@@ -260,8 +256,8 @@ class ApplicationTableContainer extends IndexedContainer {
 
 	private ComboBox newResourceComboBox(final String resourceType) {
 		final ComboBox comboBox = new ComboBox();
-		for (final Middleware middleware : middlewareProvider.getAllMiddlewares()) {
-			comboBox.addItem(middleware.getType());
+		for (final String middlewareType : validMiddlewareTypes) {
+			comboBox.addItem(middlewareType);
 		}
 		comboBox.setNullSelectionAllowed(false);
 		comboBox.setImmediate(true);

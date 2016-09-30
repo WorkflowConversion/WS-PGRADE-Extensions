@@ -16,5 +16,5 @@ interface ApplicationCommittedListener {
 	 * @param application
 	 *            the new valid application
 	 */
-	public void applicationCommitted(final Application application);
+	void applicationCommitted(final Application application);
 }
