@@ -157,6 +157,7 @@ class BulkUploadApplicationsDialog extends Window {
 		fileNameLabel.setCaption("File name");
 		fileNameLabel.setWidth(100, UNITS_PERCENTAGE);
 		final ProgressIndicator progressIndicator = new ProgressIndicator();
+		progressIndicator.setValue(0f);
 		progressIndicator.setWidth(100, UNITS_PERCENTAGE);
 		progressIndicator.setCaption("Progress");
 		final Label verboseProgressLabel = new Label();
