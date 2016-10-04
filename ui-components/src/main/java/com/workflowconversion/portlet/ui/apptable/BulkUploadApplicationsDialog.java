@@ -1,18 +1,17 @@
 package com.workflowconversion.portlet.ui.apptable;
 
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.QuoteMode;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,6 @@ import com.vaadin.ui.Upload.StartedEvent;
 import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.workflowconversion.portlet.core.app.Application;
 import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
@@ -56,6 +54,11 @@ class BulkUploadApplicationsDialog extends Window {
 	private static final long serialVersionUID = -2587575066352088585L;
 
 	private final static Logger LOG = LoggerFactory.getLogger(BulkUploadApplicationsDialog.class);
+
+	private final static String FILE_TYPE_TOOLTIP = "<i>TODO: add documentation for file type</i>";
+	private final static String FIRST_ROW_AS_HEADER_TOOLTIP = "<i>TODO: add documentation for header</i>";
+	private final static String QUOTED_VALUES_TOOLTIP = "<i>TODO: add documentation for quoted values</i>";
+	private final static String COLUMN_DELIMITER_TOOLTIP = "<i>TODO: add documentation for column delimiter</i>";
 
 	private File serverSideFile;
 	private final AtomicLong contentLength;
@@ -83,27 +86,34 @@ class BulkUploadApplicationsDialog extends Window {
 		fileTypeComboBox.setImmediate(true);
 		fileTypeComboBox.setWidth(70, UNITS_PIXELS);
 		fileTypeComboBox.select(FileType.CSV);
+		fileTypeComboBox.setDescription(FILE_TYPE_TOOLTIP);
 
 		// csv-specific options
 		final CheckBox firstRowAsHeader = new CheckBox("First row as header", true);
 		firstRowAsHeader.setImmediate(true);
+		firstRowAsHeader.setDescription(FIRST_ROW_AS_HEADER_TOOLTIP);
+
 		final CheckBox quotedValues = new CheckBox("Values are quoted", false);
 		quotedValues.setImmediate(true);
-		final IndexedContainer separatorContainer = new IndexedContainer();
-		separatorContainer.addContainerProperty(PROPERTY_NAME_CAPTION, String.class, null);
-		final ComboBox separatorCombo = new ComboBox("Column delimiter", separatorContainer);
-		separatorCombo.setNullSelectionAllowed(false);
-		separatorCombo.setImmediate(true);
-		separatorCombo.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
-		separatorCombo.setWidth(95, UNITS_PIXELS);
-		int separatorId = 0;
+		quotedValues.setDescription(QUOTED_VALUES_TOOLTIP);
+
+		final IndexedContainer columnDelimiterContainer = new IndexedContainer();
+		columnDelimiterContainer.addContainerProperty(PROPERTY_NAME_CAPTION, String.class, null);
+		final ComboBox columnDelimiterCombo = new ComboBox("Column delimiter", columnDelimiterContainer);
+		columnDelimiterCombo.setNullSelectionAllowed(false);
+		columnDelimiterCombo.setImmediate(true);
+		columnDelimiterCombo.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
+		columnDelimiterCombo.setWidth(95, UNITS_PIXELS);
+		columnDelimiterCombo.setDescription(COLUMN_DELIMITER_TOOLTIP);
 		for (final Delimiter delimiter : Delimiter.values()) {
-			final Item newItem = separatorCombo.addItem(separatorId++);
+			final Item newItem = columnDelimiterCombo.addItem(delimiter);
 			newItem.getItemProperty(PROPERTY_NAME_CAPTION)
-					.setValue(delimiter.name() + ": " + delimiter.getDelimiterAsString());
+					.setValue(delimiter.name() + ": " + delimiter.getDelimiterCharacter());
 		}
+		columnDelimiterCombo.select(Delimiter.Comma);
+
 		final IndexedContainer indexedContainer = getIndexedContainerForHeaders();
-		final Table csvHeaders = new Table("Change the column order by drag and dropping");
+		final Table csvHeaders = new Table("Change the desired column order by drag and dropping");
 		csvHeaders.setEditable(false);
 		csvHeaders.setMultiSelect(false);
 		csvHeaders.setColumnReorderingAllowed(true);
@@ -117,7 +127,7 @@ class BulkUploadApplicationsDialog extends Window {
 		final Layout csvOptions = new HorizontalLayout();
 		csvOptions.addComponent(firstRowAsHeader);
 		csvOptions.addComponent(quotedValues);
-		csvOptions.addComponent(separatorCombo);
+		csvOptions.addComponent(columnDelimiterCombo);
 		csvOptions.setWidth(100, UNITS_PERCENTAGE);
 
 		fileTypeComboBox.addListener(new Property.ValueChangeListener() {
@@ -152,25 +162,22 @@ class BulkUploadApplicationsDialog extends Window {
 		// status/progress panel
 		final Label currentStateLabel = new Label();
 		currentStateLabel.setCaption("Current state");
-		currentStateLabel.setWidth(100, UNITS_PERCENTAGE);
 		final Label fileNameLabel = new Label();
 		fileNameLabel.setCaption("File name");
-		fileNameLabel.setWidth(100, UNITS_PERCENTAGE);
 		final ProgressIndicator progressIndicator = new ProgressIndicator();
 		progressIndicator.setValue(0f);
-		progressIndicator.setWidth(100, UNITS_PERCENTAGE);
+		progressIndicator.setIndeterminate(false);
+		progressIndicator.setEnabled(false);
 		progressIndicator.setCaption("Progress");
 		final Label verboseProgressLabel = new Label();
-		verboseProgressLabel.setWidth(100, UNITS_PERCENTAGE);
 
 		final Layout statusDisplayLayout = new FormLayout();
 		statusDisplayLayout.addComponent(currentStateLabel);
 		statusDisplayLayout.addComponent(fileNameLabel);
 		statusDisplayLayout.addComponent(progressIndicator);
 		statusDisplayLayout.addComponent(verboseProgressLabel);
-		statusDisplayLayout.setWidth(100, UNITS_PERCENTAGE);
-		final Panel statusDisplayPanel = new Panel("Status", statusDisplayLayout);
-		statusDisplayPanel.setWidth(100, UNITS_PERCENTAGE);
+		final Panel statusDisplayPanel = new Panel("Status");
+		statusDisplayPanel.addComponent(statusDisplayLayout);
 
 		// set the listeners
 		upload.addListener(new Upload.StartedListener() {
@@ -180,6 +187,7 @@ class BulkUploadApplicationsDialog extends Window {
 			public void uploadStarted(final StartedEvent event) {
 				errors.clear();
 				contentLength.set(event.getContentLength());
+				progressIndicator.setEnabled(true);
 				progressIndicator.setValue(0f);
 				progressIndicator.setPollingInterval(500);
 				currentStateLabel.setValue("Uploading file");
@@ -204,9 +212,13 @@ class BulkUploadApplicationsDialog extends Window {
 			@Override
 			public void uploadSucceeded(final SucceededEvent event) {
 				currentStateLabel.setValue("Parsing file");
+				progressIndicator.setEnabled(false);
 				progressIndicator.setValue(0f);
 				verboseProgressLabel.setValue("Parsed 0 lines");
-				processFile(serverSideFile, currentStateLabel, verboseProgressLabel, progressIndicator);
+				processFile(serverSideFile, currentStateLabel, verboseProgressLabel, progressIndicator,
+						(FileType) fileTypeComboBox.getValue(), firstRowAsHeader.booleanValue(),
+						quotedValues.booleanValue(), csvHeaders.getVisibleColumns(),
+						(Delimiter) columnDelimiterCombo.getValue());
 			}
 		});
 
@@ -215,6 +227,7 @@ class BulkUploadApplicationsDialog extends Window {
 
 			@Override
 			public void uploadFailed(final FailedEvent event) {
+				progressIndicator.setEnabled(false);
 				currentStateLabel.setValue("Upload failed");
 				showNotification("Upload Applications",
 						"Could not upload file. Reason: " + event.getReason().getMessage(),
@@ -244,78 +257,36 @@ class BulkUploadApplicationsDialog extends Window {
 	}
 
 	void processFile(final File file, final Label currentStateLabel, final Label verboseProgressLabel,
-			final ProgressIndicator progressIndicator) {
-		final Thread processThread = new Thread(new FileProcessor(file, progressIndicator, verboseProgressLabel));
+			final ProgressIndicator progressIndicator, final FileType fileType, final boolean firstRowAsHeader,
+			final boolean quotedValues, final Object[] headers, final Delimiter delimiter) {
+		final AbstractFileProcessor fileProcessor;
+		switch (fileType) {
+		case CSV:
+			CSVFormat csvFormat = CSVFormat.DEFAULT;
+			if (firstRowAsHeader) {
+				csvFormat = csvFormat.withFirstRecordAsHeader();
+			}
+			if (quotedValues) {
+				csvFormat = csvFormat.withQuoteMode(QuoteMode.ALL);
+			}
+			csvFormat = csvFormat.withDelimiter(delimiter.getDelimiterCharacter());
+			final String[] orderedHeaders = new String[headers.length];
+			for (int i = 0; i < headers.length; i++) {
+				orderedHeaders[i] = ((ApplicationField) headers[i]).name();
+			}
+			csvFormat.withHeader(orderedHeaders);
+			fileProcessor = new CSVFileProcessor(file, listener, progressIndicator, verboseProgressLabel, csvFormat,
+					middlewareProvider.getAllMiddlewareTypes());
+			break;
+		case XML:
+			fileProcessor = new XMLFileProcessor(file, listener, progressIndicator, verboseProgressLabel,
+					middlewareProvider.getAllMiddlewareTypes());
+		default:
+			LOG.error("Upload file format not handled: " + fileType);
+			throw new ApplicationException("Unrecognized file format " + fileType);
+		}
+		final Thread processThread = new Thread(fileProcessor);
 		processThread.start();
-	}
-
-	private class FileProcessor implements Runnable {
-
-		private final File serverSideFile;
-		private final Collection<Application> parsedApplications;
-		private final ProgressIndicator progressIndicator;
-		private final Label verboseProgressLabel;
-		private final Set<String> validMiddlewareTypes;
-		// private final CSVFormat csvFormat;
-
-		FileProcessor(final File serverSideFile, final ProgressIndicator progressIndicator,
-				final Label verboseProgressLabel) {
-			this.serverSideFile = serverSideFile;
-			this.progressIndicator = progressIndicator;
-			this.verboseProgressLabel = verboseProgressLabel;
-			this.parsedApplications = new LinkedList<Application>();
-			this.validMiddlewareTypes = middlewareProvider.getAllMiddlewareTypes();
-		}
-
-		@Override
-		public void run() {
-			parseFile();
-			commitApplications();
-		}
-
-		private void parseFile() {
-			try (final BufferedReader reader = new BufferedReader(new FileReader(serverSideFile))) {
-				long processedBytes = 0;
-				long lineNumber = 1;
-				String line = reader.readLine();
-				final StringBuilder parsingErrors = new StringBuilder();
-				while (line != null) {
-					// highly inefficient...
-					processedBytes += line.getBytes().length;
-
-					final Application parsedApplication = parseApplication(line, parsingErrors);
-					if (parsedApplication != null) {
-						parsedApplications.add(parsedApplication);
-					} else {
-						// application could not be parsed
-						errors.add(
-								"Could not parse line number " + lineNumber + ", reason: " + parsingErrors.toString());
-						parsingErrors.setLength(0);
-					}
-
-					progressIndicator.setValue(((float) processedBytes) / contentLength.get());
-					verboseProgressLabel.setValue("Parsed " + lineNumber + " lines");
-
-					line = reader.readLine();
-					lineNumber++;
-				}
-
-			} catch (IOException e) {
-				LOG.error("There was an error while parsing the uploaded file", e);
-				throw new ApplicationException("There was an error while parsing the uploaded file");
-			}
-		}
-
-		private Application parseApplication(final String line, final StringBuilder parsingErrors) {
-			return null;
-		}
-
-		private void commitApplications() {
-			for (final Application parsedApplication : parsedApplications) {
-				listener.applicationCommitted(parsedApplication);
-			}
-		}
-
 	}
 
 	private class FileReceiver implements Receiver {
@@ -339,16 +310,16 @@ class BulkUploadApplicationsDialog extends Window {
 	}
 
 	private enum Delimiter {
-		Comma(","), Tab("\\t"), Pipe("|");
+		Comma(','), Tab('\t'), Pipe('|');
 
-		private final String delimiterStr;
+		private final char delimiterCharacter;
 
-		private Delimiter(final String delimiterStr) {
-			this.delimiterStr = delimiterStr;
+		private Delimiter(final char delimiterCharacter) {
+			this.delimiterCharacter = delimiterCharacter;
 		}
 
-		public String getDelimiterAsString() {
-			return delimiterStr;
+		public char getDelimiterCharacter() {
+			return delimiterCharacter;
 		}
 
 	}
