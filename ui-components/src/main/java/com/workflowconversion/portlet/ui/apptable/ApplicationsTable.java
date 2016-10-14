@@ -20,6 +20,7 @@ import com.workflowconversion.portlet.core.app.Application;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
+import com.workflowconversion.portlet.ui.apptable.upload.BulkUploadApplicationsDialog;
 
 /**
  * Component containing the applications to be displayed in a table, plus controls to add/save application if set on

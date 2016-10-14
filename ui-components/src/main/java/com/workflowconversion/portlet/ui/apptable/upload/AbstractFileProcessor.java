@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.apptable;
+package com.workflowconversion.portlet.ui.apptable.upload;
 
 import java.io.File;
 import java.util.Collection;
@@ -10,10 +10,7 @@ import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.ui.Label;
-import com.vaadin.ui.ProgressIndicator;
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.exception.ApplicationException;
 
 /**
  * Abstract class that contains the common methods for processing bulk uploads.
@@ -21,54 +18,50 @@ import com.workflowconversion.portlet.core.exception.ApplicationException;
  * @author delagarza
  *
  */
-abstract class AbstractFileProcessor implements Runnable {
+public abstract class AbstractFileProcessor {
 
 	private final static Logger LOG = LoggerFactory.getLogger(AbstractFileProcessor.class);
 
-	protected final ApplicationCommittedListener listener;
-	protected final ProgressIndicator progressIndicator;
-	protected final Label verboseProgressLabel;
 	protected final File serverSideFile;
 	protected final Set<String> validMiddlewareTypes;
+	protected final BulkUploadListener listener;
 	private final Collection<Application> parsedApplications;
-	private final Collection<String> errors;
 
-	AbstractFileProcessor(final File serverSideFile, final ApplicationCommittedListener listener,
-			final ProgressIndicator progressIndicator, final Label verboseProgressLabel,
+	/**
+	 * Constructor.
+	 * 
+	 * @param serverSideFile
+	 *            the file on the server to parse.
+	 * @param listener
+	 *            the listener.
+	 * @param validMiddlewareTypes
+	 *            the set of valid middleware types.
+	 */
+	protected AbstractFileProcessor(final File serverSideFile, final BulkUploadListener listener,
 			final Set<String> validMiddlewareTypes) {
 		Validate.notNull(serverSideFile, "serverSideFile cannot be null");
 		Validate.isTrue(serverSideFile.exists(), "serverSideFile does not exist");
 		Validate.notNull(listener, "listener cannot be null");
-		Validate.notNull(progressIndicator, "progressIndicator cannot be null");
-		Validate.notNull(verboseProgressLabel, "verboseProgressLabel cannot be null");
 		Validate.notEmpty(validMiddlewareTypes, "validMiddlewareTypes cannot be null or empty");
 		this.listener = listener;
-		this.progressIndicator = progressIndicator;
-		this.verboseProgressLabel = verboseProgressLabel;
 		this.serverSideFile = serverSideFile;
 		this.parsedApplications = new LinkedList<Application>();
 		this.validMiddlewareTypes = validMiddlewareTypes;
-		this.errors = new LinkedList<String>();
 	}
 
-	@Override
-	public final void run() {
-		verboseProgressLabel.setValue("Parsing file");
+	/**
+	 * Starts parsing of the provided file.
+	 */
+	public final void start() {
 		try {
+			listener.parsingStarted();
 			parseFile(serverSideFile);
 		} catch (Exception e) {
 			LOG.error("Could not parse file from " + serverSideFile.getAbsolutePath(), e);
-			throw new ApplicationException("Could not parse file from " + serverSideFile, e);
+			listener.parsingError("Could not parse uploaded file, reason: " + e.getMessage());
+		} finally {
+			listener.parsingCompleted(parsedApplications);
 		}
-
-		verboseProgressLabel.setValue("Adding applications");
-		progressIndicator.setValue(0f);
-		int addedApplications = 0;
-		for (final Application parsedApplication : parsedApplications) {
-			progressIndicator.setValue(((float) addedApplications) / parsedApplications.size());
-			listener.applicationCommitted(parsedApplication);
-		}
-		verboseProgressLabel.setValue("Processing complete");
 
 	}
 
@@ -77,10 +70,14 @@ abstract class AbstractFileProcessor implements Runnable {
 	 */
 	abstract void parseFile(final File serverSideFile) throws Exception;
 
-	final Collection<String> getProcessingErrors() {
-		return this.errors;
-	}
-
+	/**
+	 * Attempts to add a parsed application to the list of valid, parsed applications.
+	 * 
+	 * @param application
+	 *            the application to add after validation.
+	 * @param lineNumber
+	 *            the current line number.
+	 */
 	final protected void addParsedApplication(final Application application, final long lineNumber) {
 		if (isApplicationValid(application, lineNumber)) {
 			this.parsedApplications.add(application);
@@ -111,7 +108,7 @@ abstract class AbstractFileProcessor implements Runnable {
 		}
 
 		if (error.length() > 0) {
-			errors.add("Line " + lineNumber + ": " + error.toString());
+			listener.parsingError(error.toString(), lineNumber);
 		}
 
 		return error.length() == 0;

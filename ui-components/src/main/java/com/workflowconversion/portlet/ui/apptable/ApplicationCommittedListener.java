@@ -8,7 +8,7 @@ import com.workflowconversion.portlet.core.app.Application;
  * @author delagarza
  *
  */
-interface ApplicationCommittedListener {
+public interface ApplicationCommittedListener {
 
 	/**
 	 * Invoked when a valid application is about to be added.

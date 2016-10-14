@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.apptable;
+package com.workflowconversion.portlet.ui.apptable.upload;
 
 import java.io.File;
 import java.util.Set;
@@ -12,8 +12,6 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.vaadin.ui.Label;
-import com.vaadin.ui.ProgressIndicator;
 import com.workflowconversion.portlet.core.app.Application;
 import com.workflowconversion.portlet.core.app.ApplicationField;
 
@@ -25,10 +23,9 @@ import com.workflowconversion.portlet.core.app.ApplicationField;
  */
 public class XMLFileProcessor extends AbstractFileProcessor {
 
-	XMLFileProcessor(final File serverSideFile, final ApplicationCommittedListener listener,
-			final ProgressIndicator progressIndicator, final Label verboseProgressLabel,
+	public XMLFileProcessor(final File serverSideFile, final BulkUploadListener listener,
 			final Set<String> validMiddlewareTypes) {
-		super(serverSideFile, listener, progressIndicator, verboseProgressLabel, validMiddlewareTypes);
+		super(serverSideFile, listener, validMiddlewareTypes);
 	}
 
 	@Override
@@ -43,7 +40,7 @@ public class XMLFileProcessor extends AbstractFileProcessor {
 		Locator locator;
 		ApplicationField currentField = null;
 		Application currentApplication;
-		StringBuilder currentFieldValue;
+		final StringBuilder currentFieldValue = new StringBuilder();
 		private final static String APPLICATION_NODE_NAME = "application";
 
 		@Override
@@ -56,9 +53,10 @@ public class XMLFileProcessor extends AbstractFileProcessor {
 				final Attributes attributes) throws SAXException {
 			if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
 				currentField = null;
-				currentFieldValue.setLength(0);
 				currentApplication = new Application();
 			}
+			// clear whatever has been stored, as we are about to start a new field
+			currentFieldValue.setLength(0);
 			if (qName.equalsIgnoreCase(ApplicationField.Description.name())) {
 				currentField = ApplicationField.Description;
 			}
@@ -110,18 +108,21 @@ public class XMLFileProcessor extends AbstractFileProcessor {
 
 		@Override
 		public void characters(final char[] ch, final int start, final int length) throws SAXException {
-			switch (currentField) {
-			case Description:
-			case Name:
-			case Path:
-			case Resource:
-			case ResourceType:
-			case Version:
-				currentFieldValue.append(new String(ch, start, length));
-				break;
-			default:
-				// nop
-				break;
+			// ignore characters that don't belong to any field so far
+			if (currentField != null) {
+				switch (currentField) {
+				case Description:
+				case Name:
+				case Path:
+				case Resource:
+				case ResourceType:
+				case Version:
+					currentFieldValue.append(new String(ch, start, length));
+					break;
+				default:
+					// nop
+					break;
+				}
 			}
 		}
 	}
