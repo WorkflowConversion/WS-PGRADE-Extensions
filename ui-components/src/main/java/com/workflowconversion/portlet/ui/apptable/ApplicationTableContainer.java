@@ -1,13 +1,5 @@
 package com.workflowconversion.portlet.ui.apptable;
 
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_DESCRIPTION;
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_ID;
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_NAME;
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_PATH;
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_RESOURCE;
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_RESOURCE_TYPE;
-import static com.workflowconversion.portlet.ui.apptable.ApplicationsTable.COLUMN_VERSION;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Set;
@@ -27,6 +19,7 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.app.Application;
+import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.exception.InvalidApplicationException;
@@ -87,23 +80,23 @@ class ApplicationTableContainer extends IndexedContainer {
 	}
 
 	private void setUpPropertiesWithFields() {
-		addContainerProperty(COLUMN_ID, Label.class, null);
-		addContainerProperty(COLUMN_NAME, TextField.class, null);
-		addContainerProperty(COLUMN_VERSION, TextField.class, null);
-		addContainerProperty(COLUMN_RESOURCE_TYPE, ComboBox.class, null);
-		addContainerProperty(COLUMN_RESOURCE, TextField.class, null);
-		addContainerProperty(COLUMN_DESCRIPTION, TextArea.class, null);
-		addContainerProperty(COLUMN_PATH, TextField.class, null);
+		addContainerProperty(ApplicationField.Id, Label.class, null);
+		addContainerProperty(ApplicationField.Name, TextField.class, null);
+		addContainerProperty(ApplicationField.Version, TextField.class, null);
+		addContainerProperty(ApplicationField.ResourceType, ComboBox.class, null);
+		addContainerProperty(ApplicationField.Resource, TextField.class, null);
+		addContainerProperty(ApplicationField.Description, TextArea.class, null);
+		addContainerProperty(ApplicationField.Path, TextField.class, null);
 	}
 
 	private void setUpPropertiesWithStrings() {
-		addContainerProperty(COLUMN_ID, String.class, null);
-		addContainerProperty(COLUMN_NAME, String.class, null);
-		addContainerProperty(COLUMN_VERSION, String.class, null);
-		addContainerProperty(COLUMN_RESOURCE_TYPE, String.class, null);
-		addContainerProperty(COLUMN_RESOURCE, String.class, null);
-		addContainerProperty(COLUMN_DESCRIPTION, String.class, null);
-		addContainerProperty(COLUMN_PATH, String.class, null);
+		addContainerProperty(ApplicationField.Id, String.class, null);
+		addContainerProperty(ApplicationField.Name, String.class, null);
+		addContainerProperty(ApplicationField.Version, String.class, null);
+		addContainerProperty(ApplicationField.ResourceType, String.class, null);
+		addContainerProperty(ApplicationField.Resource, String.class, null);
+		addContainerProperty(ApplicationField.Description, String.class, null);
+		addContainerProperty(ApplicationField.Path, String.class, null);
 	}
 
 	private void setInitialApplications(final Collection<Application> initialApplications) {
@@ -189,13 +182,13 @@ class ApplicationTableContainer extends IndexedContainer {
 
 	private Application toApplication(final Item item) {
 		final Application application = new Application();
-		application.setId(item.getItemProperty(COLUMN_ID).toString());
-		application.setName(item.getItemProperty(COLUMN_NAME).toString());
-		application.setVersion(item.getItemProperty(COLUMN_VERSION).toString());
-		application.setResourceType(item.getItemProperty(COLUMN_RESOURCE_TYPE).toString());
-		application.setResource(item.getItemProperty(COLUMN_RESOURCE).toString());
-		application.setDescription(item.getItemProperty(COLUMN_DESCRIPTION).toString());
-		application.setPath(item.getItemProperty(COLUMN_PATH).toString());
+		application.setId(item.getItemProperty(ApplicationField.Id).toString());
+		application.setName(item.getItemProperty(ApplicationField.Name).toString());
+		application.setVersion(item.getItemProperty(ApplicationField.Version).toString());
+		application.setResourceType(item.getItemProperty(ApplicationField.ResourceType).toString());
+		application.setResource(item.getItemProperty(ApplicationField.Resource).toString());
+		application.setDescription(item.getItemProperty(ApplicationField.Description).toString());
+		application.setPath(item.getItemProperty(ApplicationField.Path).toString());
 		return application;
 	}
 
@@ -206,29 +199,33 @@ class ApplicationTableContainer extends IndexedContainer {
 
 	private void fillNewItemProperties(final Application application, final Item item) {
 		if (editable) {
-			item.getItemProperty(COLUMN_ID).setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getId())));
-			item.getItemProperty(COLUMN_NAME)
+			item.getItemProperty(ApplicationField.Id)
+					.setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getId())));
+			item.getItemProperty(ApplicationField.Name)
 					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getName())));
-			item.getItemProperty(COLUMN_VERSION)
+			item.getItemProperty(ApplicationField.Version)
 					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getVersion())));
-			item.getItemProperty(COLUMN_RESOURCE_TYPE)
+			item.getItemProperty(ApplicationField.ResourceType)
 					.setValue(newResourceComboBox(StringUtils.trimToEmpty(application.getResourceType())));
-			item.getItemProperty(COLUMN_RESOURCE)
+			item.getItemProperty(ApplicationField.Resource)
 					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getResource())));
-			item.getItemProperty(COLUMN_DESCRIPTION)
+			item.getItemProperty(ApplicationField.Description)
 					.setValue(newTextAreaWithValue(StringUtils.trimToEmpty(application.getDescription())));
-			item.getItemProperty(COLUMN_PATH)
+			item.getItemProperty(ApplicationField.Path)
 					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getPath())));
 			updateEditMode(item);
 			setValueChangeListener(item);
 		} else {
-			item.getItemProperty(COLUMN_ID).setValue(StringUtils.trimToEmpty(application.getId()));
-			item.getItemProperty(COLUMN_NAME).setValue(StringUtils.trimToEmpty(application.getName()));
-			item.getItemProperty(COLUMN_VERSION).setValue(StringUtils.trimToEmpty(application.getVersion()));
-			item.getItemProperty(COLUMN_RESOURCE_TYPE).setValue(StringUtils.trimToEmpty(application.getResourceType()));
-			item.getItemProperty(COLUMN_RESOURCE).setValue(StringUtils.trimToEmpty(application.getResource()));
-			item.getItemProperty(COLUMN_DESCRIPTION).setValue(StringUtils.trimToEmpty(application.getDescription()));
-			item.getItemProperty(COLUMN_PATH).setValue(StringUtils.trimToEmpty(application.getPath()));
+			item.getItemProperty(ApplicationField.Id).setValue(StringUtils.trimToEmpty(application.getId()));
+			item.getItemProperty(ApplicationField.Name).setValue(StringUtils.trimToEmpty(application.getName()));
+			item.getItemProperty(ApplicationField.Version).setValue(StringUtils.trimToEmpty(application.getVersion()));
+			item.getItemProperty(ApplicationField.ResourceType)
+					.setValue(StringUtils.trimToEmpty(application.getResourceType()));
+			item.getItemProperty(ApplicationField.Resource)
+					.setValue(StringUtils.trimToEmpty(application.getResource()));
+			item.getItemProperty(ApplicationField.Description)
+					.setValue(StringUtils.trimToEmpty(application.getDescription()));
+			item.getItemProperty(ApplicationField.Path).setValue(StringUtils.trimToEmpty(application.getPath()));
 		}
 	}
 
@@ -318,7 +315,7 @@ class ApplicationTableContainer extends IndexedContainer {
 					public void valueChange(ValueChangeEvent event) {
 						// this item is now dirty
 						synchronized (ApplicationTableContainer.this) {
-							dirtyItemIds.add(item.getItemProperty(COLUMN_ID).getValue().toString());
+							dirtyItemIds.add(item.getItemProperty(ApplicationField.Id).getValue().toString());
 						}
 					}
 				});

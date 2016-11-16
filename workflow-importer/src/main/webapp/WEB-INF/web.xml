@@ -23,6 +23,11 @@
     	<param-value>workflowconversion</param-value>
     </context-param>
     <context-param>
+    	<description>Server path to use as staging area for user workflows. Each user will get its own folder.</description>
+    	<param-name>workflow.stagingArea.path</param-name>
+    	<param-value>/home/guseuser/guse/stagingArea</param-value>
+    </context-param>
+    <context-param>
     	<description>Connection Pool settings: validation interval</description>
     	<param-name>pool.validationInterval</param-name>
     	<param-value>60000</param-value>

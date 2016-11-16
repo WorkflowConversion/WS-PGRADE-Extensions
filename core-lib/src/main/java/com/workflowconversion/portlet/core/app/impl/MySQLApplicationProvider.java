@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -115,9 +114,8 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 	}
 
 	@Override
-	public void addApplication(final Application app) throws NotEditableApplicationProviderException {
+	public String addApplication(final Application app) throws NotEditableApplicationProviderException {
 		// using atomic integer in order to use a final object on which the id can be stored
-		final AtomicInteger id = new AtomicInteger();
 		final MySQLStoredProcedureCall call = new MySQLStoredProcedureCall(this.dataSource, SQL_SP_ADD, false, app) {
 
 			@Override
@@ -128,13 +126,13 @@ public class MySQLApplicationProvider implements ApplicationProvider {
 
 			@Override
 			void afterExecution(final CallableStatement statement) throws SQLException {
-				id.set(statement.getInt(SQL_SP_PARAM_ID));
+				app.setId(Integer.toString(statement.getInt(SQL_SP_PARAM_ID)));
 			}
 		};
 
 		call.performCall();
 
-		app.setId(Integer.toString(id.get()));
+		return app.getId();
 	}
 
 	@Override

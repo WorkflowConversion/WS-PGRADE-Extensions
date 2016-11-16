@@ -1,5 +1,6 @@
 package com.workflowconversion.portlet.ui.apptable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window.Notification;
 import com.workflowconversion.portlet.core.app.Application;
+import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
@@ -33,17 +35,10 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 
 	private static final long serialVersionUID = -5169354278787921392L;
 
-	static final String COLUMN_ID = "Id";
-	static final String COLUMN_NAME = "Name";
-	static final String COLUMN_VERSION = "Version";
-	static final String COLUMN_RESOURCE_TYPE = "Resource Type";
-	static final String COLUMN_RESOURCE = "Resource";
-	static final String COLUMN_DESCRIPTION = "Description";
-	static final String COLUMN_PATH = "Path";
-
 	private final Table table;
 	private final ApplicationTableContainer containerDataSource;
 	private final MiddlewareProvider middlewareProvider;
+	private final ApplicationField[] visibleColumns;
 
 	/**
 	 * Builds a new instance.
@@ -57,9 +52,10 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 	 *            provider is editable or not.
 	 */
 	ApplicationsTable(final ApplicationProvider applicationProvider, final MiddlewareProvider middlewareProvider,
-			final boolean withEditControls) {
+			final boolean withEditControls, final ApplicationField... visibleColumns) {
 		Validate.notNull(applicationProvider, "applicationProvider cannot be null");
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
+		Validate.notEmpty(visibleColumns, "visibleColumns cannot be null or empty");
 		// be defensive
 		if (withEditControls && !applicationProvider.isEditable()) {
 			throw new UnsupportedOperationException(
@@ -68,6 +64,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		this.middlewareProvider = middlewareProvider;
 		this.containerDataSource = new ApplicationTableContainer(applicationProvider, middlewareProvider,
 				withEditControls);
+		this.visibleColumns = Arrays.copyOf(visibleColumns, visibleColumns.length);
 		this.table = new Table();
 		if (withEditControls) {
 			setUpEditControls();
@@ -82,9 +79,10 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 
 	private void setUpTable() {
 		table.setContainerDataSource(containerDataSource);
-		// make sure the ID column is hidden
-		table.setVisibleColumns(new String[] { COLUMN_NAME, COLUMN_VERSION, COLUMN_DESCRIPTION, COLUMN_RESOURCE,
-				COLUMN_RESOURCE_TYPE, COLUMN_PATH });
+		table.setVisibleColumns(visibleColumns);
+		for (final ApplicationField visibleColumn : visibleColumns) {
+			table.setColumnHeader(visibleColumn, visibleColumn.getDisplayName());
+		}
 		table.setWidth(100, UNITS_PERCENTAGE);
 		table.setHeight(450, UNITS_PIXELS);
 		table.setSelectable(true);
@@ -250,7 +248,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 	}
 
 	// deletes the selected application
-	private synchronized void deleteButtonClicked() {
+	private void deleteButtonClicked() {
 		// since multiselect is enabled, we get a set of the selected values
 		final Set<?> selectedRowIds = (Set<?>) table.getValue();
 		if (CollectionUtils.isNotEmpty(selectedRowIds)) {

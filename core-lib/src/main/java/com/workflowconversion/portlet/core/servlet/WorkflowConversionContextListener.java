@@ -1,5 +1,6 @@
 package com.workflowconversion.portlet.core.servlet;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,12 @@ import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.GUSEPortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.MockPortletSanityCheck;
+import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;
+import com.workflowconversion.portlet.core.workflow.WorkflowProviderFactory;
+import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowExporterFactory;
+import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowProviderFactory;
+import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowExporterFactory;
+import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowProviderFactory;
 
 /**
  * Class that deals with cleaning/init up of webapps by reading configuration values from the servlet descriptor
@@ -68,13 +76,41 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
+		final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass = extractWorkflowProviderFactoryClass(
+				servletContextEvent);
+		final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass = extractWorkflowExporterFactoryClass(
+				servletContextEvent);
+		final String workflowStagingAreaPath = extractInitParam("workflow.stagingArea.path", servletContextEvent);
+		// make sure that the staging area exists
+		if (StringUtils.isNotBlank(workflowStagingAreaPath)) {
+			LOG.info("Creating workflow staging area folder");
+			new File(workflowStagingAreaPath).mkdirs();
+		}
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
-		settingsBuilder.setVaadinTheme(vaadinTheme).setApplicationProviders(applicationProviders)
-				.setStringSimilaritySettings(stringSimilaritySettings).setMiddlewareProvider(middlewareProvider)
-				.setPortletSanityCheck(portletSanityCheck);
+		settingsBuilder.withVaadinTheme(vaadinTheme).withApplicationProviders(applicationProviders)
+				.withStringSimilaritySettings(stringSimilaritySettings).withMiddlewareProvider(middlewareProvider)
+				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
+				.withWorkflowProviderFactoryClass(workflowProviderFactoryClass)
+				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass);
 		Settings.setInstance(settingsBuilder.newSettings());
+	}
+
+	private Class<? extends WorkflowExporterFactory> extractWorkflowExporterFactoryClass(
+			ServletContextEvent servletContextEvent) {
+		if (useMocks(servletContextEvent)) {
+			return MockWorkflowExporterFactory.class;
+		}
+		return DefaultWorkflowExporterFactory.class;
+	}
+
+	private Class<? extends WorkflowProviderFactory> extractWorkflowProviderFactoryClass(
+			ServletContextEvent servletContextEvent) {
+		if (useMocks(servletContextEvent)) {
+			return MockWorkflowProviderFactory.class;
+		}
+		return DefaultWorkflowProviderFactory.class;
 	}
 
 	private String extractInitParam(final String paramName, final ServletContextEvent servletContextEvent) {

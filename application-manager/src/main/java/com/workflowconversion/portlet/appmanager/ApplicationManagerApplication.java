@@ -14,6 +14,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
@@ -94,9 +95,12 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 							: new ThemeResource("../runo/icons/16/lock.png"));
 			final ApplicationsTableBuilder tableBuilder = new ApplicationsTableBuilder();
 			// make the table editable depending on whether the applications provider is editable
-			tableBuilder.setWithEditControls(applicationProvider.isEditable())
-					.setApplicationProvider(applicationProvider)
-					.setMiddlewareProvider(Settings.getInstance().getMiddlewareProvider());
+			// and display all columns
+			tableBuilder.withDisplayEditControls(applicationProvider.isEditable())
+					.withApplicationProvider(applicationProvider)
+					.withMiddlewareProvider(Settings.getInstance().getMiddlewareProvider())
+					.withVisibleColumns(ApplicationField.Name, ApplicationField.Version, ApplicationField.Description,
+							ApplicationField.Resource, ApplicationField.Path, ApplicationField.ResourceType);
 			tableMap.put(applicationProviderId++, tableBuilder.newApplicationsTable());
 		}
 

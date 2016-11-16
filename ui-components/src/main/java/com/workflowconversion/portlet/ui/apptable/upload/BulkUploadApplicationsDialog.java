@@ -272,8 +272,7 @@ public class BulkUploadApplicationsDialog extends Window {
 		final AbstractFileProcessor fileProcessor;
 		switch (fileType) {
 		case CSV:
-			CSVFormat csvFormat = CSVFormat.DEFAULT;
-			csvFormat.withCommentMarker('#');
+			CSVFormat csvFormat = CSVFormat.DEFAULT.withCommentMarker('#');
 
 			final String[] orderedHeaders = new String[headers.length];
 			for (int i = 0; i < headers.length; i++) {
@@ -301,6 +300,8 @@ public class BulkUploadApplicationsDialog extends Window {
 			LOG.error("Upload file format not handled: " + fileType);
 			throw new ApplicationException("Unrecognized file format " + fileType);
 		}
+		// this has to be done in the same thread, otherwise, repaint requests from other thread
+		// will not be processed!
 		fileProcessor.start();
 	}
 
@@ -335,11 +336,13 @@ public class BulkUploadApplicationsDialog extends Window {
 
 		@Override
 		public void parsingCompleted(final Collection<Application> parsedApplications) {
+			int nAddedApplications = 0;
 			try {
-				statusLabel.setValue("Parsed completed, saving parsed applications.");
+				statusLabel.setValue("Parsed " + parsedApplications.size() + " application(s).");
 				for (final Application parsedApplication : parsedApplications) {
 					try {
 						applicationCommittedListener.applicationCommitted(parsedApplication);
+						nAddedApplications++;
 					} catch (Exception e) {
 						LOG.error("Could not add application " + parsedApplication, e);
 						errors.add("Could not add application " + parsedApplication + ", reason: " + e.getMessage());
@@ -348,11 +351,17 @@ public class BulkUploadApplicationsDialog extends Window {
 			} finally {
 				try {
 					if (errors.isEmpty()) {
-						statusLabel.setValue("Processing completed without errors.");
+						final String message = "Parsed and added " + nAddedApplications
+								+ " applications without errors.";
+						statusLabel.setValue(message);
+						getWindow().showNotification(NOTIFICATION_CAPTION, message, Notification.TYPE_TRAY_NOTIFICATION,
+								true);
 					} else {
-						statusLabel.setValue("Processing completed with errors.");
+						final String message = "Parsed and added " + nAddedApplications + " applications, but found "
+								+ errors.size() + " error(s).";
+						statusLabel.setValue(message);
 						final StringBuilder formattedError = new StringBuilder(
-								"<h3>The following errors were detected while processing the uploaded file:</h3><ul>");
+								"<h3>The following errors occurred while processing the uploaded file:</h3><ul>");
 						for (final String error : errors) {
 							formattedError.append("<li>").append(error);
 						}
@@ -362,7 +371,6 @@ public class BulkUploadApplicationsDialog extends Window {
 					}
 				} finally {
 					upload.setEnabled(true);
-					// BulkUploadApplicationsDialog.this.requestRepaint();
 				}
 			}
 		}

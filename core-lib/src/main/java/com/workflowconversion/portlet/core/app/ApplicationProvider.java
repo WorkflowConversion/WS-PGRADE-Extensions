@@ -57,8 +57,9 @@ public interface ApplicationProvider extends Serializable {
 	 *            by the storage.
 	 * @throws NotEditableApplicationProviderException
 	 *             if this provider is not editable.
+	 * @return the id of the added application.
 	 */
-	public void addApplication(final Application app) throws NotEditableApplicationProviderException;
+	public String addApplication(final Application app) throws NotEditableApplicationProviderException;
 
 	/**
 	 * Saves application. If this provider is not editable (i.e., {@link #isEditable()} returns {@code false}),

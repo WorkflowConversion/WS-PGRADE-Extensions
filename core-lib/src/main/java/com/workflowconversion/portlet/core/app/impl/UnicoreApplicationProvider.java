@@ -137,7 +137,7 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	}
 
 	@Override
-	public void addApplication(Application app) throws NotEditableApplicationProviderException {
+	public String addApplication(Application app) throws NotEditableApplicationProviderException {
 		throw new NotEditableApplicationProviderException(
 				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
 	}

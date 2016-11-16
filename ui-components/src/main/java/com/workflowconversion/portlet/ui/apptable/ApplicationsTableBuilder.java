@@ -1,5 +1,8 @@
 package com.workflowconversion.portlet.ui.apptable;
 
+import java.util.Arrays;
+
+import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
@@ -11,19 +14,21 @@ import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
  */
 public class ApplicationsTableBuilder {
 
-	private boolean withEditControls;
+	private boolean displayEditControls;
 	private ApplicationProvider applicationProvider;
 	private MiddlewareProvider middlewareProvider;
+	private ApplicationField[] visibleColumns;
 
 	/**
-	 * Sets whether the table to be built will have edit controls.
+	 * Sets whether the table will display edit controls.
 	 * 
-	 * @param withEditControls
-	 *            whether edit controls are desired.
+	 * @param displayEditControls
+	 *            whether the table will have edit controls.
+	 * 
 	 * @return {@code this} {@link ApplicationsTableBuilder}.
 	 */
-	public ApplicationsTableBuilder setWithEditControls(final boolean withEditControls) {
-		this.withEditControls = withEditControls;
+	public ApplicationsTableBuilder withDisplayEditControls(final boolean displayEditControls) {
+		this.displayEditControls = displayEditControls;
 		return this;
 	}
 
@@ -34,7 +39,7 @@ public class ApplicationsTableBuilder {
 	 *            the application provider.
 	 * @return {@code this} {@link ApplicationsTableBuilder}.
 	 */
-	public ApplicationsTableBuilder setApplicationProvider(final ApplicationProvider applicationProvider) {
+	public ApplicationsTableBuilder withApplicationProvider(final ApplicationProvider applicationProvider) {
 		this.applicationProvider = applicationProvider;
 		return this;
 	}
@@ -46,8 +51,20 @@ public class ApplicationsTableBuilder {
 	 *            the middleware provider.
 	 * @return {@code this} {@link ApplicationsTableBuilder}.
 	 */
-	public ApplicationsTableBuilder setMiddlewareProvider(final MiddlewareProvider middlewareProvider) {
+	public ApplicationsTableBuilder withMiddlewareProvider(final MiddlewareProvider middlewareProvider) {
 		this.middlewareProvider = middlewareProvider;
+		return this;
+	}
+
+	/**
+	 * Sets the visible columns.
+	 * 
+	 * @param visibleColumns
+	 *            a variable sequence of visible columns.
+	 * @return {@code this} {@link ApplicationsTableBuilder}.
+	 */
+	public ApplicationsTableBuilder withVisibleColumns(final ApplicationField... visibleColumns) {
+		this.visibleColumns = Arrays.copyOf(visibleColumns, visibleColumns.length);
 		return this;
 	}
 
@@ -57,7 +74,8 @@ public class ApplicationsTableBuilder {
 	 * @return a new applications table.
 	 */
 	public ApplicationsTable newApplicationsTable() {
-		return new ApplicationsTable(this.applicationProvider, this.middlewareProvider, this.withEditControls);
+		return new ApplicationsTable(this.applicationProvider, this.middlewareProvider, this.displayEditControls,
+				this.visibleColumns);
 	}
 
 }

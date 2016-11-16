@@ -75,6 +75,15 @@ public class PortletUser implements Serializable {
 	}
 
 	/**
+	 * Returns the user id.
+	 * 
+	 * @return the user id.
+	 */
+	public long getUserId() {
+		return liferayUser.getUserId();
+	}
+
+	/**
 	 * Whether this user has the passed role.
 	 * 
 	 * @param role

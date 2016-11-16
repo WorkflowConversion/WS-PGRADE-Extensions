@@ -79,12 +79,12 @@ public class InMemoryMockApplicationProvider implements ApplicationProvider, Ser
 	}
 
 	@Override
-	public void addApplication(final Application app) throws NotEditableApplicationProviderException {
+	public String addApplication(final Application app) throws NotEditableApplicationProviderException {
 		validateEditableBeforeEdition();
 		// assign the id
 		app.setId(Integer.toString(currentApplicationId));
 		applicationMap.put(currentApplicationId, app);
-		currentApplicationId++;
+		return Integer.toHexString(currentApplicationId++);
 	}
 
 	@Override

@@ -8,9 +8,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
+import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;
+import com.workflowconversion.portlet.core.workflow.WorkflowProviderFactory;
 
 /**
  * Simple class that provides application settings that are configured when the application is started up.
@@ -26,6 +29,9 @@ public class Settings implements Serializable {
 	private final Collection<ApplicationProvider> applicationProviders;
 	private final StringSimilaritySettings stringSimilaritySettings;
 	private final MiddlewareProvider middlewareProvider;
+	private final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass;
+	private final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
+	private final String workflowStagingAreaPath;
 	private static Settings INSTANCE;
 
 	/**
@@ -101,24 +107,64 @@ public class Settings implements Serializable {
 		return portletSanityCheck;
 	}
 
+	/**
+	 * @return the workflow exporter factory.
+	 */
+	public WorkflowExporterFactory getWorkflowExporterFactory() {
+		try {
+			return workflowExporterFactoryClass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ApplicationException("Could not instantiate a new WorkflowExporterFactory", e);
+		}
+	}
+
+	/**
+	 * @return the workflow provider factory.
+	 */
+	public WorkflowProviderFactory getWorkflowProviderFactory() {
+		try {
+			return workflowProviderFactoryClass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ApplicationException("Could not instantiate a new WorkflowProviderFactory", e);
+		}
+	}
+
+	/**
+	 * @return the workflow staging area path.
+	 */
+	public String getWorkflowStagingAreaPath() {
+		return workflowStagingAreaPath;
+	}
+
 	private Settings(final String vaadinTheme, final PortletSanityCheck portletSanityCheck,
 			final Collection<ApplicationProvider> applicationProviders,
-			final StringSimilaritySettings stringSimilaritySettings, final MiddlewareProvider middlewareProvider) {
+			final StringSimilaritySettings stringSimilaritySettings, final MiddlewareProvider middlewareProvider,
+			final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass,
+			final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass,
+			final String workflowStagingAreaPath) {
 		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
-				"vaadinTheme cannot be null or empty, please use the Builder.setVaadinTheme() method to set a non-blank value");
+				"vaadinTheme cannot be null or empty, please use the Builder.withVaadinTheme() method to set a non-blank value");
 		Validate.notNull(portletSanityCheck,
-				"portletSanityCheck cannot be null, please use the Builder.setPortletSanityCheck() method to set a non-null value");
+				"portletSanityCheck cannot be null, please use the Builder.withPortletSanityCheck() method to set a non-null value");
 		Validate.notEmpty(applicationProviders,
-				"applicationProviders cannot be null or empty, please use the Builder.setApplicationProviders() method to set a proper value");
+				"applicationProviders cannot be null or empty, please use the Builder.withApplicationProviders() method to set a proper value");
 		Validate.notNull(stringSimilaritySettings,
-				"stringSimilaritySettings cannot be null, please use the Builder.setStringSimilaritySettings() method to set a non-null value");
+				"stringSimilaritySettings cannot be null, please use the Builder.withStringSimilaritySettings() method to set a non-null value");
 		Validate.notNull(middlewareProvider,
-				"middlewareProvider cannot be null, please use the Builder.setMiddlewareProvider() method to set a non-null value");
+				"middlewareProvider cannot be null, please use the Builder.withMiddlewareProvider() method to set a non-null value");
+		Validate.notNull(workflowProviderFactoryClass,
+				"workflowProviderFactoryClass cannot be null, please use the Builder.withWorkflowProviderFactoryClass() method to set a non-null value");
+		Validate.notNull(workflowExporterFactoryClass,
+				"workflowExporterFactoryClass cannot be null, please use the Builder.withWorkflowExporterFactoryClass() method to set a non-null value");
 		this.vaadinTheme = vaadinTheme;
 		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
 		this.portletSanityCheck = portletSanityCheck;
 		this.stringSimilaritySettings = stringSimilaritySettings;
 		this.middlewareProvider = middlewareProvider;
+		this.workflowExporterFactoryClass = workflowExporterFactoryClass;
+		this.workflowProviderFactoryClass = workflowProviderFactoryClass;
+		// this could very well be empty, so no need to validate
+		this.workflowStagingAreaPath = workflowStagingAreaPath;
 	}
 
 	/**
@@ -133,6 +179,9 @@ public class Settings implements Serializable {
 		private PortletSanityCheck portletSanityCheck;
 		private StringSimilaritySettings stringSimilaritySettings;
 		private MiddlewareProvider middlewareProvider;
+		private Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass;
+		private Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
+		private String workflowStagingAreaPath;
 
 		/**
 		 * Sets the vaadin theme.
@@ -141,7 +190,7 @@ public class Settings implements Serializable {
 		 *            The vaadin theme.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder setVaadinTheme(final String vaadinTheme) {
+		public Builder withVaadinTheme(final String vaadinTheme) {
 			this.vaadinTheme = vaadinTheme;
 			return this;
 		}
@@ -153,7 +202,7 @@ public class Settings implements Serializable {
 		 *            The collection of application providers.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder setApplicationProviders(final Collection<ApplicationProvider> applicationProviders) {
+		public Builder withApplicationProviders(final Collection<ApplicationProvider> applicationProviders) {
 			this.applicationProviders = applicationProviders;
 			return this;
 		}
@@ -165,7 +214,7 @@ public class Settings implements Serializable {
 		 *            The string similarity settings.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder setStringSimilaritySettings(final StringSimilaritySettings stringSimilaritySettings) {
+		public Builder withStringSimilaritySettings(final StringSimilaritySettings stringSimilaritySettings) {
 			this.stringSimilaritySettings = stringSimilaritySettings;
 			return this;
 		}
@@ -177,7 +226,7 @@ public class Settings implements Serializable {
 		 *            the middleware provider.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder setMiddlewareProvider(final MiddlewareProvider middlewareProvider) {
+		public Builder withMiddlewareProvider(final MiddlewareProvider middlewareProvider) {
 			this.middlewareProvider = middlewareProvider;
 			return this;
 		}
@@ -189,8 +238,46 @@ public class Settings implements Serializable {
 		 *            the portlet sanity check.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder setPortletSanityCheck(final PortletSanityCheck portletSanityCheck) {
+		public Builder withPortletSanityCheck(final PortletSanityCheck portletSanityCheck) {
 			this.portletSanityCheck = portletSanityCheck;
+			return this;
+		}
+
+		/**
+		 * Sets the workflow exporter factory.
+		 * 
+		 * @param workflowExporterFactoryClass
+		 *            the factory.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withWorkflowExporterFactoryClass(
+				final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass) {
+			this.workflowExporterFactoryClass = workflowExporterFactoryClass;
+			return this;
+		}
+
+		/**
+		 * Sets the workflow provider factory.
+		 * 
+		 * @param workflowProviderFactoryClass
+		 *            the workflow provider factory.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withWorkflowProviderFactoryClass(
+				final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass) {
+			this.workflowProviderFactoryClass = workflowProviderFactoryClass;
+			return this;
+		}
+
+		/**
+		 * Sets the path of the workflow staging area to use.
+		 * 
+		 * @param workflowStagingAreaPath
+		 *            the path to use.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withWorkflowStagingAreaPath(final String workflowStagingAreaPath) {
+			this.workflowStagingAreaPath = workflowStagingAreaPath;
 			return this;
 		}
 
@@ -201,7 +288,8 @@ public class Settings implements Serializable {
 		 */
 		public Settings newSettings() {
 			return new Settings(vaadinTheme, portletSanityCheck, applicationProviders, stringSimilaritySettings,
-					middlewareProvider);
+					middlewareProvider, workflowExporterFactoryClass, workflowProviderFactoryClass,
+					workflowStagingAreaPath);
 		}
 	}
 }
