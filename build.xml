@@ -1,4 +1,3 @@
-
 <project name="WS-PGRADE-Portlets" default="deploy-all" basedir=".">
 	<description>
 		Script to deploy portlets to a remote liferay instance.
@@ -57,27 +56,16 @@
   	<target name="deploy-all" depends="deploy-application-manager, deploy-workflow-importer" />
 	
 	<!-- deploys the application-manager portlet -->
-  	<target name="deploy-application-manager" depends="deploy-theme">
+  	<target name="deploy-application-manager" depends="fail-if-missing-properties">
   		<antcall target="deploy-portlet">
   			<param name="portlet.dir" value="application-manager"/>
   		</antcall>
 	</target>
 	
 	<!-- deploys the workflow-importer portlet -->
-	<target name="deploy-workflow-importer" depends="deploy-theme">
+	<target name="deploy-workflow-importer" depends="fail-if-missing-properties">
 	  	<antcall target="deploy-portlet">
 	  		<param name="portlet.dir" value="workflow-importer" />
 		</antcall>
 	</target>
-	
-	<!-- deploys the vaadin theme -->
-	<target name="deploy-theme" depends="fail-if-missing-properties">
-		<echo>Deploying workflowconfersion Vaadin theme</echo>
-		<scp 
-			remoteTodir="${remote.server.username}@${remote.server}:${remote.server.tomcat.path}/webapps/ROOT/html/VAADIN/themes"
-			password="${remote.server.password}" trust="true" verbose="false">
-			<fileset dir="themes"/>
-		</scp>
-	</target>
-	
 </project>

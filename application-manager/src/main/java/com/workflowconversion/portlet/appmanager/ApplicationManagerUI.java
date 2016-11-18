@@ -7,18 +7,17 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.terminal.Resource;
-import com.vaadin.terminal.ThemeResource;
+import com.vaadin.server.Resource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
-import com.workflowconversion.portlet.ui.WorkflowConversionApplication;
+import com.workflowconversion.portlet.ui.WorkflowConversionUI;
 import com.workflowconversion.portlet.ui.apptable.ApplicationsTable;
 import com.workflowconversion.portlet.ui.apptable.ApplicationsTableBuilder;
 
@@ -28,7 +27,7 @@ import com.workflowconversion.portlet.ui.apptable.ApplicationsTableBuilder;
  * @author delagarza
  *
  */
-public class ApplicationManagerApplication extends WorkflowConversionApplication {
+public class ApplicationManagerUI extends WorkflowConversionUI {
 
 	private static final long serialVersionUID = 2714264868836832769L;
 
@@ -41,7 +40,7 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 	/**
 	 * Constructor.
 	 */
-	public ApplicationManagerApplication() {
+	public ApplicationManagerUI() {
 		super(Settings.getInstance().getVaadinTheme(), Settings.getInstance().getPortletSanityCheck(),
 				Settings.getInstance().getApplicationProviders());
 		this.applicationsTableDisplayPanel = new VerticalLayout();
@@ -49,22 +48,20 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 	}
 
 	@Override
-	protected Window prepareMainWindow() {
-		final Window window = new Window();
+	protected Layout prepareContent() {
 		final Layout layout = new VerticalLayout();
 
 		layout.addComponent(getUIControls());
 		layout.addComponent(new HorizontalSeparator());
 		layout.addComponent(applicationsTableDisplayPanel);
 
-		window.setContent(layout);
-		return window;
+		return layout;
 	}
 
 	private Layout getUIControls() {
 		final Layout layout = new HorizontalLayout();
-		layout.setWidth(100, Window.UNITS_PERCENTAGE);
-		layout.setHeight(70, Window.UNITS_PIXELS);
+		layout.setWidth(100, Unit.PERCENTAGE);
+		layout.setHeight(70, Unit.PERCENTAGE);
 
 		layout.addComponent(getApplicationProviderComboBox());
 
@@ -81,7 +78,7 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 		applicationProviderSelection.setImmediate(true);
 		applicationProviderSelection.setDescription("Select an application database to manage");
 		applicationProviderSelection.setInputPrompt("Select an application database to manage");
-		applicationProviderSelection.setWidth(30, Window.UNITS_EM);
+		applicationProviderSelection.setWidth(30, Unit.EM);
 		applicationProviderSelection.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
 		applicationProviderSelection.setItemIconPropertyId(PROPERTY_NAME_ICON);
 
@@ -104,7 +101,7 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 			tableMap.put(applicationProviderId++, tableBuilder.newApplicationsTable());
 		}
 
-		applicationProviderSelection.addListener(new Property.ValueChangeListener() {
+		applicationProviderSelection.addValueChangeListener(new Property.ValueChangeListener() {
 			private static final long serialVersionUID = 7819796474153825187L;
 
 			@Override
@@ -125,7 +122,6 @@ public class ApplicationManagerApplication extends WorkflowConversionApplication
 		final ApplicationsTable component = tableMap.get(applicationProviderId);
 		applicationsTableDisplayPanel.removeAllComponents();
 		applicationsTableDisplayPanel.addComponent(component);
-		applicationsTableDisplayPanel.requestRepaintAll();
+		applicationsTableDisplayPanel.markAsDirtyRecursive();
 	}
-
 }

@@ -14,19 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.terminal.Resource;
+import com.vaadin.server.Resource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowProvider;
+import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.workflow.export.WorkflowExportDialog;
 import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadDialog;
 import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadedListener;
@@ -38,8 +39,6 @@ import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadedListene
  *
  */
 public class WorkflowView extends VerticalLayout implements WorkflowUploadedListener {
-
-	private static final String NOTIFICATION_TITLE = "Workflow Staging Area";
 
 	private static final long serialVersionUID = 3843347539780676302L;
 
@@ -92,7 +91,7 @@ public class WorkflowView extends VerticalLayout implements WorkflowUploadedList
 		final Button deleteButton = createButton("Delete", "Delete selected workflows");
 		final Button exportButton = createButton("Export...", "Export selected workflow");
 
-		uploadButton.addListener(new Button.ClickListener() {
+		uploadButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = 3920929249905705698L;
 
 			@Override
@@ -104,7 +103,7 @@ public class WorkflowView extends VerticalLayout implements WorkflowUploadedList
 				}
 			}
 		});
-		saveButton.addListener(new Button.ClickListener() {
+		saveButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = 6892804972706972688L;
 
 			@Override
@@ -116,7 +115,7 @@ public class WorkflowView extends VerticalLayout implements WorkflowUploadedList
 				}
 			}
 		});
-		deleteButton.addListener(new Button.ClickListener() {
+		deleteButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = 7562987128061971035L;
 
 			@Override
@@ -128,7 +127,7 @@ public class WorkflowView extends VerticalLayout implements WorkflowUploadedList
 				}
 			}
 		});
-		exportButton.addListener(new Button.ClickListener() {
+		exportButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = -5910585413586746243L;
 
 			@Override
@@ -174,19 +173,17 @@ public class WorkflowView extends VerticalLayout implements WorkflowUploadedList
 		if (selectedItems.size() == 1) {
 			final Workflow workflowToExport = currentlyDisplayedWorkflows.get(selectedItems.iterator().next());
 			final WorkflowExportDialog workflowExportDialog = new WorkflowExportDialog(workflowToExport, portletUser);
-			getWindow().addWindow(workflowExportDialog);
+			UI.getCurrent().addWindow(workflowExportDialog);
 
 		} else {
-			getWindow().showNotification(NOTIFICATION_TITLE, "Please select a single workflow to export.",
-					Notification.TYPE_WARNING_MESSAGE);
+			NotificationUtils.displayMessage("Please select a single workflow to export.");
 		}
 	}
 
 	protected void deleteButtonClick() {
 		final Set<?> selectedItems = (Set<?>) workflowTable.getValue();
 		if (selectedItems.isEmpty()) {
-			getWindow().showNotification(NOTIFICATION_TITLE, "Please select at least one workflow to delete.",
-					Notification.TYPE_WARNING_MESSAGE);
+			NotificationUtils.displayMessage("Please select at least one workflow to delete.");
 		} else {
 			final Collection<String> errors = new LinkedList<String>();
 			for (final Object workflowId : selectedItems) {
@@ -226,18 +223,16 @@ public class WorkflowView extends VerticalLayout implements WorkflowUploadedList
 				errorMessage.append(error);
 			}
 			errorMessage.append("</ul>");
-			getWindow().showNotification(NOTIFICATION_TITLE, errorMessage.toString(), Notification.TYPE_ERROR_MESSAGE,
-					true);
+			NotificationUtils.displayError(errorMessage.toString());
 		}
 	}
 
 	protected void uploadButtonClick() {
 		final WorkflowUploadDialog workflowUploadDialog = new WorkflowUploadDialog(this);
 		if (workflowUploadDialog.getParent() != null) {
-			getWindow().showNotification(NOTIFICATION_TITLE, "The 'Workflow Upload Dialog' is already open.",
-					Notification.TYPE_WARNING_MESSAGE);
+			NotificationUtils.displayWarning("The 'Workflow Upload Dialog' is already open.");
 		} else {
-			getWindow().addWindow(workflowUploadDialog);
+			UI.getCurrent().addWindow(workflowUploadDialog);
 		}
 	}
 

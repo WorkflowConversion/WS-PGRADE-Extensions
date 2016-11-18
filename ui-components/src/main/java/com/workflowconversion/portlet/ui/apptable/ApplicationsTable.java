@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.Validate;
 
+import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -15,13 +16,14 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 import com.workflowconversion.portlet.core.app.Application;
 import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
+import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.apptable.upload.BulkUploadApplicationsDialog;
 
 /**
@@ -79,25 +81,24 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 
 	private void setUpTable() {
 		table.setContainerDataSource(containerDataSource);
-		table.setVisibleColumns(visibleColumns);
+		table.setVisibleColumns((Object[]) visibleColumns);
 		for (final ApplicationField visibleColumn : visibleColumns) {
 			table.setColumnHeader(visibleColumn, visibleColumn.getDisplayName());
 		}
-		table.setWidth(100, UNITS_PERCENTAGE);
-		table.setHeight(450, UNITS_PIXELS);
+		table.setWidth(100, Unit.PERCENTAGE);
+		table.setHeight(450, Unit.PIXELS);
 		table.setSelectable(true);
 		table.setMultiSelect(false);
-		table.setWriteThrough(true);
-		table.setReadThrough(true);
+		table.setBuffered(false);
 		table.setEditable(false);
-		table.setSortDisabled(true);
+		table.setSortEnabled(false);
 		table.setImmediate(true);
 		containerDataSource.setEditable(false);
 	}
 
 	private void setUpEditControls() {
 		final Button saveButton = createButton("Save", "Save changes");
-		saveButton.addListener(new ClickListener() {
+		saveButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 600552795794561068L;
 
 			@Override
@@ -111,7 +112,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		});
 
 		final Button deleteButton = createButton("Delete", "Delete selected application");
-		deleteButton.addListener(new ClickListener() {
+		deleteButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = -2027451983542233810L;
 
 			@Override
@@ -125,7 +126,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		});
 
 		final Button addButton = createButton("Add...", "Add application");
-		addButton.addListener(new ClickListener() {
+		addButton.addClickListener(new ClickListener() {
 			private static final long serialVersionUID = 9030768358959635995L;
 
 			@Override
@@ -139,7 +140,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		});
 
 		final Button bulkUploadButton = createButton("Bulk upload...", "Click to upload a CSV file with applications");
-		bulkUploadButton.addListener(new Button.ClickListener() {
+		bulkUploadButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = 47556748874175883L;
 
 			@Override
@@ -160,15 +161,15 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		buttonLayout.setVisible(false);
 
 		final CheckBox editableCheckBox = new CheckBox("Editable", false);
-		editableCheckBox.setWidth(10, UNITS_EM);
+		editableCheckBox.setWidth(10, Unit.EM);
 		editableCheckBox.setDescription("Enable edition");
 		editableCheckBox.setImmediate(true);
-		editableCheckBox.addListener(new ClickListener() {
-			private static final long serialVersionUID = 6802078670856773823L;
+		editableCheckBox.addValueChangeListener(new Property.ValueChangeListener() {
+			private static final long serialVersionUID = -2462139591087749632L;
 
 			@Override
-			public void buttonClick(final ClickEvent event) {
-				final boolean enabled = event.getButton().booleanValue();
+			public void valueChange(final ValueChangeEvent event) {
+				final boolean enabled = editableCheckBox.getValue();
 				// allow multi selection when editing
 				table.setMultiSelect(enabled);
 				table.setEditable(enabled);
@@ -178,22 +179,23 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 				addButton.setEnabled(enabled);
 				bulkUploadButton.setEnabled(enabled);
 				buttonLayout.setVisible(enabled);
+
 			}
 		});
 
 		// make sure the delete button is enabled only if there is something selected AND
 		// the control is in edit mode
-		table.addListener(new Table.ValueChangeListener() {
+		table.addValueChangeListener(new Table.ValueChangeListener() {
 			private static final long serialVersionUID = -139252210775992808L;
 
 			@Override
 			public void valueChange(final ValueChangeEvent event) {
-				deleteButton.setEnabled(editableCheckBox.booleanValue() && (event.getProperty().getValue() != null));
+				deleteButton.setEnabled(editableCheckBox.getValue() && (event.getProperty().getValue() != null));
 			}
 		});
 
 		final Layout controlsLayout = new HorizontalLayout();
-		controlsLayout.setHeight(45, UNITS_PIXELS);
+		controlsLayout.setHeight(45, Unit.PIXELS);
 		controlsLayout.addComponent(editableCheckBox);
 		controlsLayout.addComponent(buttonLayout);
 
@@ -209,10 +211,9 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		final BulkUploadApplicationsDialog bulkUploadDialog = new BulkUploadApplicationsDialog(middlewareProvider,
 				this);
 		if (bulkUploadDialog.getParent() != null) {
-			getWindow().showNotification("The 'Bulk Upload Dialog' is already open.",
-					Notification.TYPE_WARNING_MESSAGE);
+			NotificationUtils.displayWarning("The 'Bulk Upload Dialog' is already open.");
 		} else {
-			getWindow().addWindow(bulkUploadDialog);
+			UI.getCurrent().addWindow(bulkUploadDialog);
 		}
 	}
 
@@ -229,11 +230,10 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		// display a window with the application fields
 		final AddApplicationDialog addApplicationDialog = new AddApplicationDialog(middlewareProvider, this);
 		if (addApplicationDialog.getParent() != null) {
-			getWindow().showNotification(
-					"The 'Add Application Dialog' is already open. Please complete the form and then click on the 'Add' button to add a new application.",
-					Notification.TYPE_WARNING_MESSAGE);
+			NotificationUtils.displayWarning(
+					"The 'Add Application Dialog' is already open. Please complete the form and then click on the 'Add' button to add a new application.");
 		} else {
-			getWindow().addWindow(addApplicationDialog);
+			UI.getCurrent().addWindow(addApplicationDialog);
 		}
 	}
 
@@ -243,7 +243,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			// add the valid application in the data source
 			containerDataSource.addApplication(application);
 		} catch (Exception e) {
-			getWindow().showNotification("Could not add application", e.getMessage(), Notification.TYPE_ERROR_MESSAGE);
+			NotificationUtils.displayError("Could not add application.", e);
 		}
 	}
 
@@ -258,12 +258,10 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 					table.removeItem(selectedRowId.toString());
 				}
 			} catch (Exception e) {
-				getWindow().showNotification("Could not delete applications", e.getMessage(),
-						Notification.TYPE_ERROR_MESSAGE);
+				NotificationUtils.displayError("Could not delete application(s).", e);
 			}
 		} else {
-			getWindow().showNotification("Please select at least one application to delete",
-					Notification.TYPE_WARNING_MESSAGE);
+			NotificationUtils.displayMessage("Please select at least one application to delete.");
 		}
 	}
 
@@ -277,8 +275,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 					// the container will figure out which rows are dirty
 					containerDataSource.saveDirtyItems();
 				} catch (Exception e) {
-					getWindow().showNotification("Could not save changes", e.getMessage(),
-							Notification.TYPE_ERROR_MESSAGE);
+					NotificationUtils.displayError("Could not save changes.", e);
 				}
 			}
 		}
@@ -295,8 +292,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			errorDisplay.append("<li>").append(validationError);
 		}
 		errorDisplay.append("</ul>");
-		getWindow().showNotification("Could not save changes", errorDisplay.toString(), Notification.TYPE_ERROR_MESSAGE,
-				true);
+		NotificationUtils.displayError("Could not save changes. Details: " + errorDisplay.toString());
 	}
 
 }

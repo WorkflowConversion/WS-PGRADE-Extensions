@@ -17,9 +17,9 @@ import org.slf4j.MDC;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.util.PortalUtil;
-import com.vaadin.Application;
-import com.vaadin.terminal.gwt.server.PortletRequestListener;
-import com.vaadin.ui.Window;
+import com.vaadin.server.VaadinRequest;
+import com.vaadin.ui.Layout;
+import com.vaadin.ui.UI;
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.user.PortletUser;
@@ -36,13 +36,13 @@ import hu.sztaki.lpds.storage.inf.PortalStorageClient;
  * @author delagarza
  *
  */
-public abstract class WorkflowConversionApplication extends Application implements PortletRequestListener {
+public abstract class WorkflowConversionUI extends UI {
 
 	private static final long serialVersionUID = -1691439006632825854L;
 	// a simple key for logging MDC
 	private static final String MDC_REFERENCE_KEY = "reference";
 
-	private final static Logger LOG = LoggerFactory.getLogger(WorkflowConversionApplication.class);
+	private final static Logger LOG = LoggerFactory.getLogger(WorkflowConversionUI.class);
 
 	protected PortletUser currentUser;
 	protected final String vaadinTheme;
@@ -59,7 +59,7 @@ public abstract class WorkflowConversionApplication extends Application implemen
 	 * @param applicationProviders
 	 *            the application providers.
 	 */
-	public WorkflowConversionApplication(final String vaadinTheme, final PortletSanityCheck portletSanityCheck,
+	public WorkflowConversionUI(final String vaadinTheme, final PortletSanityCheck portletSanityCheck,
 			final Collection<ApplicationProvider> applicationProviders) {
 		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
 				"vaadinTheme cannot be null, empty or contain only whitespaces");
@@ -71,28 +71,27 @@ public abstract class WorkflowConversionApplication extends Application implemen
 	}
 
 	@Override
-	public final void init() {
+	public final void init(final VaadinRequest vaadinRequest) {
 		LOG.info("initializing WorkflowConversionApplication");
 		setTheme(vaadinTheme);
-		final Window mainWindow;
+		final Layout content;
 
 		if (currentUser.isAuthenticated()) {
 			if (portletSanityCheck.isPortletProperlyInitialized()) {
 				// happy path!
 				initApplicationProviders();
-				mainWindow = prepareMainWindow();
+				content = prepareContent();
 			} else {
-				mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/lock.png")
+				content = new SimpleWarningContent.Builder().setIconLocation("../runo/icons/64/lock.png")
 						.setLongDescription(
 								"This portlet has not been properly initialized. If the problem persists after restarting gUSE, please check the logs and report the problem, for this might be caused by a bug or a configuration error.")
-						.setTheme(vaadinTheme).newWarningWindow();
+						.newWarningWindow();
 			}
 		} else {
-			mainWindow = new SimpleWarningWindow.Builder().setIconLocation("../runo/icons/64/attention.png")
-					.setTheme(vaadinTheme).setLongDescription("You need to be logged-in to access this portlet.")
-					.newWarningWindow();
+			content = new SimpleWarningContent.Builder().setIconLocation("../runo/icons/64/attention.png")
+					.setLongDescription("You need to be logged-in to access this portlet.").newWarningWindow();
 		}
-		setMainWindow(mainWindow);
+		setContent(content);
 	}
 
 	/**
@@ -100,7 +99,7 @@ public abstract class WorkflowConversionApplication extends Application implemen
 	 * 
 	 * @return the main window of this application.
 	 */
-	protected abstract Window prepareMainWindow();
+	protected abstract Layout prepareContent();
 
 	private void initApplicationProviders() {
 		// init any app provider that needs initialization

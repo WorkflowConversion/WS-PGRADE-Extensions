@@ -77,11 +77,16 @@
 	</context-param>
 	<servlet>
 		<servlet-name>${portlet.name}Servlet</servlet-name>
-		<servlet-class>com.vaadin.terminal.gwt.server.ApplicationServlet</servlet-class>
+		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
-			<description>Vaadin application class to start</description>
-			<param-name>application</param-name>
-			<param-value>com.workflowconversion.portlet.appmanager.ApplicationManagerApplication</param-value>
+			<description>Vaadin UI class to start</description>
+			<param-name>UI</param-name>
+			<param-value>com.workflowconversion.portlet.appmanager.ApplicationManagerUI</param-value>
+		</init-param>
+		<init-param>
+			<description>WidgetSet</description>
+			<param-name>widgetset</param-name>
+			<param-value>com.workflowconversion.portlet.appmanager.WidgetSet</param-value>
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>
@@ -92,6 +97,10 @@
 	<servlet-mapping>
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/VAADIN/*</url-pattern>	
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>${portlet.name}Servlet</servlet-name>
+		<url-pattern>/*</url-pattern>	
 	</servlet-mapping>
 	
     <!-- the next sections are needed to enable communication with gUSE's back end -->

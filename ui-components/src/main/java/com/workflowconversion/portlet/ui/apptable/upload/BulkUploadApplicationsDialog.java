@@ -20,8 +20,6 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.FormLayout;
@@ -42,6 +40,7 @@ import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
+import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.apptable.ApplicationCommittedListener;
 
 /**
@@ -101,7 +100,7 @@ public class BulkUploadApplicationsDialog extends Window {
 		final ComboBox fileTypeComboBox = new ComboBox("File type", Arrays.asList(FileType.values()));
 		fileTypeComboBox.setNullSelectionAllowed(false);
 		fileTypeComboBox.setImmediate(true);
-		fileTypeComboBox.setWidth(70, UNITS_PIXELS);
+		fileTypeComboBox.setWidth(70, Unit.PIXELS);
 		fileTypeComboBox.select(FileType.CSV);
 		fileTypeComboBox.setDescription(FILE_TYPE_TOOLTIP_HELP);
 
@@ -120,7 +119,7 @@ public class BulkUploadApplicationsDialog extends Window {
 		columnDelimiterCombo.setNullSelectionAllowed(false);
 		columnDelimiterCombo.setImmediate(true);
 		columnDelimiterCombo.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
-		columnDelimiterCombo.setWidth(95, UNITS_PIXELS);
+		columnDelimiterCombo.setWidth(95, Unit.PIXELS);
 		columnDelimiterCombo.setDescription(COLUMN_DELIMITER_TOOLTIP_HELP);
 		for (final Delimiter delimiter : Delimiter.values()) {
 			final Item newItem = columnDelimiterCombo.addItem(delimiter);
@@ -134,20 +133,20 @@ public class BulkUploadApplicationsDialog extends Window {
 		csvHeaders.setEditable(false);
 		csvHeaders.setMultiSelect(false);
 		csvHeaders.setColumnReorderingAllowed(true);
-		csvHeaders.setWriteThrough(true);
+		csvHeaders.setBuffered(false);
 		csvHeaders.setImmediate(true);
-		csvHeaders.setHeight(80, UNITS_PIXELS);
+		csvHeaders.setHeight(80, Unit.PIXELS);
 		csvHeaders.setContainerDataSource(indexedContainer);
 		// add a sample item
 		csvHeaders.getContainerDataSource().addItem(0);
 
 		// hide the headers table when "first row as header" is selected
-		firstRowAsHeader.addListener(new Button.ClickListener() {
+		firstRowAsHeader.addValueChangeListener(new Property.ValueChangeListener() {
 			private static final long serialVersionUID = 7360860662293281984L;
 
 			@Override
-			public void buttonClick(final ClickEvent event) {
-				csvHeaders.setVisible(!event.getButton().booleanValue());
+			public void valueChange(final ValueChangeEvent event) {
+				csvHeaders.setVisible(!(Boolean) event.getProperty().getValue());
 			}
 		});
 
@@ -155,16 +154,16 @@ public class BulkUploadApplicationsDialog extends Window {
 		csvOptions.addComponent(firstRowAsHeader);
 		csvOptions.addComponent(quotedValues);
 		csvOptions.addComponent(columnDelimiterCombo);
-		csvOptions.setWidth(100, UNITS_PERCENTAGE);
+		csvOptions.setWidth(100, Unit.PERCENTAGE);
 
-		fileTypeComboBox.addListener(new Property.ValueChangeListener() {
+		fileTypeComboBox.addValueChangeListener(new Property.ValueChangeListener() {
 			private static final long serialVersionUID = -4635999804925764582L;
 
 			@Override
 			public void valueChange(final ValueChangeEvent event) {
 				if (FileType.CSV.equals(event.getProperty().getValue())) {
 					csvOptions.setVisible(true);
-					csvHeaders.setVisible(!firstRowAsHeader.booleanValue());
+					csvHeaders.setVisible(!firstRowAsHeader.getValue());
 				} else {
 					csvOptions.setVisible(false);
 					csvHeaders.setVisible(false);
@@ -175,10 +174,12 @@ public class BulkUploadApplicationsDialog extends Window {
 
 		final Layout fileTypeLayout = new FormLayout();
 		fileTypeLayout.addComponent(fileTypeComboBox);
+		final Layout panelLayout = new VerticalLayout();
+		panelLayout.addComponent(fileTypeLayout);
+		panelLayout.addComponent(csvOptions);
+		panelLayout.addComponent(csvHeaders);
 		final Panel fileOptionsPanel = new Panel("File options");
-		fileOptionsPanel.addComponent(fileTypeLayout);
-		fileOptionsPanel.addComponent(csvOptions);
-		fileOptionsPanel.addComponent(csvHeaders);
+		fileOptionsPanel.setContent(panelLayout);
 
 		// upload control
 		final Receiver fileReceiver = new FileReceiver();
@@ -194,10 +195,10 @@ public class BulkUploadApplicationsDialog extends Window {
 		final Layout statusDisplayLayout = new FormLayout();
 		statusDisplayLayout.addComponent(currentStatusLabel);
 		final Panel statusDisplayPanel = new Panel("Status");
-		statusDisplayPanel.addComponent(statusDisplayLayout);
+		statusDisplayPanel.setContent(statusDisplayLayout);
 
 		// set the listeners
-		upload.addListener(new Upload.StartedListener() {
+		upload.addStartedListener(new Upload.StartedListener() {
 			private static final long serialVersionUID = -6254312847336221333L;
 
 			@Override
@@ -209,7 +210,7 @@ public class BulkUploadApplicationsDialog extends Window {
 			}
 		});
 
-		upload.addListener(new Upload.ProgressListener() {
+		upload.addProgressListener(new Upload.ProgressListener() {
 			private static final long serialVersionUID = 6805421002888765593L;
 
 			@Override
@@ -218,27 +219,25 @@ public class BulkUploadApplicationsDialog extends Window {
 			}
 		});
 
-		upload.addListener(new Upload.SucceededListener() {
+		upload.addSucceededListener(new Upload.SucceededListener() {
 			private static final long serialVersionUID = -2722969929750545998L;
 
 			@Override
 			public void uploadSucceeded(final SucceededEvent event) {
 				currentStatusLabel.setValue("Parsing file");
 				processFile(serverSideFile, currentStatusLabel, (FileType) fileTypeComboBox.getValue(),
-						firstRowAsHeader.booleanValue(), quotedValues.booleanValue(), csvHeaders.getVisibleColumns(),
+						firstRowAsHeader.getValue(), quotedValues.getValue(), csvHeaders.getVisibleColumns(),
 						(Delimiter) columnDelimiterCombo.getValue());
 			}
 		});
 
-		upload.addListener(new Upload.FailedListener() {
+		upload.addFailedListener(new Upload.FailedListener() {
 			private static final long serialVersionUID = 4889495034113765498L;
 
 			@Override
 			public void uploadFailed(final FailedEvent event) {
 				currentStatusLabel.setValue("Upload failed");
-				showNotification("Upload Applications",
-						"Could not upload file. Reason: " + event.getReason().getMessage(),
-						Notification.TYPE_ERROR_MESSAGE);
+				NotificationUtils.displayError("Could not upload file.", event.getReason());
 				upload.setEnabled(true);
 			}
 		});
@@ -249,7 +248,7 @@ public class BulkUploadApplicationsDialog extends Window {
 		layout.addComponent(new HorizontalSeparator());
 		layout.addComponent(statusDisplayPanel);
 		layout.setMargin(true);
-		layout.setWidth(600, UNITS_PIXELS);
+		layout.setWidth(600, Unit.PIXELS);
 		layout.setSpacing(true);
 	}
 
@@ -307,7 +306,6 @@ public class BulkUploadApplicationsDialog extends Window {
 
 	private class DefaultBulkUploadListener implements BulkUploadListener {
 
-		private static final String NOTIFICATION_CAPTION = "Upload Applications";
 		private final Label statusLabel;
 		private final ApplicationCommittedListener applicationCommittedListener;
 		private final Collection<String> errors;
@@ -354,8 +352,7 @@ public class BulkUploadApplicationsDialog extends Window {
 						final String message = "Parsed and added " + nAddedApplications
 								+ " applications without errors.";
 						statusLabel.setValue(message);
-						getWindow().showNotification(NOTIFICATION_CAPTION, message, Notification.TYPE_TRAY_NOTIFICATION,
-								true);
+						NotificationUtils.displayTrayMessage(message);
 					} else {
 						final String message = "Parsed and added " + nAddedApplications + " applications, but found "
 								+ errors.size() + " error(s).";
@@ -366,8 +363,7 @@ public class BulkUploadApplicationsDialog extends Window {
 							formattedError.append("<li>").append(error);
 						}
 						formattedError.append("</ul>");
-						getWindow().showNotification(NOTIFICATION_CAPTION, formattedError.toString(),
-								Notification.TYPE_ERROR_MESSAGE, true);
+						NotificationUtils.displayError(formattedError.toString());
 					}
 				} finally {
 					upload.setEnabled(true);

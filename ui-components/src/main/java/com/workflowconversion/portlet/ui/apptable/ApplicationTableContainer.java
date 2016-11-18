@@ -233,7 +233,7 @@ class ApplicationTableContainer extends IndexedContainer {
 		final TextField textField = new TextField();
 		textField.setValue(value);
 		textField.setImmediate(true);
-		textField.setWriteThrough(true);
+		textField.setBuffered(false);
 		return textField;
 	}
 
@@ -241,7 +241,7 @@ class ApplicationTableContainer extends IndexedContainer {
 		final TextArea textArea = new TextArea();
 		textArea.setValue(value);
 		textArea.setImmediate(true);
-		textArea.setWriteThrough(true);
+		textArea.setBuffered(false);
 		return textArea;
 	}
 
@@ -258,7 +258,7 @@ class ApplicationTableContainer extends IndexedContainer {
 		}
 		comboBox.setNullSelectionAllowed(false);
 		comboBox.setImmediate(true);
-		comboBox.setWriteThrough(true);
+		comboBox.setBuffered(false);
 		comboBox.select(resourceType);
 		return comboBox;
 	}

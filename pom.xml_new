@@ -10,15 +10,13 @@
 	<name>WS-PGRADE Workflow Conversion Portlets</name>
 	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
 
-	<!-- some of these are likely to change if a different WS-PGRADE version 
-		is used -->
+	<!-- some of these are likely to change if a different WS-PGRADE version is used -->
 	<properties>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
 		<liferay.version>6.2.0-ga2</liferay.version>
 		<asm.version>3.5</asm.version>
-		<vaadin.version>7.4.3</vaadin.version>
-		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
+		<vaadin.version>6.8.12</vaadin.version>
 		<tomcat.version>7.0.55</tomcat.version>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
@@ -27,7 +25,7 @@
 	<modules>
 		<module>core-lib</module>
 		<module>ui-components</module>
-		<module>application-manager</module> 
+		<module>application-manager</module>
 		<module>workflow-importer</module>
 	</modules>
 
@@ -46,37 +44,10 @@
 			<name>Local project Maven repository</name>
 			<url>${project.basedir}/lib/mvnrepo/</url>
 		</repository>
-		<repository>
-			<id>vaadin-addons</id>
-			<url>http://maven.vaadin.com/vaadin-addons</url>
-		</repository>
-		<repository>
-			<id>vaadin-snapshots</id>
-			<url>https://oss.sonatype.org/content/repositories/vaadin-snapshots/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
 	</repositories>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-bom</artifactId>
-				<version>${vaadin.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 	<dependencies>
-		<!-- located in our local repository, used for imports in PortletUser in 
-			core-lib -->
+		<!-- from our in-project maven repository -->
 		<dependency>
 			<groupId>com.liferay</groupId>
 			<artifactId>portal-service</artifactId>
@@ -85,26 +56,8 @@
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-server</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-push</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-client</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.vaadin</groupId>
-			<artifactId>vaadin-themes</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>javax.portlet</groupId>
-			<artifactId>portlet-api</artifactId>
-			<version>2.0</version>
-			<scope>provided</scope>
+			<artifactId>vaadin</artifactId>
+			<version>${vaadin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>hu.sztaki.lpds.guse</groupId>
@@ -170,17 +123,11 @@
 			<groupId>org.apache.ws.xmlrpc</groupId>
 			<artifactId>xmlrpc</artifactId>
 			<version>2.0.1</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.servlet</groupId>
-					<artifactId>servlet-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
-			<version>3.0.1</version>
+			<artifactId>servlet-api</artifactId>
+			<version>2.2</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -209,6 +156,12 @@
 			<groupId>com.sun.xml.ws</groupId>
 			<artifactId>jaxws-rt</artifactId>
 			<version>${jaxws-rt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.portlet</groupId>
+			<artifactId>portlet-api</artifactId>
+			<version>2.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xmlbeans</groupId>
@@ -324,18 +277,17 @@
 			<artifactId>guava</artifactId>
 			<version>19.0</version>
 		</dependency>
-		<!-- for string comparison (there doesn't seem to be a deployed version 
-			in any public maven repository, so this file is included in the lib/mvnrepo 
-			folder -->
+		<!-- for string comparison (there doesn't seem to be a deployed version in any public maven
+		     repository, so this file is included in the lib/mvnrepo folder --> 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-csv</artifactId>
-			<version>1.4</version>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-csv</artifactId>
+    		<version>1.4</version>
 		</dependency>
 	</dependencies>
 
@@ -346,7 +298,6 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
-					<encoding>UTF-8</encoding>
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
 				</configuration>
@@ -356,10 +307,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.4</version>
 				<configuration>
-					<!-- vaadin portlets don't need a web.xml, but, as of gUSE 3.7.4, WS-PGRADE portlets need a web.xml -->
-					<failOnMissingWebXml>true</failOnMissingWebXml>
-					<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar,WEB-INF/classes/VAADIN/gwt-unitCache/**,WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
-					<warName>${portlet.name}</warName>
+					<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar</packagingExcludes>
 					<webResources>
 						<resource>
 							<filtering>true</filtering>
@@ -385,81 +333,7 @@
 					</webResources>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>2.6.1</version>
-				<!-- Clean up also any pre-compiled themes -->
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>src/main/webapp/VAADIN/themes</directory>
-							<includes>
-								<include>**/styles.css</include>
-								<include>**/styles.scss.cache</include>
-							</includes>
-						</fileset>
-					</filesets>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-maven-plugin</artifactId>
-				<version>${vaadin.plugin.version}</version>
-				<configuration>
-					<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
-					<webappDirectory>${basedir}/target/classes/VAADIN/widgetsets</webappDirectory>
-					<draftCompile>false</draftCompile>
-					<compileReport>false</compileReport>
-					<style>OBF</style>
-					<strict>true</strict>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>update-theme</goal>
-							<goal>update-widgetset</goal>
-							<goal>compile</goal>
-							<goal>compile-theme</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
-		<pluginManagement>
-			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself.
-					See: https://dev.vaadin.com/ticket/8899 -->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>com.vaadin</groupId>
-										<artifactId>vaadin-maven-plugin</artifactId>
-										<versionRange>[${vaadin.plugin.version},)</versionRange>
-										<goals>
-											<goal>update-theme</goal>
-											<goal>update-widgetset</goal>
-											<goal>compile</goal>
-											<goal>compile-theme</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore />
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 
 </project>

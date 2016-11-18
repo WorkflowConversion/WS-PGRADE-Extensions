@@ -23,6 +23,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
+import com.workflowconversion.portlet.ui.NotificationUtils;
 
 /**
  * Modal dialog to upload workflows to the staging area.
@@ -34,7 +35,6 @@ public class WorkflowUploadDialog extends Window {
 	private static final long serialVersionUID = -451586894660395610L;
 
 	private final static Logger LOG = LoggerFactory.getLogger(WorkflowUploadDialog.class);
-	private static final String NOTIFICATION_TITLE = "Workflow Upload";
 
 	private final WorkflowUploadedListener listener;
 	private final Upload upload;
@@ -59,7 +59,7 @@ public class WorkflowUploadDialog extends Window {
 		upload.setImmediate(true);
 		upload.setButtonCaption("Upload file...");
 
-		upload.addListener(new Upload.StartedListener() {
+		upload.addStartedListener(new Upload.StartedListener() {
 			private static final long serialVersionUID = -6254312847336221333L;
 
 			@Override
@@ -69,7 +69,7 @@ public class WorkflowUploadDialog extends Window {
 			}
 		});
 
-		upload.addListener(new Upload.SucceededListener() {
+		upload.addSucceededListener(new Upload.SucceededListener() {
 			private static final long serialVersionUID = -2722969929750545998L;
 
 			@Override
@@ -77,29 +77,25 @@ public class WorkflowUploadDialog extends Window {
 				try {
 					status.setValue("Workflow uploaded");
 					listener.workflowUploaded(serverSideFile);
-					getWindow().showNotification(NOTIFICATION_TITLE, "The workflow was uploaded to the staging area.",
-							Notification.TYPE_TRAY_NOTIFICATION, true);
+					NotificationUtils.displayTrayMessage("The workflow was uploaded to the staging area.");
 				} catch (Exception e) {
 					LOG.error("Could not upload workflow file", e);
-					getWindow().showNotification(NOTIFICATION_TITLE,
-							"There was an error adding the uploaded workflow to the staging area. Reason: "
-									+ e.getMessage(),
-							Notification.TYPE_ERROR_MESSAGE, true);
+					NotificationUtils
+							.displayError("There was an error adding the uploaded workflow to the staging area.", e);
 				} finally {
 					upload.setEnabled(true);
 				}
 			}
 		});
 
-		upload.addListener(new Upload.FailedListener() {
+		upload.addFailedListener(new Upload.FailedListener() {
 			private static final long serialVersionUID = 4889495034113765498L;
 
 			@Override
 			public void uploadFailed(final FailedEvent event) {
 				status.setValue("Upload failed");
 				LOG.error("Could not upload workflow file", event.getReason());
-				showNotification(NOTIFICATION_TITLE, "Could not upload file. Reason: " + event.getReason().getMessage(),
-						Notification.TYPE_ERROR_MESSAGE);
+				NotificationUtils.displayError("Could not upload file.", event.getReason());
 				upload.setEnabled(true);
 			}
 		});
@@ -109,7 +105,7 @@ public class WorkflowUploadDialog extends Window {
 		final Layout statusDisplayLayout = new FormLayout();
 		statusDisplayLayout.addComponent(status);
 		final Panel statusDisplayPanel = new Panel("Status");
-		statusDisplayPanel.addComponent(statusDisplayLayout);
+		statusDisplayPanel.setContent(statusDisplayLayout);
 
 		final VerticalLayout layout = (VerticalLayout) getContent();
 		layout.addComponent(upload);

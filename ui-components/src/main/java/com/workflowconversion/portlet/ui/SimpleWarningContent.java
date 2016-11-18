@@ -1,19 +1,24 @@
 package com.workflowconversion.portlet.ui;
 
-import com.vaadin.terminal.ThemeResource;
-import com.vaadin.terminal.UserError;
+import com.vaadin.server.ErrorMessage.ErrorLevel;
+import com.vaadin.server.Page;
+import com.vaadin.server.ThemeResource;
+import com.vaadin.server.UserError;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.Window;
+import com.vaadin.ui.VerticalLayout;
 
 /**
  * Vaadin UI window that is displayed instead of the main content.
  * 
  * @author delagarza
  */
-public class SimpleWarningWindow extends Window {
+public class SimpleWarningContent extends VerticalLayout {
+
 	private static final long serialVersionUID = 7192534030109710873L;
 
 	private final String iconLocation;
@@ -21,47 +26,45 @@ public class SimpleWarningWindow extends Window {
 	private final int iconHeight;
 	private final String shortDescription;
 	private final String longDescription;
-	private final int notificationType;
-	private final String theme;
+	private final Notification.Type notificationType;
 
 	// the only way to get instances of this class is via its builder class
-	private SimpleWarningWindow(final String iconLocation, final int iconWidth, final int iconHeight,
-			final String shortDescription, final String longDescription, final int notificationType,
-			final String theme) {
+	private SimpleWarningContent(final String iconLocation, final int iconWidth, final int iconHeight,
+			final String shortDescription, final String longDescription, final Notification.Type notificationType) {
 		this.iconLocation = iconLocation;
 		this.iconWidth = iconWidth;
 		this.iconHeight = iconHeight;
 		this.shortDescription = shortDescription;
 		this.longDescription = longDescription;
 		this.notificationType = notificationType;
-		this.theme = theme;
 		setUpUI();
 	}
 
 	private void setUpUI() {
-		setTheme(theme);
 
 		final Embedded icon = new Embedded(null, new ThemeResource(iconLocation));
 		icon.setWidth(Integer.toString(iconWidth) + "px");
 		icon.setHeight(Integer.toString(iconHeight) + "px");
-		final Label warningLabel = new Label("<h2>" + longDescription + "</h2>", Label.CONTENT_XHTML);
+		final Label warningLabel = new Label("<h2>" + longDescription + "</h2>", ContentMode.HTML);
 
 		final HorizontalLayout layout = new HorizontalLayout();
 		layout.addComponent(icon);
 		layout.addComponent(warningLabel);
 
 		final Panel panel = new Panel("We're sorry");
-		panel.setComponentError(
-				new UserError("<h3>" + shortDescription + "</h3>", UserError.CONTENT_XHTML, UserError.ERROR));
+		panel.setComponentError(new UserError("<h3>" + shortDescription + "</h3>",
+				com.vaadin.server.AbstractErrorMessage.ContentMode.HTML, ErrorLevel.ERROR));
 		panel.setContent(layout);
 
 		addComponent(panel);
-		showNotification("We're sorry", "<h2>" + shortDescription + "</h2>", notificationType, true);
-
+		final Notification notification = new Notification("We're sorry", "<h2>" + shortDescription + "</h2>",
+				notificationType);
+		notification.setHtmlContentAllowed(true);
+		notification.show(Page.getCurrent());
 	}
 
 	/**
-	 * Builder for {@link SimpleWarningWindow} class. Instead of building custom warning windows by using the
+	 * Builder for {@link SimpleWarningContent} class. Instead of building custom warning windows by using the
 	 * constructor with its many parameters, a builder class is provided.
 	 * 
 	 * Defaults:
@@ -85,9 +88,8 @@ public class SimpleWarningWindow extends Window {
 		private int iconWidth = 64;
 		private int iconHeight = 64;
 		private String shortDescription = "Content is currently not available.";
-		private int notificationType = Notification.TYPE_ERROR_MESSAGE;
+		private Notification.Type notificationType = Notification.Type.ERROR_MESSAGE;
 		private String longDescription = "There was an error in your request. Please inform the administrator of the portal.";
-		private String theme = "reindeer";
 
 		/**
 		 * Sets the icon location. This will be used as a {@link ThemeResource}, so make sure to provide a path relative
@@ -154,41 +156,23 @@ public class SimpleWarningWindow extends Window {
 		 * Sets the notification type.
 		 * 
 		 * @param notificationType
-		 *            One of the possible notification types as defined in {@link Notification}, namely, one of:
-		 *            <ul>
-		 *            <li>{@link Notification#TYPE_ERROR_MESSAGE}
-		 *            <li>{@link Notification#TYPE_HUMANIZED_MESSAGE}
-		 *            <li>{@link Notification#TYPE_TRAY_NOTIFICATION}
-		 *            <li>{@link Notification#TYPE_WARNING_MESSAGE}
-		 *            </ul>
+		 *            One of the possible notification types as defined in {@link Notification.Type}
 		 *
 		 * @return this instance of the {@link Builder}.
 		 */
-		public Builder setNotificationType(final int notificationType) {
+		public Builder setNotificationType(final Notification.Type notificationType) {
 			this.notificationType = notificationType;
 			return this;
 		}
 
 		/**
-		 * Sets the vaadin theme.
+		 * Builds a new {@link SimpleWarningContent} with the current parameters.
 		 * 
-		 * @param theme
-		 *            The theme.
-		 * @return this instance of the {@link Builder}.
+		 * @return A new instance of a {@link SimpleWarningContent}.
 		 */
-		public Builder setTheme(final String theme) {
-			this.theme = theme;
-			return this;
-		}
-
-		/**
-		 * Builds a new {@link SimpleWarningWindow} with the current parameters.
-		 * 
-		 * @return A new instance of a {@link SimpleWarningWindow}.
-		 */
-		public SimpleWarningWindow newWarningWindow() {
-			return new SimpleWarningWindow(this.iconLocation, this.iconWidth, this.iconHeight, this.shortDescription,
-					this.longDescription, this.notificationType, this.theme);
+		public SimpleWarningContent newWarningWindow() {
+			return new SimpleWarningContent(this.iconLocation, this.iconWidth, this.iconHeight, this.shortDescription,
+					this.longDescription, this.notificationType);
 		}
 
 	}
