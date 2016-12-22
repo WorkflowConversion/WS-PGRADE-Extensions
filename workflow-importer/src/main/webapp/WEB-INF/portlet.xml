@@ -8,11 +8,15 @@
 		<!-- portlet.name property is defined in pom.xml -->
 		<portlet-name>${portlet.name}</portlet-name>
 		<display-name>WS-PGRADE Workflow Importer</display-name>
-		<portlet-class>com.vaadin.terminal.gwt.server.ApplicationPortlet2</portlet-class>
+		<portlet-class>com.workflowconversion.portlet.CustomVaadinPortlet</portlet-class>
 		<init-param>
-			<name>application</name>
-			<value>com.workflowconversion.portlet.workflowimporter.WorkflowImporterApplication</value>
-		</init-param>
+            <name>UI</name>
+            <value>com.workflowconversion.portlet.workflowimporter.WorkflowImporterUI</value>
+        </init-param>
+        <init-param>
+            <name>widgetset</name>
+            <value>com.workflowconversion.portlet.workflowimporter.WidgetSet</value>
+        </init-param>        
 		<expiration-cache>0</expiration-cache>
 		<supports>
 			<mime-type>text/html</mime-type>

@@ -6,17 +6,16 @@ import java.util.Hashtable;
 import java.util.Vector;
 
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.util.PortalUtil;
+import com.vaadin.annotations.Theme;
+import com.vaadin.server.VaadinPortletService;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
@@ -36,36 +35,29 @@ import hu.sztaki.lpds.storage.inf.PortalStorageClient;
  * @author delagarza
  *
  */
+@Theme("mytheme")
 public abstract class WorkflowConversionUI extends UI {
 
 	private static final long serialVersionUID = -1691439006632825854L;
-	// a simple key for logging MDC
-	private static final String MDC_REFERENCE_KEY = "reference";
 
 	private final static Logger LOG = LoggerFactory.getLogger(WorkflowConversionUI.class);
 
 	protected PortletUser currentUser;
-	protected final String vaadinTheme;
 	protected final Collection<ApplicationProvider> applicationProviders;
 	protected final PortletSanityCheck portletSanityCheck;
 
 	/**
 	 * Constructor.
 	 * 
-	 * @param vaadinTheme
-	 *            The vaadin theme to use.
 	 * @param portletSanityCheck
 	 *            the portlet sanity check.
 	 * @param applicationProviders
 	 *            the application providers.
 	 */
-	public WorkflowConversionUI(final String vaadinTheme, final PortletSanityCheck portletSanityCheck,
+	protected WorkflowConversionUI(final PortletSanityCheck portletSanityCheck,
 			final Collection<ApplicationProvider> applicationProviders) {
-		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
-				"vaadinTheme cannot be null, empty or contain only whitespaces");
 		Validate.notEmpty(applicationProviders, "applicationProviders cannot be null or empty");
 		Validate.notNull(portletSanityCheck, "portletSanityCheck cannot be null");
-		this.vaadinTheme = vaadinTheme;
 		this.applicationProviders = applicationProviders;
 		this.portletSanityCheck = portletSanityCheck;
 	}
@@ -73,7 +65,8 @@ public abstract class WorkflowConversionUI extends UI {
 	@Override
 	public final void init(final VaadinRequest vaadinRequest) {
 		LOG.info("initializing WorkflowConversionApplication");
-		setTheme(vaadinTheme);
+
+		this.currentUser = extractCurrentUser(VaadinPortletService.getCurrentPortletRequest());
 		final Layout content;
 
 		if (currentUser.isAuthenticated()) {
@@ -158,20 +151,4 @@ public abstract class WorkflowConversionUI extends UI {
 			LOG.error("Error while importing workflow", e);
 		}
 	}
-
-	/**
-	 * As defined in {@link PortletRequestListener#onRequestStart(PortletRequest, PortletResponse)}.
-	 */
-	public void onRequestStart(final PortletRequest request, final PortletResponse response) {
-		MDC.put(MDC_REFERENCE_KEY, Integer.toHexString(System.identityHashCode(this)));
-		currentUser = extractCurrentUser(request);
-	}
-
-	/**
-	 * As defined in {@link PortletRequestListener#onRequestEnd(PortletRequest, PortletResponse)}.
-	 */
-	public void onRequestEnd(final PortletRequest request, final PortletResponse response) {
-		MDC.remove(MDC_REFERENCE_KEY);
-	}
-
 }

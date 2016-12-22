@@ -72,7 +72,6 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent);
 		final Collection<ApplicationProvider> applicationProviders = extractApplicationProviders(servletContextEvent,
 				middlewareProvider);
-		final String vaadinTheme = extractInitParam("vaadinTheme", servletContextEvent);
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
@@ -89,7 +88,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
-		settingsBuilder.withVaadinTheme(vaadinTheme).withApplicationProviders(applicationProviders)
+		settingsBuilder.withApplicationProviders(applicationProviders)
 				.withStringSimilaritySettings(stringSimilaritySettings).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
 				.withWorkflowProviderFactoryClass(workflowProviderFactoryClass)

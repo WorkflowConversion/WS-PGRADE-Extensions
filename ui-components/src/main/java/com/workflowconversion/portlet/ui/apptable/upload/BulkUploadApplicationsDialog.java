@@ -20,11 +20,10 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.util.IndexedContainer;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Table;
@@ -51,10 +50,10 @@ import com.workflowconversion.portlet.ui.apptable.ApplicationCommittedListener;
  */
 public class BulkUploadApplicationsDialog extends Window {
 
-	private static final String PROPERTY_NAME_CAPTION = "caption";
-
 	private static final long serialVersionUID = -2587575066352088585L;
 
+	private final static String STYLE_NAME_DISABLED = "disabled-component";
+	private final static String PROPERTY_NAME_CAPTION = "caption";
 	private final static Logger LOG = LoggerFactory.getLogger(BulkUploadApplicationsDialog.class);
 
 	private final static String FILE_TYPE_TOOLTIP_HELP = "<i>TODO: add documentation for file type</i>";
@@ -63,10 +62,10 @@ public class BulkUploadApplicationsDialog extends Window {
 	private final static String COLUMN_DELIMITER_TOOLTIP_HELP = "<i>TODO: add documentation for column delimiter</i>";
 
 	private File serverSideFile;
+	// polling file upload progress happens in another thread
 	private final AtomicLong contentLength;
 	private final MiddlewareProvider middlewareProvider;
 	private final Collection<String> errors;
-	private final Label currentStatusLabel;
 	private final ApplicationCommittedListener applicationCommittedListener;
 	private final Upload upload;
 
@@ -87,10 +86,9 @@ public class BulkUploadApplicationsDialog extends Window {
 
 		this.contentLength = new AtomicLong();
 		this.errors = new LinkedList<String>();
-		this.currentStatusLabel = new Label();
 		this.upload = new Upload();
 
-		setCaption("Upload CSV File with Applications");
+		setCaption("Upload CSV or XML File with Applications");
 		setModal(true);
 		setUpLayout();
 	}
@@ -100,102 +98,83 @@ public class BulkUploadApplicationsDialog extends Window {
 		final ComboBox fileTypeComboBox = new ComboBox("File type", Arrays.asList(FileType.values()));
 		fileTypeComboBox.setNullSelectionAllowed(false);
 		fileTypeComboBox.setImmediate(true);
-		fileTypeComboBox.setWidth(70, Unit.PIXELS);
+		fileTypeComboBox.setWidth(70, Unit.POINTS);
 		fileTypeComboBox.select(FileType.CSV);
 		fileTypeComboBox.setDescription(FILE_TYPE_TOOLTIP_HELP);
 
 		// csv-specific options
-		final CheckBox firstRowAsHeader = new CheckBox("First row as header", false);
-		firstRowAsHeader.setImmediate(true);
-		firstRowAsHeader.setDescription(FIRST_ROW_AS_HEADER_TOOLTIP_HELP);
+		final CheckBox firstRowAsHeaderCheckBox = new CheckBox("First row as header", false);
+		firstRowAsHeaderCheckBox.setImmediate(true);
+		firstRowAsHeaderCheckBox.setDescription(FIRST_ROW_AS_HEADER_TOOLTIP_HELP);
 
-		final CheckBox quotedValues = new CheckBox("Values are quoted", false);
-		quotedValues.setImmediate(true);
-		quotedValues.setDescription(QUOTED_VALUES_TOOLTIP_HELP);
+		final CheckBox quotedValuesCheckBox = new CheckBox("Values are quoted", false);
+		quotedValuesCheckBox.setImmediate(true);
+		quotedValuesCheckBox.setDescription(QUOTED_VALUES_TOOLTIP_HELP);
 
 		final IndexedContainer columnDelimiterContainer = new IndexedContainer();
 		columnDelimiterContainer.addContainerProperty(PROPERTY_NAME_CAPTION, String.class, null);
-		final ComboBox columnDelimiterCombo = new ComboBox("Column delimiter", columnDelimiterContainer);
-		columnDelimiterCombo.setNullSelectionAllowed(false);
-		columnDelimiterCombo.setImmediate(true);
-		columnDelimiterCombo.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
-		columnDelimiterCombo.setWidth(95, Unit.PIXELS);
-		columnDelimiterCombo.setDescription(COLUMN_DELIMITER_TOOLTIP_HELP);
+		final ComboBox columnDelimiterComboBox = new ComboBox("Column delimiter", columnDelimiterContainer);
+		columnDelimiterComboBox.setNullSelectionAllowed(false);
+		columnDelimiterComboBox.setImmediate(true);
+		columnDelimiterComboBox.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
+		columnDelimiterComboBox.setWidth(95, Unit.POINTS);
+		columnDelimiterComboBox.setDescription(COLUMN_DELIMITER_TOOLTIP_HELP);
 		for (final Delimiter delimiter : Delimiter.values()) {
-			final Item newItem = columnDelimiterCombo.addItem(delimiter);
+			final Item newItem = columnDelimiterComboBox.addItem(delimiter);
 			newItem.getItemProperty(PROPERTY_NAME_CAPTION)
 					.setValue(delimiter.name() + ": " + delimiter.getDelimiterCharacter());
 		}
-		columnDelimiterCombo.select(Delimiter.Comma);
+		columnDelimiterComboBox.select(Delimiter.Comma);
 
 		final IndexedContainer indexedContainer = getIndexedContainerForHeaders();
-		final Table csvHeaders = new Table("Change the desired column order by drag and dropping");
-		csvHeaders.setEditable(false);
-		csvHeaders.setMultiSelect(false);
-		csvHeaders.setColumnReorderingAllowed(true);
-		csvHeaders.setBuffered(false);
-		csvHeaders.setImmediate(true);
-		csvHeaders.setHeight(80, Unit.PIXELS);
-		csvHeaders.setContainerDataSource(indexedContainer);
+		final Table csvHeadersTable = new Table(
+				"Change the desired column order by drag and dropping (CSV files only)");
+		csvHeadersTable.setEditable(false);
+		csvHeadersTable.setMultiSelect(false);
+		csvHeadersTable.setColumnReorderingAllowed(true);
+		csvHeadersTable.setBuffered(false);
+		csvHeadersTable.setImmediate(true);
+		csvHeadersTable.setContainerDataSource(indexedContainer);
+		csvHeadersTable.setHeight(80, Unit.PIXELS);
 		// add a sample item
-		csvHeaders.getContainerDataSource().addItem(0);
+		csvHeadersTable.getContainerDataSource().addItem(0);
 
-		// hide the headers table when "first row as header" is selected
-		firstRowAsHeader.addValueChangeListener(new Property.ValueChangeListener() {
-			private static final long serialVersionUID = 7360860662293281984L;
+		// put the table in a layout so we can gray the table AND its caption
+		final VerticalLayout csvHeadersLayout = new VerticalLayout();
+		csvHeadersLayout.addComponent(csvHeadersTable);
 
-			@Override
-			public void valueChange(final ValueChangeEvent event) {
-				csvHeaders.setVisible(!(Boolean) event.getProperty().getValue());
-			}
-		});
+		final HorizontalLayout csvOptionsLayout = new HorizontalLayout();
+		csvOptionsLayout.addComponent(firstRowAsHeaderCheckBox);
+		csvOptionsLayout.addComponent(quotedValuesCheckBox);
+		csvOptionsLayout.addComponent(columnDelimiterComboBox);
+		csvOptionsLayout.setComponentAlignment(firstRowAsHeaderCheckBox, Alignment.MIDDLE_CENTER);
+		csvOptionsLayout.setComponentAlignment(quotedValuesCheckBox, Alignment.MIDDLE_CENTER);
+		csvOptionsLayout.setComponentAlignment(columnDelimiterComboBox, Alignment.MIDDLE_CENTER);
+		csvOptionsLayout.setWidth(100, Unit.PERCENTAGE);
 
-		final Layout csvOptions = new HorizontalLayout();
-		csvOptions.addComponent(firstRowAsHeader);
-		csvOptions.addComponent(quotedValues);
-		csvOptions.addComponent(columnDelimiterCombo);
-		csvOptions.setWidth(100, Unit.PERCENTAGE);
+		final Property.ValueChangeListener valueChangeListener = new ControlUpdaterChangeListener(csvOptionsLayout,
+				csvHeadersLayout, csvHeadersTable, fileTypeComboBox, firstRowAsHeaderCheckBox, quotedValuesCheckBox,
+				columnDelimiterComboBox);
+		fileTypeComboBox.addValueChangeListener(valueChangeListener);
+		firstRowAsHeaderCheckBox.addValueChangeListener(valueChangeListener);
 
-		fileTypeComboBox.addValueChangeListener(new Property.ValueChangeListener() {
-			private static final long serialVersionUID = -4635999804925764582L;
-
-			@Override
-			public void valueChange(final ValueChangeEvent event) {
-				if (FileType.CSV.equals(event.getProperty().getValue())) {
-					csvOptions.setVisible(true);
-					csvHeaders.setVisible(!firstRowAsHeader.getValue());
-				} else {
-					csvOptions.setVisible(false);
-					csvHeaders.setVisible(false);
-				}
-			}
-
-		});
-
-		final Layout fileTypeLayout = new FormLayout();
+		final VerticalLayout fileTypeLayout = new VerticalLayout();
 		fileTypeLayout.addComponent(fileTypeComboBox);
-		final Layout panelLayout = new VerticalLayout();
-		panelLayout.addComponent(fileTypeLayout);
-		panelLayout.addComponent(csvOptions);
-		panelLayout.addComponent(csvHeaders);
+		fileTypeLayout.setComponentAlignment(fileTypeComboBox, Alignment.MIDDLE_CENTER);
+		final VerticalLayout fileOptionsLayout = new VerticalLayout();
+		fileOptionsLayout.addComponent(fileTypeLayout);
+		fileOptionsLayout.addComponent(new HorizontalSeparator());
+		fileOptionsLayout.addComponent(csvOptionsLayout);
+		fileOptionsLayout.addComponent(new HorizontalSeparator());
+		fileOptionsLayout.addComponent(csvHeadersLayout);
+		fileOptionsLayout.setMargin(true);
 		final Panel fileOptionsPanel = new Panel("File options");
-		fileOptionsPanel.setContent(panelLayout);
-
+		fileOptionsPanel.setContent(fileOptionsLayout);
 		// upload control
 		final Receiver fileReceiver = new FileReceiver();
 		upload.setReceiver(fileReceiver);
 		upload.setImmediate(true);
 		upload.setButtonCaption("Upload file...");
-
-		// status/progress panel
-		currentStatusLabel.setImmediate(true);
-		currentStatusLabel.setCaption("Current state");
-		currentStatusLabel.setValue("Waiting for file");
-
-		final Layout statusDisplayLayout = new FormLayout();
-		statusDisplayLayout.addComponent(currentStatusLabel);
-		final Panel statusDisplayPanel = new Panel("Status");
-		statusDisplayPanel.setContent(statusDisplayLayout);
 
 		// set the listeners
 		upload.addStartedListener(new Upload.StartedListener() {
@@ -206,7 +185,7 @@ public class BulkUploadApplicationsDialog extends Window {
 				upload.setEnabled(false);
 				errors.clear();
 				contentLength.set(event.getContentLength());
-				currentStatusLabel.setValue("Uploading file");
+				NotificationUtils.displayTrayMessage("Uploading file");
 			}
 		});
 
@@ -215,7 +194,8 @@ public class BulkUploadApplicationsDialog extends Window {
 
 			@Override
 			public void updateProgress(final long readBytes, final long contentLength) {
-				currentStatusLabel.setValue("Read " + readBytes + " of " + contentLength + " bytes");
+				// TODO: do we need this much detail?
+				// someLabel.setValue("Read " + readBytes + " of " + contentLength + " bytes");
 			}
 		});
 
@@ -224,10 +204,10 @@ public class BulkUploadApplicationsDialog extends Window {
 
 			@Override
 			public void uploadSucceeded(final SucceededEvent event) {
-				currentStatusLabel.setValue("Parsing file");
-				processFile(serverSideFile, currentStatusLabel, (FileType) fileTypeComboBox.getValue(),
-						firstRowAsHeader.getValue(), quotedValues.getValue(), csvHeaders.getVisibleColumns(),
-						(Delimiter) columnDelimiterCombo.getValue());
+				NotificationUtils.displayTrayMessage("Parsing file");
+				processFile(serverSideFile, (FileType) fileTypeComboBox.getValue(), firstRowAsHeaderCheckBox.getValue(),
+						quotedValuesCheckBox.getValue(), csvHeadersTable.getVisibleColumns(),
+						(Delimiter) columnDelimiterComboBox.getValue());
 			}
 		});
 
@@ -236,20 +216,68 @@ public class BulkUploadApplicationsDialog extends Window {
 
 			@Override
 			public void uploadFailed(final FailedEvent event) {
-				currentStatusLabel.setValue("Upload failed");
 				NotificationUtils.displayError("Could not upload file.", event.getReason());
 				upload.setEnabled(true);
 			}
 		});
 
-		final VerticalLayout layout = (VerticalLayout) getContent();
+		final VerticalLayout layout = new VerticalLayout();
 		layout.addComponent(fileOptionsPanel);
 		layout.addComponent(upload);
 		layout.addComponent(new HorizontalSeparator());
-		layout.addComponent(statusDisplayPanel);
 		layout.setMargin(true);
 		layout.setWidth(600, Unit.PIXELS);
 		layout.setSpacing(true);
+		setContent(layout);
+	}
+
+	// change listener that takes care of updating whether the controls are active or not
+	private class ControlUpdaterChangeListener implements Property.ValueChangeListener {
+		private static final long serialVersionUID = -2161222679135188132L;
+
+		private final Layout csvOptionsLayout;
+		private final Layout csvHeadersLayout;
+		private final Table csvHeadersTable;
+		private final ComboBox fileTypeComboBox;
+		private final CheckBox quotedValuesCheckBox;
+		private final CheckBox firstRowAsHeaderCheckBox;
+		private final ComboBox columnDelimiterComboBox;
+
+		private ControlUpdaterChangeListener(final Layout csvOptionsLayout, final Layout csvHeadersLayout,
+				final Table csvHeadersTable, final ComboBox fileTypeComboBox, final CheckBox firstRowAsHeaderCheckBox,
+				final CheckBox quotedValuesCheckBox, final ComboBox columnDelimiterComboBox) {
+			this.csvOptionsLayout = csvOptionsLayout;
+			this.csvHeadersLayout = csvHeadersLayout;
+			this.csvHeadersTable = csvHeadersTable;
+			this.fileTypeComboBox = fileTypeComboBox;
+			this.firstRowAsHeaderCheckBox = firstRowAsHeaderCheckBox;
+			this.quotedValuesCheckBox = quotedValuesCheckBox;
+			this.columnDelimiterComboBox = columnDelimiterComboBox;
+		}
+
+		@Override
+		public void valueChange(final ValueChangeEvent event) {
+			final boolean isCsvFileType = FileType.CSV.equals(fileTypeComboBox.getValue());
+			final boolean firstRowAsHeader = this.firstRowAsHeaderCheckBox.getValue();
+
+			firstRowAsHeaderCheckBox.setEnabled(isCsvFileType);
+			columnDelimiterComboBox.setEnabled(isCsvFileType);
+			quotedValuesCheckBox.setEnabled(isCsvFileType);
+			if (isCsvFileType) {
+				csvOptionsLayout.removeStyleName(STYLE_NAME_DISABLED);
+			} else {
+				csvOptionsLayout.addStyleName(STYLE_NAME_DISABLED);
+			}
+
+			csvHeadersTable.setEnabled(isCsvFileType && !firstRowAsHeader);
+			if (csvHeadersTable.isEnabled()) {
+				csvHeadersLayout.removeStyleName(STYLE_NAME_DISABLED);
+			} else {
+				csvHeadersLayout.addStyleName(STYLE_NAME_DISABLED);
+			}
+
+		}
+
 	}
 
 	private IndexedContainer getIndexedContainerForHeaders() {
@@ -263,11 +291,9 @@ public class BulkUploadApplicationsDialog extends Window {
 		return indexedContainer;
 	}
 
-	void processFile(final File file, final Label currentStatusLabel, final FileType fileType,
-			final boolean firstRowAsHeader, final boolean quotedValues, final Object[] headers,
-			final Delimiter delimiter) {
-		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(currentStatusLabel,
-				applicationCommittedListener);
+	void processFile(final File file, final FileType fileType, final boolean firstRowAsHeader,
+			final boolean quotedValues, final Object[] headers, final Delimiter delimiter) {
+		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(applicationCommittedListener);
 		final AbstractFileProcessor fileProcessor;
 		switch (fileType) {
 		case CSV:
@@ -306,20 +332,17 @@ public class BulkUploadApplicationsDialog extends Window {
 
 	private class DefaultBulkUploadListener implements BulkUploadListener {
 
-		private final Label statusLabel;
 		private final ApplicationCommittedListener applicationCommittedListener;
 		private final Collection<String> errors;
 
-		private DefaultBulkUploadListener(final Label statusLabel,
-				final ApplicationCommittedListener applicationCommittedListener) {
-			this.statusLabel = statusLabel;
+		private DefaultBulkUploadListener(final ApplicationCommittedListener applicationCommittedListener) {
 			this.applicationCommittedListener = applicationCommittedListener;
 			this.errors = new LinkedList<String>();
 		}
 
 		@Override
 		public void parsingStarted() {
-			statusLabel.setValue("Parsing uploaded file, please be patient.");
+			NotificationUtils.displayTrayMessage("Parsing file, please be patient");
 		}
 
 		@Override
@@ -336,7 +359,7 @@ public class BulkUploadApplicationsDialog extends Window {
 		public void parsingCompleted(final Collection<Application> parsedApplications) {
 			int nAddedApplications = 0;
 			try {
-				statusLabel.setValue("Parsed " + parsedApplications.size() + " application(s).");
+				NotificationUtils.displayTrayMessage("Parsed " + parsedApplications.size() + " application(s).");
 				for (final Application parsedApplication : parsedApplications) {
 					try {
 						applicationCommittedListener.applicationCommitted(parsedApplication);
@@ -351,14 +374,11 @@ public class BulkUploadApplicationsDialog extends Window {
 					if (errors.isEmpty()) {
 						final String message = "Parsed and added " + nAddedApplications
 								+ " applications without errors.";
-						statusLabel.setValue(message);
 						NotificationUtils.displayTrayMessage(message);
 					} else {
-						final String message = "Parsed and added " + nAddedApplications + " applications, but found "
-								+ errors.size() + " error(s).";
-						statusLabel.setValue(message);
-						final StringBuilder formattedError = new StringBuilder(
-								"<h3>The following errors occurred while processing the uploaded file:</h3><ul>");
+						final StringBuilder formattedError = new StringBuilder("<h3>Parsed and added ");
+						formattedError.append(nAddedApplications)
+								.append(" application(s) and found the following errors:</h3><ul>");
 						for (final String error : errors) {
 							formattedError.append("<li>").append(error);
 						}

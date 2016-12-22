@@ -2,11 +2,8 @@
 <configuration>
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-	 	<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      		<level>INFO</level>
-    	</filter>
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<pattern>[%date{dd.MM.yy HH:mm:ss}] %-5level %logger{0}: \(%thread, %mdc{reference}\) %msg %n</pattern>
+			<pattern>[%date{dd.MM.yy HH:mm:ss}] %-5level %logger{0}: \(%thread\) %msg %n</pattern>
 		</layout>
 	</appender>
 
@@ -19,11 +16,11 @@
 			<maxHistory>30</maxHistory><!-- keep 30 days' worth of history -->
 		</rollingPolicy>
 		<encoder>
-			<pattern>[%date{dd.MM.yy HH:mm:ss}] %-5level %logger{0}.%M: \(%thread, %mdc{reference}\) %msg %n</pattern>
+			<pattern>[%date{dd.MM.yy HH:mm:ss}] %-5level %logger{0}.%M: \(%thread\) %msg %n</pattern>
 		</encoder>
 	</appender>
 
-	<logger name="com.workflowconversion.importer" level="trace">
+	<logger name="com.workflowconversion.portlet" level="trace">
 		<appender-ref ref="LOG_FILE" />
 	</logger>
 

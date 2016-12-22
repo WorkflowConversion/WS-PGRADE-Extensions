@@ -9,6 +9,7 @@ import org.apache.commons.lang.Validate;
 
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
@@ -80,13 +81,14 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 	}
 
 	private void setUpTable() {
+		table.addStyleName("appTable");
+		table.setWidth(100, Unit.PERCENTAGE);
+		table.setHeight(450, Unit.PIXELS);
 		table.setContainerDataSource(containerDataSource);
 		table.setVisibleColumns((Object[]) visibleColumns);
 		for (final ApplicationField visibleColumn : visibleColumns) {
 			table.setColumnHeader(visibleColumn, visibleColumn.getDisplayName());
 		}
-		table.setWidth(100, Unit.PERCENTAGE);
-		table.setHeight(450, Unit.PIXELS);
 		table.setSelectable(true);
 		table.setMultiSelect(false);
 		table.setBuffered(false);
@@ -160,9 +162,9 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		buttonLayout.addComponent(bulkUploadButton);
 		buttonLayout.setVisible(false);
 
-		final CheckBox editableCheckBox = new CheckBox("Editable", false);
-		editableCheckBox.setWidth(10, Unit.EM);
-		editableCheckBox.setDescription("Enable edition");
+		final CheckBox editableCheckBox = new CheckBox("Enable edition", false);
+		editableCheckBox.setWidth(220, Unit.PIXELS);
+		editableCheckBox.setDescription("Click to enable/disable edition of the applications table");
 		editableCheckBox.setImmediate(true);
 		editableCheckBox.addValueChangeListener(new Property.ValueChangeListener() {
 			private static final long serialVersionUID = -2462139591087749632L;
@@ -194,10 +196,12 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 			}
 		});
 
-		final Layout controlsLayout = new HorizontalLayout();
-		controlsLayout.setHeight(45, Unit.PIXELS);
+		final HorizontalLayout controlsLayout = new HorizontalLayout();
+		controlsLayout.addStyleName("left-padded");
 		controlsLayout.addComponent(editableCheckBox);
 		controlsLayout.addComponent(buttonLayout);
+		controlsLayout.setComponentAlignment(editableCheckBox, Alignment.MIDDLE_CENTER);
+		controlsLayout.setComponentAlignment(buttonLayout, Alignment.MIDDLE_CENTER);
 
 		final Layout layout = new VerticalLayout();
 		layout.addComponent(controlsLayout);

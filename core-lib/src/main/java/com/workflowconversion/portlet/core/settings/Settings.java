@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.app.ApplicationProvider;
@@ -24,7 +23,6 @@ import com.workflowconversion.portlet.core.workflow.WorkflowProviderFactory;
 public class Settings implements Serializable {
 
 	private static final long serialVersionUID = -1344935177312215690L;
-	private final String vaadinTheme;
 	private final PortletSanityCheck portletSanityCheck;
 	private final Collection<ApplicationProvider> applicationProviders;
 	private final StringSimilaritySettings stringSimilaritySettings;
@@ -66,15 +64,6 @@ public class Settings implements Serializable {
 					"intance is null, please use the setInstance() method before using invoking getInstance().");
 		}
 		return INSTANCE;
-	}
-
-	/**
-	 * Obtains the Vaadin theme.
-	 * 
-	 * @return The Vaadin theme.
-	 */
-	public String getVaadinTheme() {
-		return vaadinTheme;
 	}
 
 	/**
@@ -136,14 +125,12 @@ public class Settings implements Serializable {
 		return workflowStagingAreaPath;
 	}
 
-	private Settings(final String vaadinTheme, final PortletSanityCheck portletSanityCheck,
+	private Settings(final PortletSanityCheck portletSanityCheck,
 			final Collection<ApplicationProvider> applicationProviders,
 			final StringSimilaritySettings stringSimilaritySettings, final MiddlewareProvider middlewareProvider,
 			final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass,
 			final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass,
 			final String workflowStagingAreaPath) {
-		Validate.isTrue(StringUtils.isNotBlank(vaadinTheme),
-				"vaadinTheme cannot be null or empty, please use the Builder.withVaadinTheme() method to set a non-blank value");
 		Validate.notNull(portletSanityCheck,
 				"portletSanityCheck cannot be null, please use the Builder.withPortletSanityCheck() method to set a non-null value");
 		Validate.notEmpty(applicationProviders,
@@ -156,7 +143,6 @@ public class Settings implements Serializable {
 				"workflowProviderFactoryClass cannot be null, please use the Builder.withWorkflowProviderFactoryClass() method to set a non-null value");
 		Validate.notNull(workflowExporterFactoryClass,
 				"workflowExporterFactoryClass cannot be null, please use the Builder.withWorkflowExporterFactoryClass() method to set a non-null value");
-		this.vaadinTheme = vaadinTheme;
 		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
 		this.portletSanityCheck = portletSanityCheck;
 		this.stringSimilaritySettings = stringSimilaritySettings;
@@ -174,7 +160,6 @@ public class Settings implements Serializable {
 	 *
 	 */
 	public static class Builder {
-		private String vaadinTheme;
 		private Collection<ApplicationProvider> applicationProviders;
 		private PortletSanityCheck portletSanityCheck;
 		private StringSimilaritySettings stringSimilaritySettings;
@@ -182,18 +167,6 @@ public class Settings implements Serializable {
 		private Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass;
 		private Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
 		private String workflowStagingAreaPath;
-
-		/**
-		 * Sets the vaadin theme.
-		 * 
-		 * @param vaadinTheme
-		 *            The vaadin theme.
-		 * @return the instance of {@code this} {@link Builder}.
-		 */
-		public Builder withVaadinTheme(final String vaadinTheme) {
-			this.vaadinTheme = vaadinTheme;
-			return this;
-		}
 
 		/**
 		 * Sets the application providers.
@@ -287,9 +260,8 @@ public class Settings implements Serializable {
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newSettings() {
-			return new Settings(vaadinTheme, portletSanityCheck, applicationProviders, stringSimilaritySettings,
-					middlewareProvider, workflowExporterFactoryClass, workflowProviderFactoryClass,
-					workflowStagingAreaPath);
+			return new Settings(portletSanityCheck, applicationProviders, stringSimilaritySettings, middlewareProvider,
+					workflowExporterFactoryClass, workflowProviderFactoryClass, workflowStagingAreaPath);
 		}
 	}
 }

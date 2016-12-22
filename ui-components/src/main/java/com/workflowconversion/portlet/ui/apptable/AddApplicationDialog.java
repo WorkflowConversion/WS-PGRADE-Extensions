@@ -137,6 +137,11 @@ class AddApplicationDialog extends Window {
 		final Label error = new Label("", ContentMode.HTML);
 		error.setVisible(false);
 		layout.addComponent(error);
+
+		layout.setWidth(410, Unit.PIXELS);
+		layout.setMargin(true);
+
+		setContent(layout);
 	}
 
 	private ComboBox createResourceTypeComboBox() {

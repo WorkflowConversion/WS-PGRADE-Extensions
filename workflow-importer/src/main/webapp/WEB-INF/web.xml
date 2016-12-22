@@ -18,11 +18,6 @@
     	<param-value>true</param-value>
     </context-param>
     <context-param>
-    	<description>Vaadin Theme used</description>
-    	<param-name>vaadinTheme</param-name>
-    	<param-value>workflowconversion</param-value>
-    </context-param>
-    <context-param>
     	<description>Server path to use as staging area for user workflows. Each user will get its own folder.</description>
     	<param-name>workflow.stagingArea.path</param-name>
     	<param-value>/home/guseuser/guse/stagingArea</param-value>
@@ -87,11 +82,6 @@
 			<description>Vaadin UI class to start</description>
 			<param-name>UI</param-name>
 			<param-value>com.workflowconversion.portlet.workflowimporter.WorkflowImporterUI</param-value>
-		</init-param>
-		<init-param>
-			<description>WidgetSet</description>
-			<param-name>widgetset</param-name>
-			<param-value>com.workflowconversion.portlet.workflowimporter.WidgetSet</param-value>
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>

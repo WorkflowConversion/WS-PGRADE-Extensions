@@ -6,6 +6,9 @@ target/
 .classpath
 .settings
 
+# some other weird stuff
+.tern-project
+
 # ignore any changes done on the scrapbook
 scrapbook.jpage
 

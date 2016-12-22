@@ -182,13 +182,13 @@ class ApplicationTableContainer extends IndexedContainer {
 
 	private Application toApplication(final Item item) {
 		final Application application = new Application();
-		application.setId(item.getItemProperty(ApplicationField.Id).toString());
-		application.setName(item.getItemProperty(ApplicationField.Name).toString());
-		application.setVersion(item.getItemProperty(ApplicationField.Version).toString());
-		application.setResourceType(item.getItemProperty(ApplicationField.ResourceType).toString());
-		application.setResource(item.getItemProperty(ApplicationField.Resource).toString());
-		application.setDescription(item.getItemProperty(ApplicationField.Description).toString());
-		application.setPath(item.getItemProperty(ApplicationField.Path).toString());
+		application.setId(item.getItemProperty(ApplicationField.Id).getValue().toString());
+		application.setName(item.getItemProperty(ApplicationField.Name).getValue().toString());
+		application.setVersion(item.getItemProperty(ApplicationField.Version).getValue().toString());
+		application.setResourceType(item.getItemProperty(ApplicationField.ResourceType).getValue().toString());
+		application.setResource(item.getItemProperty(ApplicationField.Resource).getValue().toString());
+		application.setDescription(item.getItemProperty(ApplicationField.Description).getValue().toString());
+		application.setPath(item.getItemProperty(ApplicationField.Path).getValue().toString());
 		return application;
 	}
 
@@ -308,7 +308,7 @@ class ApplicationTableContainer extends IndexedContainer {
 		for (final Object propertyId : item.getItemPropertyIds()) {
 			final Object propertyValue = item.getItemProperty(propertyId).getValue();
 			if (propertyValue instanceof Field) {
-				((Field) propertyValue).addListener(new Property.ValueChangeListener() {
+				((Field<?>) propertyValue).addValueChangeListener(new Property.ValueChangeListener() {
 					private static final long serialVersionUID = 2055195168270807750L;
 
 					@Override

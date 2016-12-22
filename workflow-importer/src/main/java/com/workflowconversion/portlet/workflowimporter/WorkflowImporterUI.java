@@ -17,8 +17,7 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 	private static final long serialVersionUID = 712483663690909775L;
 
 	public WorkflowImporterUI() {
-		super(Settings.getInstance().getVaadinTheme(), Settings.getInstance().getPortletSanityCheck(),
-				Settings.getInstance().getApplicationProviders());
+		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getApplicationProviders());
 
 	}
 

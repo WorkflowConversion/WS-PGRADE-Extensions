@@ -34,7 +34,11 @@ public enum ApplicationField {
 	/**
 	 * Version of the application.
 	 */
-	Version(16, "version", "Version");
+	Version(16, "version", "Version"),
+	/**
+	 * Some resources such as moab support the use of queues.
+	 */
+	Queue(128, "queue", "Queue");
 
 	private final int maxLength;
 	private final String memberName;

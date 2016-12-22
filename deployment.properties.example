@@ -2,9 +2,8 @@
 # remote server to which the war file will be copied
 remote.server=your.server.com
 
-# username/password (ssh)
+# username (passwordless SSH, using key in ~/.ssh/id_rsa)
 remote.server.username=username
-remote.server.password=password
 
 # remote server's liferay deploy folder
 remote.server.deploy.path=/path/to/your/liferay/deploy/folder

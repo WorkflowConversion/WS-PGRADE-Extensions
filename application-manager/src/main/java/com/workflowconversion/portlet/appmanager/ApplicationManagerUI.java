@@ -41,8 +41,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	 * Constructor.
 	 */
 	public ApplicationManagerUI() {
-		super(Settings.getInstance().getVaadinTheme(), Settings.getInstance().getPortletSanityCheck(),
-				Settings.getInstance().getApplicationProviders());
+		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getApplicationProviders());
 		this.applicationsTableDisplayPanel = new VerticalLayout();
 		this.tableMap = new TreeMap<Integer, ApplicationsTable>();
 	}

@@ -27,8 +27,8 @@
 	<modules>
 		<module>core-lib</module>
 		<module>ui-components</module>
-		<module>application-manager</module> 
-		<module>workflow-importer</module>
+	 	<module>application-manager</module> 
+		<!-- <module>workflow-importer</module> -->
 	</modules>
 
 	<!-- other repositories -->

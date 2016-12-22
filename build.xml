@@ -29,9 +29,6 @@
 			<param name="required.property" value="remote.server.username" />
 		</antcall>
 		<antcall target="fail-if-missing-property">
-			<param name="required.property" value="remote.server.password" />
-		</antcall>
-		<antcall target="fail-if-missing-property">
 			<param name="required.property" value="remote.server.deploy.path" />
 		</antcall>
 		<antcall target="fail-if-missing-property">
@@ -46,9 +43,8 @@
 		<scp 
 			file="${portlet.dir}/target/${portlet.name}.war"
 			remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
-			password="${remote.server.password}" trust="true" verbose="false" />
-		<sshexec host="${remote.server}" username="${remote.server.username}"
-			password="${remote.server.password}" trust="true" verbose="false"
+			trust="true" verbose="false" keyfile="${user.home}/.ssh/id_rsa" />
+		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${user.home}/.ssh/id_rsa"
 			command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
 	</target>
 
