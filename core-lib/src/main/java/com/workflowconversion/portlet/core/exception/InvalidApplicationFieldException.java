@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.core.exception;
 
-import com.workflowconversion.portlet.core.app.ApplicationField;
+import com.workflowconversion.portlet.core.app.FormField;
 
 /**
  * Thrown when an invalid application field is accessed or used.
@@ -18,7 +18,7 @@ public class InvalidApplicationFieldException extends ApplicationException {
 	 * @param field
 	 *            the invalid field.
 	 */
-	public InvalidApplicationFieldException(final ApplicationField field) {
+	public InvalidApplicationFieldException(final FormField field) {
 		super("Invalid application field: " + field.toString());
 	}
 

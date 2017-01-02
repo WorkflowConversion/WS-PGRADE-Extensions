@@ -1,10 +1,10 @@
 package com.workflowconversion.portlet.core.exception;
 
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 
 /**
- * Thrown by instances of {@link ApplicationProvider} when an insertion/edition results in a duplicate.
+ * Thrown by instances of {@link ResourceProvider} when an insertion/edition results in a duplicate.
  * 
  * @author delagarza
  *

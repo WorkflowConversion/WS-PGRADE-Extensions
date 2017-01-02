@@ -22,7 +22,6 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
 import dci.data.Middleware;
@@ -65,12 +64,9 @@ class AddApplicationDialog extends Window {
 
 	private Application newEmptyApplication() {
 		final Application app = new Application();
-		app.setId("automatically generated");
 		app.setName("");
 		app.setDescription("");
 		app.setPath("");
-		app.setResource("");
-		app.setResourceType("");
 		app.setVersion("");
 		return app;
 	}
@@ -84,33 +80,25 @@ class AddApplicationDialog extends Window {
 
 		// create the input controls
 		final TextField applicationName = createRequiredTextField("Application name:",
-				"Please enter a name for the application", ApplicationField.Name.getMaxLength());
+				"Please enter a name for the application", Application.Field.Name.getMaxLength());
 		final TextField version = createRequiredTextField("Version:", "Please enter a valid version",
-				ApplicationField.Version.getMaxLength());
+				Application.Field.Version.getMaxLength());
 		final TextField executablePath = createRequiredTextField("Executable path:",
-				"Please enter a valid application path", ApplicationField.Path.getMaxLength());
+				"Please enter a valid application path", Application.Field.Path.getMaxLength());
 		final TextArea description = createOptionalTextArea("Description:",
-				ApplicationField.Description.getMaxLength());
-		final TextField resource = createRequiredTextField("Resource:",
-				"Please enter a valid resource (i.e., IP address, DNS name of resource)",
-				ApplicationField.Resource.getMaxLength());
-		final ComboBox resourceType = createResourceTypeComboBox();
+				Application.Field.Description.getMaxLength());
 
 		layout.addComponent(applicationName);
 		layout.addComponent(version);
 		layout.addComponent(executablePath);
 		layout.addComponent(description);
-		layout.addComponent(resource);
-		layout.addComponent(resourceType);
 
 		applicationFieldGroup.setBuffered(true);
 		applicationFieldGroup.setItemDataSource(new BeanItem<Application>(application));
-		applicationFieldGroup.bind(applicationName, ApplicationField.Name.getMemberName());
-		applicationFieldGroup.bind(version, ApplicationField.Version.getMemberName());
-		applicationFieldGroup.bind(executablePath, ApplicationField.Path.getMemberName());
-		applicationFieldGroup.bind(description, ApplicationField.Description.getMemberName());
-		applicationFieldGroup.bind(resource, ApplicationField.Resource.getMemberName());
-		applicationFieldGroup.bind(resourceType, ApplicationField.ResourceType.getMemberName());
+		applicationFieldGroup.bind(applicationName, Application.Field.Name.getMemberName());
+		applicationFieldGroup.bind(version, Application.Field.Version.getMemberName());
+		applicationFieldGroup.bind(executablePath, Application.Field.Path.getMemberName());
+		applicationFieldGroup.bind(description, Application.Field.Description.getMemberName());
 
 		final Button addApplicationButton = new Button("Add", new Button.ClickListener() {
 			private static final long serialVersionUID = -2999251588313488770L;
@@ -144,6 +132,7 @@ class AddApplicationDialog extends Window {
 		setContent(layout);
 	}
 
+	// TODO: move this method to the AddResourceDialog class
 	private ComboBox createResourceTypeComboBox() {
 		final ComboBox resourceTypeComboBox = new ComboBox("Resource type:");
 		resourceTypeComboBox.setInputPrompt("Please select a resource type");

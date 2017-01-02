@@ -13,21 +13,18 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
-import com.workflowconversion.portlet.core.app.impl.InMemoryMockApplicationProvider;
-import com.workflowconversion.portlet.core.app.impl.MySQLApplicationProvider;
-import com.workflowconversion.portlet.core.app.impl.UnicoreApplicationProvider;
-import com.workflowconversion.portlet.core.dbconfig.DatabaseConfigurationProvider;
-import com.workflowconversion.portlet.core.dbconfig.impl.GUSEDatabaseConfigurationProvider;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
+import com.workflowconversion.portlet.core.app.impl.InMemoryMockResourceProvider;
+import com.workflowconversion.portlet.core.app.impl.JAXBResourceDatabase;
+import com.workflowconversion.portlet.core.app.impl.UnicoreResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
-import com.workflowconversion.portlet.core.middleware.impl.GUSEMiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
+import com.workflowconversion.portlet.core.middleware.impl.WSPGRADEMiddlewareProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
@@ -70,7 +67,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		}
 
 		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent);
-		final Collection<ApplicationProvider> applicationProviders = extractApplicationProviders(servletContextEvent,
+		final Collection<ResourceProvider> applicationProviders = extractResourceProviders(servletContextEvent,
 				middlewareProvider);
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
@@ -147,24 +144,19 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		}
 	}
 
-	private Collection<ApplicationProvider> extractApplicationProviders(final ServletContextEvent servletContextEvent,
+	private Collection<ResourceProvider> extractResourceProviders(final ServletContextEvent servletContextEvent,
 			final MiddlewareProvider middlewareProvider) {
 		// find out if we are using mocks
-		final Collection<ApplicationProvider> applicationProviders = new LinkedList<ApplicationProvider>();
+		final Collection<ResourceProvider> applicationProviders = new LinkedList<ResourceProvider>();
 		if (useMocks(servletContextEvent)) {
 			applicationProviders
-					.add(new InMemoryMockApplicationProvider("Editable mock app provider", middlewareProvider, true));
+					.add(new InMemoryMockResourceProvider("Editable mock app provider", middlewareProvider, true));
 			applicationProviders
-					.add(new InMemoryMockApplicationProvider("Read-only mock app provider", middlewareProvider, false));
+					.add(new InMemoryMockResourceProvider("Read-only mock app provider", middlewareProvider, false));
 		} else {
-			// get an initial pool properties
-			final PoolProperties initialProperties = extractInitialPoolProperties(
-					servletContextEvent.getServletContext());
-			// use the real db config provider
-			final DatabaseConfigurationProvider databaseConfigurationProvider = new GUSEDatabaseConfigurationProvider(
-					initialProperties);
-			applicationProviders.add(new MySQLApplicationProvider(databaseConfigurationProvider));
-			applicationProviders.add(new UnicoreApplicationProvider(middlewareProvider));
+			applicationProviders
+					.add(new JAXBResourceDatabase(extractInitParam("resource.xmlFile.location", servletContextEvent)));
+			applicationProviders.add(new UnicoreResourceProvider(middlewareProvider));
 		}
 		return Collections.unmodifiableCollection(applicationProviders);
 	}
@@ -187,7 +179,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		if (useMocks(servletContextEvent)) {
 			return new InMemoryMockMiddlewareProvider();
 		} else {
-			return new GUSEMiddlewareProvider();
+			return new WSPGRADEMiddlewareProvider();
 		}
 	}
 
@@ -198,20 +190,6 @@ public class WorkflowConversionContextListener implements ServletContextListener
 				.setAlgorithm(newInstance(servletContext.getInitParameter("stringSimilarityAlgorithm.implementation"),
 						StringSimilarityAlgorithm.class));
 		return builder.newStringSimilaritySettings();
-	}
-
-	// extracts pool properties from web.xml
-	private PoolProperties extractInitialPoolProperties(final ServletContext servletContext) {
-		final PoolProperties poolProperties = new PoolProperties();
-		poolProperties.setValidationInterval(Long.valueOf(servletContext.getInitParameter("pool.validationInterval")));
-		poolProperties.setTimeBetweenEvictionRunsMillis(
-				Integer.valueOf(servletContext.getInitParameter("pool.timeBetweenEviction")));
-		poolProperties.setMaxActive(Integer.valueOf(servletContext.getInitParameter("pool.maxActive")));
-		poolProperties.setMaxIdle(Integer.valueOf(servletContext.getInitParameter("pool.maxIdle")));
-		poolProperties.setMinIdle(Integer.valueOf(servletContext.getInitParameter("pool.minIdle")));
-		poolProperties.setInitialSize(Integer.valueOf(servletContext.getInitParameter("pool.initialSize")));
-		poolProperties.setMaxWait(Integer.valueOf(servletContext.getInitParameter("pool.maxWait")));
-		return poolProperties;
 	}
 
 	@Override

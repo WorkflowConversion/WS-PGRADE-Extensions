@@ -13,7 +13,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationField;
 
 /**
  * Processes an uploaded XML file.
@@ -38,7 +37,7 @@ public class XMLFileProcessor extends AbstractFileProcessor {
 
 	private class SAXHandler extends DefaultHandler {
 		Locator locator;
-		ApplicationField currentField = null;
+		Field currentField = null;
 		Application currentApplication;
 		final StringBuilder currentFieldValue = new StringBuilder();
 		private final static String APPLICATION_NODE_NAME = "application";
@@ -57,23 +56,23 @@ public class XMLFileProcessor extends AbstractFileProcessor {
 			}
 			// clear whatever has been stored, as we are about to start a new field
 			currentFieldValue.setLength(0);
-			if (qName.equalsIgnoreCase(ApplicationField.Description.name())) {
-				currentField = ApplicationField.Description;
+			if (qName.equalsIgnoreCase(Field.Description.name())) {
+				currentField = Field.Description;
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Name.name())) {
-				currentField = ApplicationField.Name;
+			if (qName.equalsIgnoreCase(Field.Name.name())) {
+				currentField = Field.Name;
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Path.name())) {
-				currentField = ApplicationField.Path;
+			if (qName.equalsIgnoreCase(Field.Path.name())) {
+				currentField = Field.Path;
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Resource.name())) {
-				currentField = ApplicationField.Resource;
+			if (qName.equalsIgnoreCase(Field.Resource.name())) {
+				currentField = Field.Resource;
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.ResourceType.name())) {
-				currentField = ApplicationField.ResourceType;
+			if (qName.equalsIgnoreCase(Field.ResourceType.name())) {
+				currentField = Field.ResourceType;
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Version.name())) {
-				currentField = ApplicationField.Version;
+			if (qName.equalsIgnoreCase(Field.Version.name())) {
+				currentField = Field.Version;
 			}
 		}
 
@@ -82,22 +81,22 @@ public class XMLFileProcessor extends AbstractFileProcessor {
 			if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
 				XMLFileProcessor.this.addParsedApplication(currentApplication, locator.getLineNumber());
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Description.name())) {
+			if (qName.equalsIgnoreCase(Field.Description.name())) {
 				currentApplication.setDescription(getCleanCurrentFieldValue());
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Name.name())) {
+			if (qName.equalsIgnoreCase(Field.Name.name())) {
 				currentApplication.setName(getCleanCurrentFieldValue());
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Path.name())) {
+			if (qName.equalsIgnoreCase(Field.Path.name())) {
 				currentApplication.setPath(getCleanCurrentFieldValue());
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Resource.name())) {
+			if (qName.equalsIgnoreCase(Field.Resource.name())) {
 				currentApplication.setResource(getCleanCurrentFieldValue());
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.ResourceType.name())) {
+			if (qName.equalsIgnoreCase(Field.ResourceType.name())) {
 				currentApplication.setResourceType(getCleanCurrentFieldValue());
 			}
-			if (qName.equalsIgnoreCase(ApplicationField.Version.name())) {
+			if (qName.equalsIgnoreCase(Field.Version.name())) {
 				currentApplication.setVersion(getCleanCurrentFieldValue());
 			}
 		}

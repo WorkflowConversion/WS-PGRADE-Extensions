@@ -35,7 +35,6 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationField;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
@@ -280,17 +279,6 @@ public class BulkUploadApplicationsDialog extends Window {
 
 	}
 
-	private IndexedContainer getIndexedContainerForHeaders() {
-		final IndexedContainer indexedContainer = new IndexedContainer();
-		indexedContainer.addContainerProperty(ApplicationField.Name, String.class, "lib.sample");
-		indexedContainer.addContainerProperty(ApplicationField.Version, String.class, "1.0");
-		indexedContainer.addContainerProperty(ApplicationField.Description, String.class, "magic!");
-		indexedContainer.addContainerProperty(ApplicationField.Path, String.class, "/usr/bin");
-		indexedContainer.addContainerProperty(ApplicationField.Resource, String.class, "server.org");
-		indexedContainer.addContainerProperty(ApplicationField.ResourceType, String.class, "moab");
-		return indexedContainer;
-	}
-
 	void processFile(final File file, final FileType fileType, final boolean firstRowAsHeader,
 			final boolean quotedValues, final Object[] headers, final Delimiter delimiter) {
 		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(applicationCommittedListener);
@@ -301,7 +289,7 @@ public class BulkUploadApplicationsDialog extends Window {
 
 			final String[] orderedHeaders = new String[headers.length];
 			for (int i = 0; i < headers.length; i++) {
-				orderedHeaders[i] = ((ApplicationField) headers[i]).name();
+				orderedHeaders[i] = ((Field) headers[i]).name();
 			}
 			if (firstRowAsHeader) {
 				csvFormat = csvFormat.withFirstRecordAsHeader();

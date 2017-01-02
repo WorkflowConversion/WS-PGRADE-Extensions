@@ -14,7 +14,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.VerticalLayout;
 import com.workflowconversion.portlet.core.app.ApplicationField;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
@@ -82,7 +82,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		applicationProviderSelection.setItemIconPropertyId(PROPERTY_NAME_ICON);
 
 		int applicationProviderId = 0;
-		for (final ApplicationProvider applicationProvider : super.applicationProviders) {
+		for (final ResourceProvider applicationProvider : super.applicationProviders) {
 			final Item newItem = applicationProviderSelection.addItem(applicationProviderId);
 			newItem.getItemProperty(PROPERTY_NAME_CAPTION)
 					.setValue(applicationProvider.getName() + (applicationProvider.isEditable() ? "" : " (read-only)"));

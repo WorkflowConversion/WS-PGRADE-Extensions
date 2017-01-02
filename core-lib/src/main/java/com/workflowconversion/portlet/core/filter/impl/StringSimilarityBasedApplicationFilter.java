@@ -11,9 +11,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationField;
+import com.workflowconversion.portlet.core.app.FormField;
+import com.workflowconversion.portlet.core.app.Resource;
 import com.workflowconversion.portlet.core.exception.InvalidApplicationFieldException;
 import com.workflowconversion.portlet.core.filter.Filter;
+import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
 
 /**
@@ -29,22 +31,22 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 	private final double cutOffScore;
 	private final StringSimilarityAlgorithm algorithm;
 	private final String term;
-	private final ApplicationField field;
+	private final FormField formField;
 
 	private StringSimilarityBasedApplicationFilter(final double cutOffScore, final StringSimilarityAlgorithm algorithm,
-			final String term, final ApplicationField field) {
+			final String term, final FormField formField) {
 		Validate.isTrue(cutOffScore > 0.0,
 				"cutOffScore must be greater or equal to zero, please use the Builder.setCutOffScore() method to set a proper value.");
 		Validate.notNull(algorithm,
 				"algorithm cannot be null, please use the Builder.setAlgorithm() method to set a proper instance.");
 		Validate.isTrue(!StringUtils.isBlank(term),
 				"term cannot be empty or contain only whitespace, please use the Builder.setTerm() method to set a proper value.");
-		Validate.notNull(field,
-				"field cannot be null, please use the Builder.setField() method to set a proper instance.");
+		Validate.notNull(formField,
+				"formField cannot be null, please use the Builder.setField() method to set a proper instance.");
 		this.cutOffScore = cutOffScore;
 		this.algorithm = algorithm;
 		this.term = term;
-		this.field = field;
+		this.formField = formField;
 	}
 
 	@Override
@@ -53,25 +55,32 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 
 			@Override
 			protected String getField(final Application application) {
-				switch (field) {
-				case Name:
-					return application.getName();
-				case Description:
-					return application.getDescription();
-				case Path:
-					return application.getPath();
-				case Resource:
-					return application.getResource();
-				case ResourceType:
-					return application.getResourceType();
-				case Version:
-					return application.getVersion();
-				default:
-					throw new InvalidApplicationFieldException(field);
-
+				if (Application.Field.class.isAssignableFrom(formField.getClass())) {
+					switch ((Application.Field) formField) {
+					case Description:
+						return application.getDescription();
+					case Path:
+						return application.getPath();
+					case Version:
+						return application.getVersion();
+					default:
+						throw new InvalidApplicationFieldException(formField);
+					}
+				} else if (Resource.Field.class.isAssignableFrom(formField.getClass())) {
+					switch ((Resource.Field) formField) {
+					case Name:
+						return application.getResource().getName();
+					case Type:
+						return application.getResource().getType();
+					default:
+						throw new InvalidApplicationFieldException(formField);
+					}
+				} else {
+					throw new InvalidApplicationFieldException(formField);
 				}
 			}
 		};
+
 		return scorer.applyByField(applications, term);
 	}
 
@@ -146,7 +155,7 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 		private double cutOffScore;
 		private StringSimilarityAlgorithm algorithm;
 		private String term;
-		private ApplicationField field;
+		private FormField formField;
 
 		/**
 		 * Sets the cut off score for the filter. For an entry to pass the filter, it's score must be greater or equal
@@ -188,12 +197,12 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 		/**
 		 * Sets the field against which the provided {@code term} will be compared.
 		 * 
-		 * @param field
+		 * @param formField
 		 *            the field to compare with.
 		 * @return an instance to {@code this} builder.
 		 */
-		public Builder setField(final ApplicationField field) {
-			this.field = field;
+		public Builder setFormField(final FormField formField) {
+			this.formField = formField;
 			return this;
 		}
 
@@ -203,7 +212,8 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 		 * @return a new instance of a {@link StringSimilarityBasedApplicationFilter}.
 		 */
 		public StringSimilarityBasedApplicationFilter newStringSimilarityBasedApplicationFilter() {
-			return new StringSimilarityBasedApplicationFilter(this.cutOffScore, this.algorithm, this.term, this.field);
+			return new StringSimilarityBasedApplicationFilter(this.cutOffScore, this.algorithm, this.term,
+					this.formField);
 		}
 	}
 }

@@ -2,8 +2,9 @@ package com.workflowconversion.portlet.ui.apptable;
 
 import java.util.Arrays;
 
-import com.workflowconversion.portlet.core.app.ApplicationField;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.Application;
+import com.workflowconversion.portlet.core.app.FormField;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
 /**
@@ -15,9 +16,9 @@ import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 public class ApplicationsTableBuilder {
 
 	private boolean displayEditControls;
-	private ApplicationProvider applicationProvider;
+	private ResourceProvider applicationProvider;
 	private MiddlewareProvider middlewareProvider;
-	private ApplicationField[] visibleColumns;
+	private FormField[] visibleColumns;
 
 	/**
 	 * Sets whether the table will display edit controls.
@@ -39,7 +40,7 @@ public class ApplicationsTableBuilder {
 	 *            the application provider.
 	 * @return {@code this} {@link ApplicationsTableBuilder}.
 	 */
-	public ApplicationsTableBuilder withApplicationProvider(final ApplicationProvider applicationProvider) {
+	public ApplicationsTableBuilder withApplicationProvider(final ResourceProvider applicationProvider) {
 		this.applicationProvider = applicationProvider;
 		return this;
 	}
@@ -63,7 +64,7 @@ public class ApplicationsTableBuilder {
 	 *            a variable sequence of visible columns.
 	 * @return {@code this} {@link ApplicationsTableBuilder}.
 	 */
-	public ApplicationsTableBuilder withVisibleColumns(final ApplicationField... visibleColumns) {
+	public ApplicationsTableBuilder withVisibleColumns(final Application.Field... visibleColumns) {
 		this.visibleColumns = Arrays.copyOf(visibleColumns, visibleColumns.length);
 		return this;
 	}

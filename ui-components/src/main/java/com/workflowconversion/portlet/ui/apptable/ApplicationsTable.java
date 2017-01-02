@@ -20,8 +20,8 @@ import com.vaadin.ui.Table;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationField;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.FormField;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
@@ -31,8 +31,8 @@ import com.workflowconversion.portlet.ui.apptable.upload.BulkUploadApplicationsD
  * Component containing the applications to be displayed in a table, plus controls to add/save application if set on
  * editable mode.
  * 
- * Clients are responsible of validating that instances of this class based on a read-only {@link ApplicationProvider}
- * are not editable.
+ * Clients are responsible of validating that instances of this class based on a read-only {@link ResourceProvider} are
+ * not editable.
  */
 public class ApplicationsTable extends VerticalLayout implements ApplicationCommittedListener {
 
@@ -41,7 +41,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 	private final Table table;
 	private final ApplicationTableContainer containerDataSource;
 	private final MiddlewareProvider middlewareProvider;
-	private final ApplicationField[] visibleColumns;
+	private final FormField[] visibleColumns;
 
 	/**
 	 * Builds a new instance.
@@ -53,9 +53,11 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 	 * @param withEditControls
 	 *            whether the table with applications will be editable, regardless whether the passed application
 	 *            provider is editable or not.
+	 * @param visibleColumns
+	 *            the name of the fields that will be visible on this table.
 	 */
-	ApplicationsTable(final ApplicationProvider applicationProvider, final MiddlewareProvider middlewareProvider,
-			final boolean withEditControls, final ApplicationField... visibleColumns) {
+	ApplicationsTable(final ResourceProvider applicationProvider, final MiddlewareProvider middlewareProvider,
+			final boolean withEditControls, final FormField... visibleColumns) {
 		Validate.notNull(applicationProvider, "applicationProvider cannot be null");
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		Validate.notEmpty(visibleColumns, "visibleColumns cannot be null or empty");
@@ -86,7 +88,7 @@ public class ApplicationsTable extends VerticalLayout implements ApplicationComm
 		table.setHeight(450, Unit.PIXELS);
 		table.setContainerDataSource(containerDataSource);
 		table.setVisibleColumns((Object[]) visibleColumns);
-		for (final ApplicationField visibleColumn : visibleColumns) {
+		for (final FormField visibleColumn : visibleColumns) {
 			table.setColumnHeader(visibleColumn, visibleColumn.getDisplayName());
 		}
 		table.setSelectable(true);

@@ -19,7 +19,7 @@ import com.vaadin.server.VaadinPortletService;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
@@ -43,7 +43,7 @@ public abstract class WorkflowConversionUI extends UI {
 	private final static Logger LOG = LoggerFactory.getLogger(WorkflowConversionUI.class);
 
 	protected PortletUser currentUser;
-	protected final Collection<ApplicationProvider> applicationProviders;
+	protected final Collection<ResourceProvider> applicationProviders;
 	protected final PortletSanityCheck portletSanityCheck;
 
 	/**
@@ -55,7 +55,7 @@ public abstract class WorkflowConversionUI extends UI {
 	 *            the application providers.
 	 */
 	protected WorkflowConversionUI(final PortletSanityCheck portletSanityCheck,
-			final Collection<ApplicationProvider> applicationProviders) {
+			final Collection<ResourceProvider> applicationProviders) {
 		Validate.notEmpty(applicationProviders, "applicationProviders cannot be null or empty");
 		Validate.notNull(portletSanityCheck, "portletSanityCheck cannot be null");
 		this.applicationProviders = applicationProviders;
@@ -97,7 +97,7 @@ public abstract class WorkflowConversionUI extends UI {
 	private void initApplicationProviders() {
 		// init any app provider that needs initialization
 		LOG.info("initializing ApplicationProviders");
-		for (final ApplicationProvider provider : applicationProviders) {
+		for (final ResourceProvider provider : applicationProviders) {
 			if (provider.needsInit()) {
 				if (LOG.isInfoEnabled()) {
 					LOG.info("initializing " + provider.getClass());

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Simple object that contains all of the information an application requires to be executed on gUSE.
@@ -24,6 +25,11 @@ public class Application implements Serializable {
 	private String description;
 	@XmlAttribute
 	private String path;
+
+	// add a reference to the resource on which this application resides,
+	// but signal that we don't want it to be serialized/deserialized
+	@XmlTransient
+	private Resource resource;
 
 	/**
 	 * @return the name
@@ -85,6 +91,21 @@ public class Application implements Serializable {
 		this.path = path;
 	}
 
+	/**
+	 * @return the resource
+	 */
+	public Resource getResource() {
+		return resource;
+	}
+
+	/**
+	 * @param resource
+	 *            the resource to set
+	 */
+	public void setResource(Resource resource) {
+		this.resource = resource;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -103,6 +124,67 @@ public class Application implements Serializable {
 	 */
 	public String generateKey() {
 		return "name=" + this.name + "_version=" + this.version + "_path=" + this.path;
+	}
+
+	/**
+	 * An enum listing the fields of an application.
+	 * 
+	 * @author delagarza
+	 */
+	public static enum Field implements FormField {
+		/**
+		 * Name of the application.
+		 */
+		Name(256, "name", "Name"),
+		/**
+		 * Description.
+		 */
+		Description(512, "description", "Description"),
+		/**
+		 * Path on which the application is found.
+		 */
+		Path(512, "path", "Path"),
+		/**
+		 * Version of the application.
+		 */
+		Version(16, "version", "Version");
+
+		private final int maxLength;
+		private final String memberName;
+		private final String displayName;
+
+		Field(final int maxLength, final String memberName, final String displayName) {
+			this.maxLength = maxLength;
+			this.memberName = memberName;
+			this.displayName = displayName;
+		}
+
+		/**
+		 * Returns the maximum length of this field.
+		 * 
+		 * @return the maximum length of this field.
+		 */
+		public int getMaxLength() {
+			return maxLength;
+		}
+
+		/**
+		 * Returns the internal name of this field. This is the name of the member in the {@link Application} class.
+		 * 
+		 * @return the member name of this field.
+		 */
+		public String getMemberName() {
+			return memberName;
+		}
+
+		/**
+		 * A <i>nice</i> name that can be presented to the end user.
+		 * 
+		 * @return the display name.
+		 */
+		public String getDisplayName() {
+			return displayName;
+		}
 	}
 
 }

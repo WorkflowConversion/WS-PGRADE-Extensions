@@ -6,7 +6,7 @@ package com.workflowconversion.portlet.core.exception;
  * @author delagarza
  *
  */
-public class NotEditableApplicationProviderException extends ApplicationException {
+public class ProviderNotEditableException extends ApplicationException {
 
 	private static final long serialVersionUID = -4721655382750206432L;
 
@@ -16,7 +16,7 @@ public class NotEditableApplicationProviderException extends ApplicationExceptio
 	 * @param message
 	 *            A message.
 	 */
-	public NotEditableApplicationProviderException(String message) {
+	public ProviderNotEditableException(String message) {
 		super(message);
 		// TODO Auto-generated constructor stub
 	}

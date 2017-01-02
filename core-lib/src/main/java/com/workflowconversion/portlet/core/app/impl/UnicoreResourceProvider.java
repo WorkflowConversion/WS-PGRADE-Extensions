@@ -11,9 +11,10 @@ import org.unigrids.x2006.x04.services.tss.ApplicationResourceType;
 import org.w3.x2005.x08.addressing.EndpointReferenceType;
 
 import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.Resource;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
-import com.workflowconversion.portlet.core.exception.NotEditableApplicationProviderException;
+import com.workflowconversion.portlet.core.exception.ProviderNotEditableException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
 import dci.data.Item;
@@ -31,11 +32,11 @@ import de.fzj.unicore.wsrflite.xmlbeans.client.RegistryClient;
  * @author delagarza
  *
  */
-public class UnicoreApplicationProvider implements ApplicationProvider {
+public class UnicoreResourceProvider implements ResourceProvider {
 
 	private static final long serialVersionUID = 6542266373514172909L;
 
-	private final static Logger LOG = LoggerFactory.getLogger(UnicoreApplicationProvider.class);
+	private final static Logger LOG = LoggerFactory.getLogger(UnicoreResourceProvider.class);
 
 	/**
 	 * Since it is not possible to add UNICORE applications, some classes might find this constant useful.
@@ -49,7 +50,7 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	 * @param middlewareProvider
 	 *            A middleware provider.
 	 */
-	public UnicoreApplicationProvider(final MiddlewareProvider middlewareProvider) {
+	public UnicoreResourceProvider(final MiddlewareProvider middlewareProvider) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		this.middlewareProvider = middlewareProvider;
 	}
@@ -60,48 +61,47 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	}
 
 	@Override
-	public Collection<Application> getApplications() {
+	public Collection<Resource> getResources() {
 		// get the available unicore items
 		final Collection<Item> unicoreItems = middlewareProvider.getAvailableItems(UNICORE_RESOURCE_TYPE);
 
 		// extract the applications from each item
-		final Collection<Application> applications = new LinkedList<Application>();
+		final Collection<Resource> resources = new LinkedList<Resource>();
 		for (final Item item : unicoreItems) {
-			extractAppsFromUnicoreInstance(item, applications);
+			extractResourcesFromUnicoreInstance(item, resources);
 		}
 
-		return applications;
+		return resources;
 	}
 
-	private void extractAppsFromUnicoreInstance(final Item item, final Collection<Application> applications) {
+	private void extractResourcesFromUnicoreInstance(final Item item, final Collection<Resource> resources) {
 		try {
 			final Unicore unicoreConfigItem = item.getUnicore();
 			final ClientProperties securityProperties = createClientProperties(unicoreConfigItem);
-			final String resource = item.getName().trim();
-			final RegistryClient registryClient = initRegistryClient(resource, unicoreConfigItem);
+			final String resourceName = item.getName().trim();
+			final RegistryClient registryClient = initRegistryClient(resourceName, unicoreConfigItem);
 			final List<EndpointReferenceType> tsfEPRs = registryClient
 					.listAccessibleServices(TargetSystemFactory.TSF_PORT);
 
 			for (final EndpointReferenceType epr : tsfEPRs) {
 				final String serverUrl = epr.getAddress().getStringValue().trim();
 				final TSFClient tsf = new TSFClient(serverUrl, epr, securityProperties);
-				int nApplications = 0;
+				final Resource resource = new Resource();
+				resource.setType(UNICORE_RESOURCE_TYPE);
+				resource.setName(resourceName);
 				if (tsf != null && tsf.getResourcePropertiesDocument() != null) {
 					for (final ApplicationResourceType unicoreApp : tsf.getResourcePropertiesDocument()
 							.getTargetSystemFactoryProperties().getApplicationResourceArray()) {
 						final Application app = new Application();
-						// set some id, since we don't get any from UNICORE
-						app.setId(resource + "_app_id_" + nApplications++);
 						app.setName(unicoreApp.getApplicationName());
 						app.setVersion(unicoreApp.getApplicationVersion());
 						app.setDescription(unicoreApp.getDescription());
-						app.setResource(resource);
-						app.setResourceType(UNICORE_RESOURCE_TYPE);
 						// UNICORE hides application details such as its path
 						app.setPath("not available");
-						applications.add(app);
+						resource.addApplication(app);
 					}
 				}
+				resources.add(resource);
 
 			}
 		} catch (Exception e) {
@@ -137,14 +137,14 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	}
 
 	@Override
-	public String addApplication(Application app) throws NotEditableApplicationProviderException {
-		throw new NotEditableApplicationProviderException(
+	public void addResource(final Resource app) throws ProviderNotEditableException {
+		throw new ProviderNotEditableException(
 				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
 	}
 
 	@Override
-	public void saveApplication(Application app) throws NotEditableApplicationProviderException {
-		throw new NotEditableApplicationProviderException(
+	public void saveResource(final Resource app) throws ProviderNotEditableException {
+		throw new ProviderNotEditableException(
 				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
 	}
 
@@ -164,8 +164,14 @@ public class UnicoreApplicationProvider implements ApplicationProvider {
 	}
 
 	@Override
-	public void removeApplication(Application app) throws NotEditableApplicationProviderException {
-		throw new NotEditableApplicationProviderException(
+	public void removeResource(final Resource resource) throws ProviderNotEditableException {
+		throw new ProviderNotEditableException(
+				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
+	}
+
+	@Override
+	public void commitChanges() throws ProviderNotEditableException {
+		throw new ProviderNotEditableException(
 				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
 	}
 

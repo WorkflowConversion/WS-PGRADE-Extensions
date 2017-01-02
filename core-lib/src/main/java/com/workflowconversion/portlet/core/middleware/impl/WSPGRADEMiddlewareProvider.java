@@ -14,15 +14,15 @@ import hu.sztaki.lpds.dcibridge.client.ResourceConfigurationFace;
 import hu.sztaki.lpds.information.local.InformationBase;
 
 /**
- * Implementation of {@link MiddlewareProvider} that uses webservices to query gUSE about middlewares.
+ * Implementation of {@link MiddlewareProvider} that uses webservices to query WS-PGRADE about middlewares.
  * 
  * @author delagarza
  *
  */
-public class GUSEMiddlewareProvider extends AbstractFilteredMiddlewareProvider {
+public class WSPGRADEMiddlewareProvider extends AbstractFilteredMiddlewareProvider {
 
 	private static final long serialVersionUID = -8805943511022013993L;
-	private final static Logger LOG = LoggerFactory.getLogger(GUSEMiddlewareProvider.class);
+	private final static Logger LOG = LoggerFactory.getLogger(WSPGRADEMiddlewareProvider.class);
 
 	// this is that dci-bride.xml looks like
 	// there are multiple <middleware> items, but there should be only one with type "unicore"

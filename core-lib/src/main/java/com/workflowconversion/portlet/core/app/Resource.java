@@ -19,13 +19,13 @@ import com.workflowconversion.portlet.core.jaxb.ApplicationsXmlAdapter;
 /**
  * Class representing a computing resource, such as a computing cluster.
  * 
- * {@link ComputingResource} classes contain a list of {@link Application} and a list of queues.
+ * {@link Resource} classes contain a list of {@link Application} and a list of queues.
  * 
  * @author delagarza
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class ComputingResource implements Serializable {
+public class Resource implements Serializable {
 
 	private static final long serialVersionUID = -2174466858733103521L;
 
@@ -82,6 +82,7 @@ public class ComputingResource implements Serializable {
 	 *            application to add.
 	 */
 	public void addApplication(final Application application) {
+		application.setResource(this);
 		this.applications.put(application.generateKey(), application);
 	}
 
@@ -90,7 +91,18 @@ public class ComputingResource implements Serializable {
 	 *            the application to remove.
 	 */
 	public void removeApplication(final Application application) {
+		application.setResource(null);
 		this.applications.remove(application.generateKey());
+	}
+
+	/**
+	 * Saves changes done to the application.
+	 * 
+	 * @param application
+	 *            the edited application to be saved.
+	 */
+	public void saveApplication(final Application application) {
+		addApplication(application);
 	}
 
 	/**
@@ -123,8 +135,8 @@ public class ComputingResource implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "ComputingResource [type=" + type + ", name=" + name + ", applications=" + applications + ", queues="
-				+ queues + "]";
+		return "Resource [type=" + type + ", name=" + name + ", applications=" + applications + ", queues=" + queues
+				+ "]";
 	}
 
 	/**
@@ -134,5 +146,44 @@ public class ComputingResource implements Serializable {
 	 */
 	public String generateKey() {
 		return "type=" + type + "_name=" + name;
+	}
+
+	/**
+	 * Enum listing the fields of computing resources.
+	 * 
+	 * @author delagarza
+	 *
+	 */
+	public static enum Field implements FormField {
+
+		Name(256, "name", "Name"), Type(64, "type", "Type"),
+		// to add/remove/edit queues, there's no need for an extra dialog with a form,
+		// therefore we really don't need to use the real member name
+		Queues(64, "n/a", "Queues");
+
+		private final int maxLength;
+		private final String displayName;
+		private final String memberName;
+
+		private Field(final int maxLength, final String memberName, final String displayName) {
+			this.maxLength = maxLength;
+			this.memberName = memberName;
+			this.displayName = displayName;
+		}
+
+		@Override
+		public int getMaxLength() {
+			return maxLength;
+		}
+
+		@Override
+		public String getMemberName() {
+			return memberName;
+		}
+
+		@Override
+		public String getDisplayName() {
+			return displayName;
+		}
 	}
 }

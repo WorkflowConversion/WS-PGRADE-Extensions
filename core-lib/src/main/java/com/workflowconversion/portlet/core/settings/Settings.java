@@ -6,7 +6,7 @@ import java.util.Collections;
 
 import org.apache.commons.lang.Validate;
 
-import com.workflowconversion.portlet.core.app.ApplicationProvider;
+import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
@@ -24,7 +24,7 @@ public class Settings implements Serializable {
 
 	private static final long serialVersionUID = -1344935177312215690L;
 	private final PortletSanityCheck portletSanityCheck;
-	private final Collection<ApplicationProvider> applicationProviders;
+	private final Collection<ResourceProvider> applicationProviders;
 	private final StringSimilaritySettings stringSimilaritySettings;
 	private final MiddlewareProvider middlewareProvider;
 	private final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass;
@@ -71,7 +71,7 @@ public class Settings implements Serializable {
 	 * 
 	 * @return The application providers.
 	 */
-	public Collection<ApplicationProvider> getApplicationProviders() {
+	public Collection<ResourceProvider> getApplicationProviders() {
 		return this.applicationProviders;
 	}
 
@@ -126,7 +126,7 @@ public class Settings implements Serializable {
 	}
 
 	private Settings(final PortletSanityCheck portletSanityCheck,
-			final Collection<ApplicationProvider> applicationProviders,
+			final Collection<ResourceProvider> applicationProviders,
 			final StringSimilaritySettings stringSimilaritySettings, final MiddlewareProvider middlewareProvider,
 			final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass,
 			final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass,
@@ -160,7 +160,7 @@ public class Settings implements Serializable {
 	 *
 	 */
 	public static class Builder {
-		private Collection<ApplicationProvider> applicationProviders;
+		private Collection<ResourceProvider> applicationProviders;
 		private PortletSanityCheck portletSanityCheck;
 		private StringSimilaritySettings stringSimilaritySettings;
 		private MiddlewareProvider middlewareProvider;
@@ -175,7 +175,7 @@ public class Settings implements Serializable {
 		 *            The collection of application providers.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder withApplicationProviders(final Collection<ApplicationProvider> applicationProviders) {
+		public Builder withApplicationProviders(final Collection<ResourceProvider> applicationProviders) {
 			this.applicationProviders = applicationProviders;
 			return this;
 		}
