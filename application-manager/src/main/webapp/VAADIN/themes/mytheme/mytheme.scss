@@ -36,16 +36,16 @@ $v-app-loading-text: "Loading...";
 	@include valo;
 	// Insert your own theme rules here
 	
-	.appTable .v-table-cell-wrapper textarea.v-textarea {
+	.tableWithControls .v-table-cell-wrapper textarea.v-textarea {
 		height: 50px;		
 	}
 	
-	.appTable .v-filterselect-input, .appTable .v-textfield.v-widget, .appTable .v-textarea.v-widget {
+	.tableWithControls .v-filterselect-input, .tableWithControls .v-textfield.v-widget, .tableWithControls .v-textarea.v-widget {
 		color: black;
 		font-size: 14px;
 	}
 	
-	.appTable .v-filterselect.v-readonly [class*="input"], .appTable .v-textfield.v-disabled, .appTable .v-textarea.v-disabled {
+	.tableWithControls .v-filterselect.v-readonly [class*="input"], .tableWithControls .v-textfield.v-disabled, .tableWithControls .v-textarea.v-disabled {
 		color: #8d8d8d;
 		font-size: 14px;
 		opacity: 1.0;
@@ -56,7 +56,7 @@ $v-app-loading-text: "Loading...";
 		font-size: 14px;
 	}
 	
-	.appTable .v-table-row-odd {
+	.tableWithControls .v-table-row-odd {
 		background-color: rgba(186, 214, 236, 0.68);
 	}
 	
@@ -78,6 +78,18 @@ $v-app-loading-text: "Loading...";
 	.disabled-component {
 		opacity: 0.5;
 		filter: alpha(opacity=50);
+	}
+	
+	.v-table-row-withError {
+		color: red;
+	}
+	
+	.v-table-cell-content-withError {
+		color: red;
+	}
+	
+	.withError {
+		color: red;
 	}
 	
 }

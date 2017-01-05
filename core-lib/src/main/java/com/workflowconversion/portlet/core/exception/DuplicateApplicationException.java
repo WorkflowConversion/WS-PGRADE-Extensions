@@ -1,10 +1,11 @@
 package com.workflowconversion.portlet.core.exception;
 
-import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.ResourceProvider;
+import com.workflowconversion.portlet.core.resource.Application;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 
 /**
- * Thrown by instances of {@link ResourceProvider} when an insertion/edition results in a duplicate.
+ * Thrown by instances of {@link ResourceProvider} when an insertion would result in overwriting an already existing
+ * application.
  * 
  * @author delagarza
  *
@@ -14,29 +15,12 @@ public class DuplicateApplicationException extends ApplicationException {
 	private static final long serialVersionUID = -7388349157090017138L;
 
 	/**
-	 * Constructor.
-	 * 
-	 * @param message
-	 *            A message.
-	 * @param application
+	 * @param duplicateApplication
 	 *            The duplicate application.
 	 */
-	public DuplicateApplicationException(final String message, final Application application) {
-		super(message + ", duplicate application: " + application);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param message
-	 *            A message.
-	 * @param The
-	 *            duplicate application.
-	 * @param cause
-	 *            The underlying cause of this exception.
-	 */
-	public DuplicateApplicationException(final String message, final Application application, final Throwable cause) {
-		super(message + ", duplicate application: " + application, cause);
+	public DuplicateApplicationException(final Application duplicateApplication) {
+		super("An application with the same name, version, path already exists on this resource. Duplicate: "
+				+ duplicateApplication);
 	}
 
 }

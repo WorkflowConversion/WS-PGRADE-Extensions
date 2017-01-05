@@ -17,14 +17,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
-import com.workflowconversion.portlet.core.app.ResourceProvider;
-import com.workflowconversion.portlet.core.app.impl.InMemoryMockResourceProvider;
-import com.workflowconversion.portlet.core.app.impl.JAXBResourceDatabase;
-import com.workflowconversion.portlet.core.app.impl.UnicoreResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.WSPGRADEMiddlewareProvider;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
+import com.workflowconversion.portlet.core.resource.impl.InMemoryMockResourceProvider;
+import com.workflowconversion.portlet.core.resource.impl.JAXBResourceDatabase;
+import com.workflowconversion.portlet.core.resource.impl.UnicoreResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;

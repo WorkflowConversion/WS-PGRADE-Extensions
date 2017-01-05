@@ -13,13 +13,11 @@ import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.VerticalLayout;
-import com.workflowconversion.portlet.core.app.ApplicationField;
-import com.workflowconversion.portlet.core.app.ResourceProvider;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
-import com.workflowconversion.portlet.ui.apptable.ApplicationsTable;
-import com.workflowconversion.portlet.ui.apptable.ApplicationsTableBuilder;
+import com.workflowconversion.portlet.ui.table.application.ApplicationsTable;
 
 /**
  * Entry point for this portlet.

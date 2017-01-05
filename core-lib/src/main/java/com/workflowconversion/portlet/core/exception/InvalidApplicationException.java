@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.core.exception;
 
-import com.workflowconversion.portlet.core.app.Application;
+import com.workflowconversion.portlet.core.resource.Application;
 
 /**
  * Exception thrown when an application does not satisfy certain constraints, such as having a non-null name, for

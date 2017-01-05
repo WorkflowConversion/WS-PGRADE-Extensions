@@ -3,7 +3,7 @@ package com.workflowconversion.portlet.core.workflow;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
-import com.workflowconversion.portlet.core.app.Application;
+import com.workflowconversion.portlet.core.resource.Application;
 
 /**
  * Simple class that represents jobs in imported workflows.

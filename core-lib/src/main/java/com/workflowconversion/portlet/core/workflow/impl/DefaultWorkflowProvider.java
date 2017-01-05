@@ -23,8 +23,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.google.common.io.Files;
-import com.workflowconversion.portlet.core.app.Application;
 import com.workflowconversion.portlet.core.exception.InvalidWorkflowException;
+import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.workflow.Job;
 import com.workflowconversion.portlet.core.workflow.Job.ConfigurationState;
 import com.workflowconversion.portlet.core.workflow.Workflow;

@@ -28,9 +28,9 @@ import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowProvider;
 import com.workflowconversion.portlet.ui.NotificationUtils;
+import com.workflowconversion.portlet.ui.upload.workflow.WorkflowUploadDialog;
+import com.workflowconversion.portlet.ui.upload.workflow.WorkflowUploadedListener;
 import com.workflowconversion.portlet.ui.workflow.export.WorkflowExportDialog;
-import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadDialog;
-import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadedListener;
 
 /**
  * Class containing all of the ui components needed to upload, save, delete, export workflows.

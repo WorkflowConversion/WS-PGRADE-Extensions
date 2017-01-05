@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.core.exception;
 
-import com.workflowconversion.portlet.core.app.FormField;
+import com.workflowconversion.portlet.core.resource.FormField;
 
 /**
  * Thrown when an invalid application field is accessed or used.

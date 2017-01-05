@@ -1,0 +1,45 @@
+<!-- 
+	processing of this file is NOT case sensitive, the only important thing to have in mind
+	is the tag names
+-->
+<resources>
+	<resource>
+		<!-- name, type of a resource -->
+		<name>sample.resource.com</name>
+		<type>lsf</type>
+		<!-- queues -->
+		<queue>
+			<name>default</name>
+		</queue>
+		<!-- applications -->
+		<application>
+			<!-- name, version, path, description -->
+			<name>SampleApp</name>
+			<version>1.1</version>
+			<path>/usr/bin/sampleapp</path>
+			<description>This is a sample application</description>
+		</application>
+		<application>
+			<name>FileChecker</name>
+			<version>1.2b</version>
+			<path>/share/apps/filechecker</path>
+			<description>This is a sample application</description>
+		</application>
+	</resource>
+	<resource>
+		<name>sample.resource.edu</name>
+		<type>moab</type>
+		<queue>
+			<name>longterm</name>
+		</queue>
+		<queue>
+			<name>fast</name>
+		</queue>
+		<application>
+			<name>EmailSender</name>
+			<version>9.5</version>
+			<path>/local/usr/bin/email</path>
+			<description>This is a sample app</description>
+		</application>
+	</resource>
+</resources>

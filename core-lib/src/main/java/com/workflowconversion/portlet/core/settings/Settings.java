@@ -6,9 +6,9 @@ import java.util.Collections;
 
 import org.apache.commons.lang.Validate;
 
-import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;

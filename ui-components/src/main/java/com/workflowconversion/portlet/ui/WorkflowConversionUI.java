@@ -19,8 +19,8 @@ import com.vaadin.server.VaadinPortletService;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
-import com.workflowconversion.portlet.core.app.ResourceProvider;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 

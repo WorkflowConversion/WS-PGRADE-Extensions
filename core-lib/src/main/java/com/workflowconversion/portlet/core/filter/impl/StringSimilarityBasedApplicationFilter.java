@@ -10,11 +10,11 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
-import com.workflowconversion.portlet.core.app.Application;
-import com.workflowconversion.portlet.core.app.FormField;
-import com.workflowconversion.portlet.core.app.Resource;
 import com.workflowconversion.portlet.core.exception.InvalidApplicationFieldException;
 import com.workflowconversion.portlet.core.filter.Filter;
+import com.workflowconversion.portlet.core.resource.Application;
+import com.workflowconversion.portlet.core.resource.FormField;
+import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
 
