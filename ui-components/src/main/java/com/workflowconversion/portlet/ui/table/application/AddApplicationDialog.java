@@ -6,7 +6,7 @@ import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.ui.table.AbstractAddGenericElementDialog;
-import com.workflowconversion.portlet.ui.table.GenericElementCommitedListener;
+import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
 
 /**
  * Modal dialog to add new applications.
@@ -22,18 +22,13 @@ class AddApplicationDialog extends AbstractAddGenericElementDialog<Application> 
 	 * @param listener
 	 *            the listener to be notified when an application is to be added.
 	 */
-	AddApplicationDialog(final GenericElementCommitedListener<Application> listener) {
+	AddApplicationDialog(final GenericElementCommittedListener<Application> listener) {
 		super("Add application", listener);
 	}
 
 	@Override
 	protected Application createDefaultElement() {
-		final Application app = new Application();
-		app.setName("");
-		app.setDescription("");
-		app.setPath("");
-		app.setVersion("");
-		return app;
+		return new Application();
 	}
 
 	@Override

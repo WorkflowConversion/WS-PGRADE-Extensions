@@ -80,16 +80,16 @@ $v-app-loading-text: "Loading...";
 		filter: alpha(opacity=50);
 	}
 	
-	.v-table-row-withError {
-		color: red;
+	.tableWithControls .v-table-row-withError {
+		background-color: #f7a3a3; 
 	}
 	
-	.v-table-cell-content-withError {
-		color: red;
+	.tableWithControls .v-table-cell-content-withError {
+		background-color: #f7a3a3;
 	}
 	
 	.withError {
-		color: red;
+		background-color: #f7a3a3;
 	}
 	
 }

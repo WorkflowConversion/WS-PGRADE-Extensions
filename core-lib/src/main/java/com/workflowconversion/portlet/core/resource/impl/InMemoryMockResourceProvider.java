@@ -6,6 +6,8 @@ import java.util.TreeMap;
 
 import org.apache.http.annotation.NotThreadSafe;
 import org.jsoup.helper.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.workflowconversion.portlet.core.exception.DuplicateResourceException;
 import com.workflowconversion.portlet.core.exception.ProviderNotEditableException;
@@ -29,9 +31,11 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	private static final long serialVersionUID = 9085026519196444948L;
 
-	private final static int N_INITIAL_RESOURCES = 3;
-	private final static int N_INITIAL_APPS = 8;
-	private final static int N_INITIAL_QUEUES = 2;
+	private final static Logger LOG = LoggerFactory.getLogger(InMemoryMockResourceProvider.class);
+
+	private final static int N_INITIAL_RESOURCES = 8;
+	private final static int N_INITIAL_APPS = 9;
+	private final static int N_INITIAL_QUEUES = 4;
 
 	private final boolean editable;
 	private final String name;
@@ -55,18 +59,18 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 			resource.setName("Fake resource " + i);
 			for (int j = 0; j < N_INITIAL_QUEUES; j++) {
 				final Queue queue = new Queue();
-				queue.setName("queue_" + j);
+				queue.setName("queue_" + i + '_' + j);
 				resource.addQueue(queue);
 			}
 			for (int j = 0; j < N_INITIAL_APPS; j++) {
 				final Application application = new Application();
-				application.setName("Fake application " + j);
+				application.setName("Fake application " + i + ", " + j);
 				application.setDescription("Description of fake application " + j);
 				application.setPath("/path/of/fake/app_" + j);
 				application.setVersion("1.1." + j);
 				resource.addApplication(application);
 			}
-			addResource(resource);
+			addResource_internal(resource);
 		}
 	}
 
@@ -101,9 +105,17 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	@Override
 	public void addResource(final Resource resource) {
+		LOG.info("ADDING " + resource);
 		validateEditableBeforeEdition();
+		addResource_internal(resource);
+	}
+
+	/**
+	 * @param resource
+	 */
+	private void addResource_internal(final Resource resource) {
 		Validate.notNull(resource);
-		final String key = resource.getId();
+		final String key = resource.generateKey();
 		if (!resources.containsKey(key)) {
 			resources.put(key, resource);
 		} else {
@@ -113,9 +125,10 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	@Override
 	public void saveResource(final Resource resource) {
+		LOG.info("SAVING " + resource);
 		validateEditableBeforeEdition();
 		Validate.notNull(resource);
-		final String key = resource.getId();
+		final String key = resource.generateKey();
 		if (resources.containsKey(key)) {
 			resources.put(key, resource);
 		} else {
@@ -125,15 +138,17 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	@Override
 	public void removeResource(final Resource resource) {
+		LOG.info("REMOVING " + resource);
 		validateEditableBeforeEdition();
 		Validate.notNull(resource);
-		if (resources.remove(resource.getId()) == null) {
+		if (resources.remove(resource.generateKey()) == null) {
 			throw new ResourceNotFoundException(resource);
 		}
 	}
 
 	@Override
 	public void removeAllResources() throws ProviderNotEditableException {
+		LOG.info("REMOVING ALL RESOURCES");
 		validateEditableBeforeEdition();
 		resources.clear();
 	}
@@ -141,11 +156,12 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 	@Override
 	public boolean containsResource(final Resource resource) {
 		Validate.notNull(resource);
-		return resources.containsKey(resource.getId());
+		return resources.containsKey(resource.generateKey());
 	}
 
 	@Override
 	public void commitChanges() {
+		LOG.info("COMMITTING CHANGES");
 		validateEditableBeforeEdition();
 		// does nothing, since we're actually not storing anything
 	}

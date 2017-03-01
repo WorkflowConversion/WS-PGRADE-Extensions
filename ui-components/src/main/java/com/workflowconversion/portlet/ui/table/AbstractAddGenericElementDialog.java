@@ -38,21 +38,26 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 	protected static final String COMMON_FIELD_WIDTH = "10em";
 
 	protected final FieldGroup fieldGroup;
-	protected final GenericElementCommitedListener<T> listener;
-	protected final T element;
+	protected final GenericElementCommittedListener<T> listener;
+	protected T element;
 
-	protected AbstractAddGenericElementDialog(final String caption, final GenericElementCommitedListener<T> listener) {
+	protected AbstractAddGenericElementDialog(final String caption, final GenericElementCommittedListener<T> listener) {
 		Validate.isTrue(StringUtils.isNotBlank(caption),
 				"caption cannot be null, empty or contain only whitespace characters.");
 		Validate.notNull(listener, "listener cannot be null.");
 
 		this.fieldGroup = new FieldGroup();
 		this.listener = listener;
-		this.element = createDefaultElement();
 
 		setCaption(caption);
 		setModal(true);
+	}
 
+	/**
+	 * Sets the default element and the layout.
+	 */
+	public void init() {
+		this.element = createDefaultElement();
 		setUpLayout();
 	}
 

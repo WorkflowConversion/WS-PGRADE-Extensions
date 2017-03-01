@@ -23,7 +23,7 @@ public class ApplicationsXmlAdapter extends XmlAdapter<ApplicationsXmlAdapter.Ap
 	public Map<String, Application> unmarshal(final Applications apps) throws Exception {
 		final Map<String, Application> map = new TreeMap<String, Application>();
 		for (final Application app : apps.applications) {
-			map.put(app.getId(), app);
+			map.put(app.generateKey(), app);
 		}
 		return map;
 	}
@@ -43,6 +43,6 @@ public class ApplicationsXmlAdapter extends XmlAdapter<ApplicationsXmlAdapter.Ap
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class Applications {
 		@XmlElement(name = "application")
-		private List<Application> applications = new LinkedList<Application>();
+		private final List<Application> applications = new LinkedList<Application>();
 	}
 }

@@ -5,6 +5,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
+
 /**
  * Simple wrapper for resource queues.
  * 
@@ -12,10 +15,10 @@ import javax.xml.bind.annotation.XmlTransient;
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Queue implements Comparable<Queue> {
+public class Queue implements Comparable<Queue>, HasKey {
 
 	@XmlAttribute
-	private String name;
+	private String name = "";
 	@XmlTransient
 	private Resource resource;
 
@@ -31,6 +34,7 @@ public class Queue implements Comparable<Queue> {
 	 *            the name to set
 	 */
 	public void setName(final String name) {
+		Validate.isTrue(StringUtils.isNotBlank(name), "name cannot be null, empty or contain only whitespaces.");
 		this.name = name;
 	}
 
@@ -47,6 +51,11 @@ public class Queue implements Comparable<Queue> {
 	 */
 	public void setResource(final Resource resource) {
 		this.resource = resource;
+	}
+
+	@Override
+	public String generateKey() {
+		return name;
 	}
 
 	/*

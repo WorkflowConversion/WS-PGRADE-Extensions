@@ -9,8 +9,9 @@ import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.ui.table.AbstractAddGenericElementDialog;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControls;
-import com.workflowconversion.portlet.ui.table.Dimensions;
-import com.workflowconversion.portlet.ui.table.GenericElementCommitedListener;
+import com.workflowconversion.portlet.ui.table.AbstractTableWithControlsFactory;
+import com.workflowconversion.portlet.ui.table.Size;
+import com.workflowconversion.portlet.ui.table.TableWithControls;
 
 /**
  * Table on which the queues of a resource are displayed.
@@ -18,34 +19,26 @@ import com.workflowconversion.portlet.ui.table.GenericElementCommitedListener;
  * @author delagarza
  *
  */
-public class QueueTable extends AbstractTableWithControls<Queue> implements GenericElementCommitedListener<Queue> {
+public class QueueTable extends AbstractTableWithControls<Queue> {
 
 	private static final long serialVersionUID = -6243453484525350648L;
 
-	private final Resource resource;
+	private final Resource owningResource;
 
-	/**
-	 * @param resource
-	 *            the resource owning the displayed queues.
-	 */
-	public QueueTable(final Resource resource, final boolean withEditControls) {
-		super("Queues", true, resource.getQueues());
-		this.resource = resource;
+	private QueueTable(final Resource resource, final String title, final boolean withEditControls,
+			final boolean withDetails, final boolean allowDuplicates) {
+		super(title, withEditControls, withDetails, allowDuplicates);
+		this.owningResource = resource;
 	}
 
 	@Override
-	protected void setUpContainerPropertiesWithEditableFields() {
+	protected void setUpContainerProperties() {
 		super.addContainerProperty(Queue.Field.Name, TextField.class);
 	}
 
 	@Override
-	protected void setUpContainerPropertiesWithStrings() {
-		super.addContainerProperty(Queue.Field.Name, String.class);
-	}
-
-	@Override
-	protected Dimensions getTableDimensions() {
-		final Dimensions tableDimensions = new Dimensions();
+	public Size getSize() {
+		final Size tableDimensions = new Size();
 		tableDimensions.width = 300;
 		tableDimensions.widthUnit = Unit.PIXELS;
 		tableDimensions.height = 400;
@@ -67,29 +60,25 @@ public class QueueTable extends AbstractTableWithControls<Queue> implements Gene
 
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void fillNewItemProperties(final Queue queue, final Item item) {
-		if (super.allowEdition) {
-			item.getItemProperty(Queue.Field.Name).setValue(super.newTextFieldWithValue(queue.getName()));
-		} else {
-			item.getItemProperty(Queue.Field.Name).setValue(queue.getName());
-		}
+	protected void fillItemProperties(final Queue queue, final Item item) {
+		item.getItemProperty(Queue.Field.Name).setValue(super.newTextFieldWithValue(queue.getName()));
 	}
 
 	@Override
-	protected void beforeBatchSave() {
-		resource.removeAllQueues();
+	protected void beforeSaveAllChanges() {
+		owningResource.removeAllQueues();
 	}
 
 	@Override
-	protected Queue convert(final Item item) {
+	protected Queue convertFromItem(final Item item) {
 		final Queue queue = new Queue();
-		queue.setName((String) item.getItemProperty(Queue.Field.Name).getValue());
+		queue.setName(((TextField) item.getItemProperty(Queue.Field.Name).getValue()).getValue());
 		return queue;
 	}
 
 	@Override
 	protected void save(final Queue queue) {
-		resource.addQueue(queue);
+		owningResource.addQueue(queue);
 	}
 
 	@Override
@@ -97,4 +86,24 @@ public class QueueTable extends AbstractTableWithControls<Queue> implements Gene
 		return new AddQueueDialog(this);
 	}
 
+	/**
+	 * Factory for queue tables.
+	 * 
+	 * @author delagarza
+	 */
+	public static class QueueTableFactory extends AbstractTableWithControlsFactory<Queue> {
+		private Resource owningResource;
+
+		@Override
+		public TableWithControls<Queue> build() {
+			return new QueueTable(owningResource, super.title, super.allowEdition, super.withDetails,
+					super.allowDuplicates);
+		}
+
+		public QueueTableFactory withOwningResource(final Resource owningResource) {
+			this.owningResource = owningResource;
+			return this;
+		}
+
+	}
 }

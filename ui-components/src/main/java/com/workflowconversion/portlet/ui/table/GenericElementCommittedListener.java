@@ -6,7 +6,7 @@ package com.workflowconversion.portlet.ui.table;
  * @author delagarza
  *
  */
-public interface GenericElementCommitedListener<T> {
+public interface GenericElementCommittedListener<T> {
 
 	/**
 	 * Notifies that an element is valid and is ready to be added.

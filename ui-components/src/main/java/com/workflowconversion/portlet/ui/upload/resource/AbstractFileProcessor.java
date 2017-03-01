@@ -82,7 +82,7 @@ public abstract class AbstractFileProcessor {
 	 */
 	final protected void addParsedResource(final Resource resource, final long lineNumber) {
 		if (isResourceValid(resource, lineNumber)) {
-			final String key = resource.getId();
+			final String key = resource.generateKey();
 			if (!parsedResources.containsKey(key)) {
 				parsedResources.put(key, resource);
 			} else {

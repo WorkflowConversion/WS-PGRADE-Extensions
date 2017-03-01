@@ -1,8 +1,10 @@
 package com.workflowconversion.portlet.ui.table;
 
+import java.util.Collection;
+
 import com.vaadin.data.Container;
-import com.vaadin.data.Item;
 import com.vaadin.ui.Component;
+import com.workflowconversion.portlet.core.resource.HasKey;
 
 /**
  * Table to display generic elements. Contains methods to add items of a specific type, batch save changes and determine
@@ -11,20 +13,45 @@ import com.vaadin.ui.Component;
  * @author delagarza
  *
  */
-public interface TableWithControls<T> extends Component {
+public interface TableWithControls<T extends HasKey>
+		extends Component, GenericElementCommittedListener<T>, GenericElementDetailsCommittedListener<T> {
 	/**
 	 * {@link Container} contains {@link #addItem(Object))}, but we need to enforce that implementations accept only
 	 * certain type of elements (i.e., of type {@code T}).
-	 * 
-	 * @param item
-	 *            the item to insert.
 	 */
-	Item insertItem(final T newElement);
+	void insertItem(final T newElement);
+
+	/**
+	 * Initializes the table with the given elements.
+	 * 
+	 * @param initialElements
+	 *            a collection of the initial elements to display.
+	 */
+	void init(final Collection<T> initialElements);
+
+	/**
+	 * Allow users to check this table's dimensions.
+	 * 
+	 * @return the dimensions of this table.
+	 */
+	Size getSize();
+
+	/**
+	 * Returns all elements contained in this table.
+	 * 
+	 * @return elements contained in this table.
+	 */
+	Collection<T> getAllElements();
+
+	/**
+	 * Clears any item selection.
+	 */
+	void clearSelection();
 
 	/**
 	 * Propagates changes done in the container to any data structure or storage system that holds these items.
 	 */
-	void batchSave();
+	void saveAllChanges();
 
 	/**
 	 * @return whether the instance has unsaved changes.

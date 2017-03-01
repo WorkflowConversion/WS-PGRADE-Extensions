@@ -43,7 +43,8 @@ public abstract class WorkflowConversionUI extends UI {
 	private final static Logger LOG = LoggerFactory.getLogger(WorkflowConversionUI.class);
 
 	protected PortletUser currentUser;
-	protected final Collection<ResourceProvider> applicationProviders;
+	// a non-empty collection of resource providers
+	protected final Collection<ResourceProvider> resourceProviders;
 	protected final PortletSanityCheck portletSanityCheck;
 
 	/**
@@ -51,14 +52,29 @@ public abstract class WorkflowConversionUI extends UI {
 	 * 
 	 * @param portletSanityCheck
 	 *            the portlet sanity check.
-	 * @param applicationProviders
-	 *            the application providers.
+	 * @param resourceProviders
+	 *            the resource providers.
 	 */
 	protected WorkflowConversionUI(final PortletSanityCheck portletSanityCheck,
-			final Collection<ResourceProvider> applicationProviders) {
-		Validate.notEmpty(applicationProviders, "applicationProviders cannot be null or empty");
+			final Collection<ResourceProvider> resourceProviders) {
+		Validate.notEmpty(resourceProviders, "resourceProviders cannot be null or empty");
 		Validate.notNull(portletSanityCheck, "portletSanityCheck cannot be null");
-		this.applicationProviders = applicationProviders;
+		// check that there is only one editable resource provider
+		boolean editableProviderFound = false;
+		for (final ResourceProvider resourceProvider : resourceProviders) {
+			if (resourceProvider.isEditable()) {
+				if (editableProviderFound) {
+					throw new ApplicationException(
+							"Only one editable resource provider is expected. This seems to be a coding problem and should be reported.");
+				}
+				editableProviderFound = true;
+			}
+		}
+		if (!editableProviderFound) {
+			throw new ApplicationException(
+					"No suitable editable resource provider was found. This seems to be a coding problem and should be reported.");
+		}
+		this.resourceProviders = resourceProviders;
 		this.portletSanityCheck = portletSanityCheck;
 	}
 
@@ -95,9 +111,9 @@ public abstract class WorkflowConversionUI extends UI {
 	protected abstract Layout prepareContent();
 
 	private void initApplicationProviders() {
-		// init any app provider that needs initialization
+		// init any provider that needs initialization
 		LOG.info("initializing ApplicationProviders");
-		for (final ResourceProvider provider : applicationProviders) {
+		for (final ResourceProvider provider : resourceProviders) {
 			if (provider.needsInit()) {
 				if (LOG.isInfoEnabled()) {
 					LOG.info("initializing " + provider.getClass());
@@ -130,7 +146,7 @@ public abstract class WorkflowConversionUI extends UI {
 			if (LOG.isInfoEnabled()) {
 				LOG.info("importing Workflow from " + serverSideFile.getCanonicalPath());
 			}
-			Hashtable<String, Object> h = new Hashtable<String, Object>();
+			final Hashtable<String, Object> h = new Hashtable<String, Object>();
 			ServiceType st = InformationBase.getI().getService("wfs", "portal", new Hashtable<String, Object>(),
 					new Vector<Object>());
 			h.put("senderObj", "ZipFileSender");
@@ -138,14 +154,14 @@ public abstract class WorkflowConversionUI extends UI {
 			h.put("wfsID", st.getServiceUrl());
 			// h.put("userID", currentRequest.getRemoteUser());
 
-			Hashtable<String, Object> hsh = new Hashtable<String, Object>();
+			final Hashtable<String, Object> hsh = new Hashtable<String, Object>();
 			st = InformationBase.getI().getService("storage", "portal", hsh, new Vector<Object>());
-			PortalStorageClient psc = (PortalStorageClient) Class.forName(st.getClientObject()).newInstance();
+			final PortalStorageClient psc = (PortalStorageClient) Class.forName(st.getClientObject()).newInstance();
 			psc.setServiceURL(st.getServiceUrl());
 			psc.setServiceID("/receiver");
 			psc.fileUpload(serverSideFile, "fileName", h);
 			LOG.info("workflow has been imported");
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// mainWindow.showNotification(new Notification("Workflow Importer",
 			// "Could not import workflow." + e.getMessage(), Notification.TYPE_ERROR_MESSAGE));
 			LOG.error("Error while importing workflow", e);

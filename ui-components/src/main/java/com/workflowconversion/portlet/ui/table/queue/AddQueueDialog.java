@@ -5,20 +5,18 @@ import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.ui.table.AbstractAddGenericElementDialog;
-import com.workflowconversion.portlet.ui.table.GenericElementCommitedListener;
+import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
 
 public class AddQueueDialog extends AbstractAddGenericElementDialog<Queue> {
 	private static final long serialVersionUID = -5777361522747805042L;
 
-	protected AddQueueDialog(final GenericElementCommitedListener<Queue> listener) {
-		super("Add new queue", listener);
+	protected AddQueueDialog(final GenericElementCommittedListener<Queue> listener) {
+		super("Add queue", listener);
 	}
 
 	@Override
 	protected Queue createDefaultElement() {
-		final Queue defaultQueue = new Queue();
-		defaultQueue.setName("");
-		return defaultQueue;
+		return new Queue();
 	}
 
 	@Override

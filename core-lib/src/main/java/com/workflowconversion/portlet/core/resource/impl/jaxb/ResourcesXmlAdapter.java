@@ -24,7 +24,7 @@ public class ResourcesXmlAdapter extends XmlAdapter<ResourcesXmlAdapter.Resource
 	public Map<String, Resource> unmarshal(final ResourcesXmlAdapter.Resources resources) throws Exception {
 		final Map<String, Resource> map = new TreeMap<String, Resource>();
 		for (final Resource resource : resources.resources) {
-			map.put(resource.getId(), resource);
+			map.put(resource.generateKey(), resource);
 		}
 		return map;
 	}
@@ -46,6 +46,6 @@ public class ResourcesXmlAdapter extends XmlAdapter<ResourcesXmlAdapter.Resource
 	public static class Resources {
 
 		@XmlElement(name = "resource")
-		private List<Resource> resources = new LinkedList<Resource>();
+		private final List<Resource> resources = new LinkedList<Resource>();
 	}
 }

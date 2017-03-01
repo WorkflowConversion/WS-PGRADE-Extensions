@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.StringUtils;
-import org.jsoup.helper.Validate;
+import org.apache.commons.lang.Validate;
 
 /**
  * Simple object that contains all of the information an application requires to be executed on gUSE.
@@ -16,18 +16,18 @@ import org.jsoup.helper.Validate;
  * @author delagarza
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Application implements Serializable {
+public class Application implements Serializable, HasKey {
 
 	private static final long serialVersionUID = -8200132807492156967L;
 
 	@XmlAttribute
-	private String name;
+	private String name = "";
 	@XmlAttribute
-	private String version;
+	private String version = "";
 	@XmlAttribute
-	private String description;
+	private String path = "";
 	@XmlAttribute
-	private String path;
+	private String description = "";
 
 	// add a reference to the resource on which this application resides,
 	// but signal that we don't want it to be serialized/deserialized
@@ -115,6 +115,11 @@ public class Application implements Serializable {
 		this.resource = resource;
 	}
 
+	@Override
+	public String generateKey() {
+		return "name=" + name + "-version=" + version + "-path=" + path;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -126,13 +131,51 @@ public class Application implements Serializable {
 				+ "]";
 	}
 
-	/**
-	 * Generates an id/key using the relevant fields.
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return
+	 * @see java.lang.Object#hashCode()
 	 */
-	public String getId() {
-		return "name=" + this.name + "_version=" + this.version + "_path=" + this.path;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((version == null) ? 0 : version.hashCode());
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(final Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		final Application other = (Application) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (path == null) {
+			if (other.path != null)
+				return false;
+		} else if (!path.equals(other.path))
+			return false;
+		if (version == null) {
+			if (other.version != null)
+				return false;
+		} else if (!version.equals(other.version))
+			return false;
+		return true;
 	}
 
 	/**

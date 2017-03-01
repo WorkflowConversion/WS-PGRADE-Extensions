@@ -10,7 +10,7 @@ import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.ui.table.AbstractAddGenericElementDialog;
-import com.workflowconversion.portlet.ui.table.GenericElementCommitedListener;
+import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
 
 /**
  * Modal dialog to add resources.
@@ -24,8 +24,14 @@ public class AddResourceDialog extends AbstractAddGenericElementDialog<Resource>
 
 	final Collection<String> middlewareTypes;
 
+	/**
+	 * @param middlewareTypes
+	 *            a collection with all of the allowed middleware types.
+	 * @param listener
+	 *            a listener to this dialog's events.
+	 */
 	public AddResourceDialog(final Collection<String> middlewareTypes,
-			final GenericElementCommitedListener<Resource> listener) {
+			final GenericElementCommittedListener<Resource> listener) {
 		super("Add Resource", listener);
 		Validate.notEmpty(middlewareTypes, "middlewareTypes cannot be null or empty.");
 		Validate.notNull(listener, "listener cannot be null.");
@@ -35,7 +41,6 @@ public class AddResourceDialog extends AbstractAddGenericElementDialog<Resource>
 	@Override
 	protected Resource createDefaultElement() {
 		final Resource resource = new Resource();
-		resource.setName("");
 		resource.setType(middlewareTypes.iterator().next());
 		return resource;
 	}

@@ -12415,16 +12415,16 @@ div.v-layout.v-horizontal.v-widget {
 	overflow: hidden;
 }
 
-.mytheme .appTable .v-table-cell-wrapper textarea.v-textarea {
+.mytheme .tableWithControls .v-table-cell-wrapper textarea.v-textarea {
 	height: 50px;
 }
 
-.mytheme .appTable .v-filterselect-input, .mytheme .appTable .v-textfield.v-widget, .mytheme .appTable .v-textarea.v-widget {
+.mytheme .tableWithControls .v-filterselect-input, .mytheme .tableWithControls .v-textfield.v-widget, .mytheme .tableWithControls .v-textarea.v-widget {
 	color: black;
 	font-size: 14px;
 }
 
-.mytheme .appTable .v-filterselect.v-readonly [class*="input"], .mytheme .appTable .v-textfield.v-disabled, .mytheme .appTable .v-textarea.v-disabled {
+.mytheme .tableWithControls .v-filterselect.v-readonly [class*="input"], .mytheme .tableWithControls .v-textfield.v-disabled, .mytheme .tableWithControls .v-textarea.v-disabled {
 	color: #8d8d8d;
 	font-size: 14px;
 	opacity: 1;
@@ -12435,7 +12435,7 @@ div.v-layout.v-horizontal.v-widget {
 	font-size: 14px;
 }
 
-.mytheme .appTable .v-table-row-odd {
+.mytheme .tableWithControls .v-table-row-odd {
 	background-color: rgba(186, 214, 236, 0.68);
 }
 
@@ -12457,4 +12457,16 @@ div.v-layout.v-horizontal.v-widget {
 .mytheme .disabled-component {
 	opacity: 0.5;
 	filter: alpha(opacity=50);
+}
+
+.mytheme .tableWithControls .v-table-row-withError {
+	background-color: #f7a3a3;
+}
+
+.mytheme .tableWithControls .v-table-cell-content-withError {
+	background-color: #f7a3a3;
+}
+
+.mytheme .withError {
+	background-color: #f7a3a3;
 }

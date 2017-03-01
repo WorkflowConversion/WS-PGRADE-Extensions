@@ -152,9 +152,9 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	public boolean containsResource(final Resource resource) {
 		Validate.notNull(resource, "resource cannot be null");
 		final Collection<Resource> resources = getResources();
-		final String key = resource.getId();
+		final String key = resource.generateKey();
 		for (final Resource existentResource : resources) {
-			if (key.equals(existentResource.getId())) {
+			if (key.equals(existentResource.generateKey())) {
 				return true;
 			}
 		}
