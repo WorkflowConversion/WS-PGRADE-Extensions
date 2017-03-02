@@ -242,7 +242,8 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 
 	private ComboBox getResourceProviderComboBox() {
 		final ComboBox resourceProviderComboBox = new ComboBox();
-		resourceProviderComboBox.setCaption("Resource database");
+		resourceProviderComboBox.setCaptionAsHtml(true);
+		resourceProviderComboBox.setCaption("<h3>Resource database</h3>");
 		resourceProviderComboBox.setNullSelectionAllowed(false);
 		resourceProviderComboBox.setImmediate(true);
 		resourceProviderComboBox.setDescription("Select a resource database to manage");

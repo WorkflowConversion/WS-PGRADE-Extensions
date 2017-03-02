@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -19,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.FailedEvent;
@@ -47,8 +45,6 @@ public class BulkUploadResourcesDialog extends Window {
 
 	private final static Logger LOG = LoggerFactory.getLogger(BulkUploadResourcesDialog.class);
 
-	private final static String FILE_TYPE_TOOLTIP_HELP = "Currently only XML file types are supported";
-
 	private File serverSideFile;
 	// polling file upload progress happens in another thread
 	private final AtomicLong contentLength;
@@ -75,26 +71,16 @@ public class BulkUploadResourcesDialog extends Window {
 		this.errors = new LinkedList<String>();
 		this.upload = new Upload();
 
-		setCaption("Upload CSV or XML File with Applications");
+		setCaption("Upload applications XML file");
 		setModal(true);
 		setUpLayout();
 	}
 
 	private void setUpLayout() {
-		// xml is the only format supported, for now
-		final ComboBox fileTypeComboBox = new ComboBox("File type", Arrays.asList(FileType.XML));
-		fileTypeComboBox.setNullSelectionAllowed(false);
-		fileTypeComboBox.setImmediate(true);
-		fileTypeComboBox.setWidth(70, Unit.POINTS);
-		fileTypeComboBox.select(FileType.XML);
-		fileTypeComboBox.setDescription(FILE_TYPE_TOOLTIP_HELP);
-
 		final Link xmlSampleLink = new Link("Click to download a sample XML file", createSampleXmlStreamResource());
 
 		final VerticalLayout fileOptionsLayout = new VerticalLayout();
-		fileOptionsLayout.setMargin(true);
 		fileOptionsLayout.setSpacing(true);
-		fileOptionsLayout.addComponent(fileTypeComboBox);
 		fileOptionsLayout.addComponent(xmlSampleLink);
 
 		// upload control
@@ -132,7 +118,8 @@ public class BulkUploadResourcesDialog extends Window {
 			@Override
 			public void uploadSucceeded(final SucceededEvent event) {
 				NotificationUtils.displayTrayMessage("Parsing file");
-				processFile(serverSideFile, (FileType) fileTypeComboBox.getValue());
+				// support only xml for now
+				processFile(serverSideFile, FileType.XML);
 			}
 		});
 

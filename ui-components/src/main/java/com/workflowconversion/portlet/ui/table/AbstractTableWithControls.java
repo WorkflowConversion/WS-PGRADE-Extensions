@@ -212,7 +212,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 
 		final Label titleLabel = new Label();
 		titleLabel.setContentMode(ContentMode.HTML);
-		titleLabel.setValue("<h2>" + title + "</h2>");
+		titleLabel.setValue("<h3>" + title + "</h3>");
 
 		final HorizontalLayout titleBarLayout = new HorizontalLayout();
 		titleBarLayout.setSpacing(true);
