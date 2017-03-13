@@ -19,13 +19,14 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.workflowconversion.portlet.core.exception.ProviderNotEditableException;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
-import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
+import com.workflowconversion.portlet.ui.table.GenericBatchCommittedListener;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
 import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourceTableFactory;
 import com.workflowconversion.portlet.ui.upload.resource.BulkUploadResourcesDialog;
@@ -196,6 +197,10 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	}
 
 	private void bulkUploadButtonClicked(final UIComponents uiComponents) {
+		if (!uiComponents.resourceProvider.isEditable()) {
+			throw new ProviderNotEditableException(
+					"This resource provider is not editable. This seems to be a coding problem and should be reported.");
+		}
 		final Map<String, Resource> resourcesInProvider = new TreeMap<String, Resource>();
 		for (final Resource resource : uiComponents.resourceProvider.getResources()) {
 			resourcesInProvider.put(resource.generateKey(), resource);
@@ -206,13 +211,23 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		}
 		// instead of using the resource table as a listener, which doesn't allow duplicates,
 		// we use a custom listener that merges incoming items into the already existing ones.
-		final GenericElementCommittedListener<Resource> listener = new GenericElementCommittedListener<Resource>() {
+		final GenericBatchCommittedListener<Resource> listener = new GenericBatchCommittedListener<Resource>() {
+			@Override
+			public void elementCommitted(final Resource committedResource) {
+				final ResourceProvider resourceProvider = uiComponents.resourceProvider;
+				if (resourceProvider.containsResource(committedResource)) {
+					resourceProvider.saveResource(committedResource);
+				} else {
+					resourceProvider.addResource(committedResource);
+				}
+			}
 
 			@Override
-			public void elementCommitted(final Resource committedElement) {
-
+			public void batchCommitted() {
+				uiComponents.resourceProvider.commitChanges();
 			}
 		};
+
 		final Window bulkUploadDialog = new BulkUploadResourcesDialog(listener,
 				Settings.getInstance().getMiddlewareProvider());
 

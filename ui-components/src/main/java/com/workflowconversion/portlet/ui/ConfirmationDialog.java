@@ -46,7 +46,8 @@ public class ConfirmationDialog extends Window {
 		this.caption = caption;
 		this.message = message;
 		this.listener = listener;
-		super.setModal(true);
+		setModal(true);
+		setClosable(false);
 		setUpLayout();
 	}
 

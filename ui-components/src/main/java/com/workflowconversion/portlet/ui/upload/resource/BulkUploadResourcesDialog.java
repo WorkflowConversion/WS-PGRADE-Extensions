@@ -3,7 +3,6 @@ package com.workflowconversion.portlet.ui.upload.resource;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,11 +15,17 @@ import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.server.FileDownloader;
 import com.vaadin.server.StreamResource;
 import com.vaadin.server.StreamResource.StreamSource;
+import com.vaadin.ui.Alignment;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.Upload;
 import com.vaadin.ui.Upload.FailedEvent;
+import com.vaadin.ui.Upload.FinishedEvent;
 import com.vaadin.ui.Upload.Receiver;
 import com.vaadin.ui.Upload.StartedEvent;
 import com.vaadin.ui.Upload.SucceededEvent;
@@ -31,7 +36,7 @@ import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
-import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
+import com.workflowconversion.portlet.ui.table.GenericBatchCommittedListener;
 
 /**
  * Modal dialog through which a file containing resources can be uploaded.
@@ -41,6 +46,8 @@ import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
  */
 public class BulkUploadResourcesDialog extends Window {
 
+	private static final String SAMPLE_RESOURCE_FILE_NAME = "sample_resource_file.xml";
+
 	private static final long serialVersionUID = -2587575066352088585L;
 
 	private final static Logger LOG = LoggerFactory.getLogger(BulkUploadResourcesDialog.class);
@@ -49,22 +56,22 @@ public class BulkUploadResourcesDialog extends Window {
 	// polling file upload progress happens in another thread
 	private final AtomicLong contentLength;
 	private final Collection<String> errors;
-	private final GenericElementCommittedListener<Resource> resourceCommittedListener;
+	private final GenericBatchCommittedListener<Resource> batchCommittedListener;
 	private final MiddlewareProvider middlewareProvider;
 	private final Upload upload;
 
 	/**
-	 * @param resourceCommittedListener
+	 * @param batchCommittedListener
 	 *            a listener that will be informed of parsed, valid, uploaded resources.
 	 * @param middlewareProvider
 	 *            the middleware provider.
 	 */
-	public BulkUploadResourcesDialog(final GenericElementCommittedListener<Resource> resourceCommittedListener,
+	public BulkUploadResourcesDialog(final GenericBatchCommittedListener<Resource> batchCommittedListener,
 			final MiddlewareProvider middlewareProvider) {
-		Validate.notNull(resourceCommittedListener, "resourceCommittedListener cannot be null");
+		Validate.notNull(batchCommittedListener, "batchCommittedListener cannot be null");
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 
-		this.resourceCommittedListener = resourceCommittedListener;
+		this.batchCommittedListener = batchCommittedListener;
 		this.middlewareProvider = middlewareProvider;
 
 		this.contentLength = new AtomicLong();
@@ -73,15 +80,31 @@ public class BulkUploadResourcesDialog extends Window {
 
 		setCaption("Upload applications XML file");
 		setModal(true);
+		setClosable(false);
 		setUpLayout();
 	}
 
 	private void setUpLayout() {
-		final Link xmlSampleLink = new Link("Click to download a sample XML file", createSampleXmlStreamResource());
+		final Link xmlSampleLink = new Link();
+		xmlSampleLink.setCaption("Download a sample XML file");
+
+		final FileDownloader fileDownloader = new FileDownloader(createSampleXmlStreamResource());
+		fileDownloader.extend(xmlSampleLink);
 
 		final VerticalLayout fileOptionsLayout = new VerticalLayout();
 		fileOptionsLayout.setSpacing(true);
 		fileOptionsLayout.addComponent(xmlSampleLink);
+
+		final Button closeButton = new Button("Close");
+		closeButton.setImmediate(true);
+		closeButton.addClickListener(new Button.ClickListener() {
+			private static final long serialVersionUID = 8033668816964396887L;
+
+			@Override
+			public void buttonClick(final ClickEvent event) {
+				BulkUploadResourcesDialog.this.close();
+			}
+		});
 
 		// upload control
 		final Receiver fileReceiver = new FileReceiver();
@@ -95,20 +118,11 @@ public class BulkUploadResourcesDialog extends Window {
 
 			@Override
 			public void uploadStarted(final StartedEvent event) {
+				closeButton.setEnabled(false);
 				upload.setEnabled(false);
 				errors.clear();
 				contentLength.set(event.getContentLength());
 				NotificationUtils.displayTrayMessage("Uploading file");
-			}
-		});
-
-		upload.addProgressListener(new Upload.ProgressListener() {
-			private static final long serialVersionUID = 6805421002888765593L;
-
-			@Override
-			public void updateProgress(final long readBytes, final long contentLength) {
-				// TODO: do we need this much detail?
-				// someLabel.setValue("Read " + readBytes + " of " + contentLength + " bytes");
 			}
 		});
 
@@ -118,8 +132,12 @@ public class BulkUploadResourcesDialog extends Window {
 			@Override
 			public void uploadSucceeded(final SucceededEvent event) {
 				NotificationUtils.displayTrayMessage("Parsing file");
-				// support only xml for now
-				processFile(serverSideFile, FileType.XML);
+				try {
+					// support only xml for now
+					processFile(serverSideFile, FileType.XML);
+				} finally {
+					upload.setEnabled(true);
+				}
 			}
 		});
 
@@ -133,36 +151,50 @@ public class BulkUploadResourcesDialog extends Window {
 			}
 		});
 
+		upload.addFinishedListener(new Upload.FinishedListener() {
+			private static final long serialVersionUID = -2182290023265251004L;
+
+			@Override
+			public void uploadFinished(final FinishedEvent event) {
+				closeButton.setEnabled(true);
+			}
+		});
+
+		final HorizontalLayout footerLayout = new HorizontalLayout();
+		footerLayout.setWidth(100, Unit.PERCENTAGE);
+		footerLayout.addComponent(closeButton);
+		footerLayout.setComponentAlignment(closeButton, Alignment.BOTTOM_RIGHT);
+
 		final VerticalLayout layout = new VerticalLayout();
+		layout.setMargin(true);
+		layout.setSpacing(true);
+		layout.addComponent(upload);
 		layout.addComponent(fileOptionsLayout);
 		layout.addComponent(new HorizontalSeparator());
-		layout.addComponent(upload);
-		layout.addComponent(new HorizontalSeparator());
-		layout.setMargin(true);
+		layout.addComponent(footerLayout);
 		layout.setWidth(400, Unit.PIXELS);
-		layout.setSpacing(true);
 		setContent(layout);
 	}
 
 	private StreamResource createSampleXmlStreamResource() {
-		final String fileName = "sample_resource_file.xml";
 		return new StreamResource(new StreamSource() {
 			private static final long serialVersionUID = -482825331518184714L;
 
 			@Override
 			public InputStream getStream() {
 				try {
-					return new BufferedInputStream(new FileInputStream(fileName));
-				} catch (final IOException e) {
+					return new BufferedInputStream(
+							BulkUploadResourcesDialog.class.getResourceAsStream('/' + SAMPLE_RESOURCE_FILE_NAME));
+				} catch (final Exception e) {
 					LOG.error("Could not create stream for sample file", e);
 					return null;
 				}
 			}
-		}, fileName);
+		}, SAMPLE_RESOURCE_FILE_NAME);
 	}
 
 	void processFile(final File file, final FileType fileType) {
-		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(resourceCommittedListener);
+		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(batchCommittedListener);
 		final AbstractFileProcessor fileProcessor;
 		switch (fileType) {
 		case XML:
@@ -180,11 +212,11 @@ public class BulkUploadResourcesDialog extends Window {
 
 	private class DefaultBulkUploadListener implements BulkUploadListener {
 
-		private final GenericElementCommittedListener<Resource> resourceCommittedListener;
+		private final GenericBatchCommittedListener<Resource> resourceCommittedListener;
 		private final Collection<String> errors;
 		private final Collection<String> warnings;
 
-		private DefaultBulkUploadListener(final GenericElementCommittedListener<Resource> resourceCommittedListener) {
+		private DefaultBulkUploadListener(final GenericBatchCommittedListener<Resource> resourceCommittedListener) {
 			this.resourceCommittedListener = resourceCommittedListener;
 			this.errors = new LinkedList<String>();
 			this.warnings = new LinkedList<String>();

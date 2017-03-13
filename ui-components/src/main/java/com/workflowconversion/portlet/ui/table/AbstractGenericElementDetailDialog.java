@@ -32,6 +32,7 @@ public class AbstractGenericElementDetailDialog<T> extends Window {
 		this.listener = listener;
 		this.allowEdition = allowEdition;
 		setModal(true);
+		setClosable(false);
 	}
 
 }

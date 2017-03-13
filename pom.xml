@@ -28,7 +28,9 @@
 		<module>core-lib</module>
 		<module>ui-components</module>
 	 	<module>application-manager</module> 
-		<!-- <module>workflow-importer</module> -->
+	 	<!-- 
+		<module>workflow-importer</module>
+		 -->
 	</modules>
 
 	<!-- other repositories -->
@@ -366,6 +368,7 @@
 							<directory>src/main/resources</directory>
 							<includes>
 								<include>logback.xml</include>
+								<include>sample_resource_file.xml</include>
 							</includes>
 							<targetPath>WEB-INF/classes</targetPath>
 						</resource>

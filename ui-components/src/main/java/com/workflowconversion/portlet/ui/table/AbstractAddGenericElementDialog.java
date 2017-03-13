@@ -51,6 +51,7 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 
 		setCaption(caption);
 		setModal(true);
+		setClosable(false);
 	}
 
 	/**

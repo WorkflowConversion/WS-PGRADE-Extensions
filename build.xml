@@ -11,12 +11,12 @@
 	
 	<!-- if deployment.properties is not found, this task will terminate the execution of this script -->
 	<target name="fail-if-missing-properties-file" depends="resource-check" unless="deployment.properties.present">
-		<fail message="Cannot deploy to remote liferay instance! Missing file: ${deployment.properties.file}; Use ${deployment.properties.file}.example as a guide."/>
+		<fail message="Missing file ${deployment.properties.file}; Use deployment.properties.example as a guide."/>
 	</target>
 	
 	<!-- stops execution of the script if the given property is not defined -->
 	<target name="fail-if-missing-property" unless="${required.property}">
-		<fail message="Cannot deploy to remote liferay instance! Missing property: ${required.property}; Use ${deployment.properties.file}.example as a guide."/>
+		<fail message="Missing property ${required.property} in file ${deployment.properties.file}; Use deployment.properties.example as a guide."/>
 	</target>
 
 	<!-- if any of the required properties is missing, this task will terminate the execution of this script  -->
@@ -34,6 +34,9 @@
 		<antcall target="fail-if-missing-property">
 			<param name="required.property" value="remote.server.tomcat.path" />
 		</antcall>
+		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="keyfile.location" />
+		</antcall>
 	</target>
 
 	<!-- copies a single portlet to the liferay instance -->
@@ -43,8 +46,8 @@
 		<scp 
 			file="${portlet.dir}/target/${portlet.name}.war"
 			remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
-			trust="true" verbose="false" keyfile="${user.home}/.ssh/id_rsa" />
-		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${user.home}/.ssh/id_rsa"
+			trust="true" verbose="false" keyfile="${keyfile.location}" />
+		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}"
 			command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
 	</target>
 
