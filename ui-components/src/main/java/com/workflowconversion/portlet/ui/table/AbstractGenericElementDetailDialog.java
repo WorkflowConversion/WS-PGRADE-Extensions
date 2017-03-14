@@ -33,6 +33,7 @@ public class AbstractGenericElementDetailDialog<T> extends Window {
 		this.allowEdition = allowEdition;
 		setModal(true);
 		setClosable(false);
+		setResizable(false);
 	}
 
 }

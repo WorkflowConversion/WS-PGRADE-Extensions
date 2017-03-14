@@ -36,7 +36,7 @@ import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
-import com.workflowconversion.portlet.ui.table.GenericBatchCommittedListener;
+import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
 
 /**
  * Modal dialog through which a file containing resources can be uploaded.
@@ -56,7 +56,7 @@ public class BulkUploadResourcesDialog extends Window {
 	// polling file upload progress happens in another thread
 	private final AtomicLong contentLength;
 	private final Collection<String> errors;
-	private final GenericBatchCommittedListener<Resource> batchCommittedListener;
+	private final GenericElementCommittedListener<Resource> elementCommittedListener;
 	private final MiddlewareProvider middlewareProvider;
 	private final Upload upload;
 
@@ -66,12 +66,12 @@ public class BulkUploadResourcesDialog extends Window {
 	 * @param middlewareProvider
 	 *            the middleware provider.
 	 */
-	public BulkUploadResourcesDialog(final GenericBatchCommittedListener<Resource> batchCommittedListener,
+	public BulkUploadResourcesDialog(final GenericElementCommittedListener<Resource> batchCommittedListener,
 			final MiddlewareProvider middlewareProvider) {
 		Validate.notNull(batchCommittedListener, "batchCommittedListener cannot be null");
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 
-		this.batchCommittedListener = batchCommittedListener;
+		this.elementCommittedListener = batchCommittedListener;
 		this.middlewareProvider = middlewareProvider;
 
 		this.contentLength = new AtomicLong();
@@ -81,6 +81,7 @@ public class BulkUploadResourcesDialog extends Window {
 		setCaption("Upload applications XML file");
 		setModal(true);
 		setClosable(false);
+		setResizable(false);
 		setUpLayout();
 	}
 
@@ -194,7 +195,7 @@ public class BulkUploadResourcesDialog extends Window {
 	}
 
 	void processFile(final File file, final FileType fileType) {
-		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(batchCommittedListener);
+		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(elementCommittedListener);
 		final AbstractFileProcessor fileProcessor;
 		switch (fileType) {
 		case XML:
@@ -212,12 +213,12 @@ public class BulkUploadResourcesDialog extends Window {
 
 	private class DefaultBulkUploadListener implements BulkUploadListener {
 
-		private final GenericBatchCommittedListener<Resource> resourceCommittedListener;
+		private final GenericElementCommittedListener<Resource> elementCommittedListener;
 		private final Collection<String> errors;
 		private final Collection<String> warnings;
 
-		private DefaultBulkUploadListener(final GenericBatchCommittedListener<Resource> resourceCommittedListener) {
-			this.resourceCommittedListener = resourceCommittedListener;
+		private DefaultBulkUploadListener(final GenericElementCommittedListener<Resource> elementCommittedListener) {
+			this.elementCommittedListener = elementCommittedListener;
 			this.errors = new LinkedList<String>();
 			this.warnings = new LinkedList<String>();
 		}
@@ -254,7 +255,7 @@ public class BulkUploadResourcesDialog extends Window {
 				NotificationUtils.displayTrayMessage("Parsed " + parsedResources.size() + " resource(s).");
 				for (final Resource parsedResource : parsedResources) {
 					try {
-						resourceCommittedListener.elementCommitted(parsedResource);
+						elementCommittedListener.elementCommitted(parsedResource);
 						nAddedResources++;
 					} catch (final Exception e) {
 						LOG.error("Could not add resource " + nAddedResources, e);

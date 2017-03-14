@@ -46,7 +46,7 @@ public class PortletUser implements Serializable {
 					// convert between liferay role name and our enums
 					roles.add(role.getName());
 				}
-			} catch (SystemException e) {
+			} catch (final SystemException e) {
 				throw new RuntimeException("Could not retrieve user roles.", e);
 			}
 		}
@@ -55,7 +55,7 @@ public class PortletUser implements Serializable {
 	/**
 	 * Only authenticated users have a <i>real</i> liferay user.
 	 * 
-	 * @return If the liferay user is not {@code null}.
+	 * @return {@code true} the liferay user is not {@code null}.
 	 */
 	public boolean isAuthenticated() {
 		return liferayUser != null;

@@ -48,6 +48,7 @@ public class ConfirmationDialog extends Window {
 		this.listener = listener;
 		setModal(true);
 		setClosable(false);
+		setResizable(false);
 		setUpLayout();
 	}
 

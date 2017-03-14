@@ -26,7 +26,6 @@ import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
-import com.workflowconversion.portlet.ui.table.GenericBatchCommittedListener;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
 import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourceTableFactory;
 import com.workflowconversion.portlet.ui.upload.resource.BulkUploadResourcesDialog;
@@ -107,8 +106,10 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 
 					enableEditionCheckBox.setValue(uiComponents.isEditionEnabled);
 					enableEditionCheckBox.setEnabled(uiComponents.resourceProvider.isEditable());
-					saveButton.setEnabled(uiComponents.resourceProvider.isEditable());
-					bulkUploadButton.setEnabled(uiComponents.resourceProvider.isEditable());
+					saveButton
+							.setEnabled(uiComponents.resourceProvider.isEditable() && enableEditionCheckBox.getValue());
+					bulkUploadButton
+							.setEnabled(uiComponents.resourceProvider.isEditable() && enableEditionCheckBox.getValue());
 
 					resourceTableLayout.removeAllComponents();
 
@@ -131,6 +132,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 				final boolean editable = Boolean.parseBoolean(event.getProperty().getValue().toString());
 
 				saveButton.setEnabled(editable);
+				bulkUploadButton.setEnabled(editable);
 				propagateReadOnlyStatus(uiComponents, editable);
 
 				uiComponents.isEditionEnabled = editable;
@@ -201,34 +203,8 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 			throw new ProviderNotEditableException(
 					"This resource provider is not editable. This seems to be a coding problem and should be reported.");
 		}
-		final Map<String, Resource> resourcesInProvider = new TreeMap<String, Resource>();
-		for (final Resource resource : uiComponents.resourceProvider.getResources()) {
-			resourcesInProvider.put(resource.generateKey(), resource);
-		}
-		final Map<String, Resource> displayedResources = new TreeMap<String, Resource>();
-		for (final Resource resource : uiComponents.resourceTable.getAllElements()) {
-			displayedResources.put(resource.generateKey(), resource);
-		}
-		// instead of using the resource table as a listener, which doesn't allow duplicates,
-		// we use a custom listener that merges incoming items into the already existing ones.
-		final GenericBatchCommittedListener<Resource> listener = new GenericBatchCommittedListener<Resource>() {
-			@Override
-			public void elementCommitted(final Resource committedResource) {
-				final ResourceProvider resourceProvider = uiComponents.resourceProvider;
-				if (resourceProvider.containsResource(committedResource)) {
-					resourceProvider.saveResource(committedResource);
-				} else {
-					resourceProvider.addResource(committedResource);
-				}
-			}
 
-			@Override
-			public void batchCommitted() {
-				uiComponents.resourceProvider.commitChanges();
-			}
-		};
-
-		final Window bulkUploadDialog = new BulkUploadResourcesDialog(listener,
+		final Window bulkUploadDialog = new BulkUploadResourcesDialog(uiComponents.resourceTable,
 				Settings.getInstance().getMiddlewareProvider());
 
 		if (bulkUploadDialog.getParent() != null) {

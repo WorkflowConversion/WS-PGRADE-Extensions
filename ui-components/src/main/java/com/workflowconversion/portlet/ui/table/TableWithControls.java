@@ -37,13 +37,6 @@ public interface TableWithControls<T extends HasKey>
 	Size getSize();
 
 	/**
-	 * Returns all elements contained in this table.
-	 * 
-	 * @return elements contained in this table.
-	 */
-	Collection<T> getAllElements();
-
-	/**
 	 * Clears any item selection.
 	 */
 	void clearSelection();

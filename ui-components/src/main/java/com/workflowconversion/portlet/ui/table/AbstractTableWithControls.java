@@ -430,15 +430,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	}
 
 	@Override
-	public Collection<T> getAllElements() {
-		final Collection<T> elements = new LinkedList<T>();
-		for (final Object itemId : table.getItemIds()) {
-			elements.add(convertFromItem(table.getItem(itemId)));
-		}
-		return elements;
-	}
-
-	@Override
 	public final boolean isDirty() {
 		return dirty;
 	}
@@ -451,6 +442,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 				NotificationUtils.displayWarning("Some elements are duplicated. This table does not allow duplicates.");
 			} else {
 				saveAllChanges_internal();
+				NotificationUtils.displayMessage("Save successful.");
 			}
 		}
 	}
@@ -463,7 +455,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 			final Item item = table.getItem(id);
 			clearError(item);
 			try {
-				// we assume the items are editable
 				final T element = convertFromItem(item);
 				validate(element);
 				save(element);
@@ -473,9 +464,9 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 				keepDirty = true;
 			}
 		}
-		dirty = keepDirty;
-		// mark table as dirty to update style/tooltips
-		if (dirty) {
+		// not a typo! we want to assign the value of 'keepDirty' to 'dirty'
+		// and then check the value of 'dirty'
+		if (dirty = keepDirty) {
 			table.markAsDirtyRecursive();
 		}
 	}
