@@ -93,7 +93,7 @@ public abstract class WorkflowConversionUI extends UI {
 			} else {
 				content = new SimpleWarningContent.Builder().setIconLocation("../runo/icons/64/lock.png")
 						.setLongDescription(
-								"This portlet has not been properly initialized. If the problem persists after restarting gUSE, please check the logs and report the problem, for this might be caused by a bug or a configuration error.")
+								"This portlet has not been properly initialized.<br/>If the problem persists after restarting gUSE, please check the logs and report the problem.<br/>This might be caused by a bug or a configuration error.")
 						.newWarningWindow();
 			}
 		} else {

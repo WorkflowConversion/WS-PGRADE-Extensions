@@ -442,7 +442,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 				NotificationUtils.displayWarning("Some elements are duplicated. This table does not allow duplicates.");
 			} else {
 				saveAllChanges_internal();
-				NotificationUtils.displayMessage("Save successful.");
+				NotificationUtils.displayTrayMessage("Save successful.");
 			}
 		}
 	}
@@ -663,12 +663,14 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 		textField.setValue(value);
 		textField.setImmediate(true);
 		textField.setBuffered(false);
+		textField.setWidth(250, Unit.PIXELS);
 		return textField;
 	}
 
 	protected final TextArea newTextAreaWithValue(final String value) {
 		final TextArea textArea = new TextArea();
 		textArea.setValue(value);
+		textArea.setWidth(250, Unit.PIXELS);
 		textArea.setImmediate(true);
 		textArea.setBuffered(false);
 		return textArea;

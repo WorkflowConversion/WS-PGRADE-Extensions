@@ -28,7 +28,7 @@ import com.workflowconversion.portlet.ui.table.queue.QueueTable.QueueTableFactor
  * @author delagarza
  *
  */
-public class ResourceDetailDialog extends AbstractGenericElementDetailDialog<Resource> {
+public class ResourceDetaislDialog extends AbstractGenericElementDetailDialog<Resource> {
 	private static final long serialVersionUID = 3316803946008323297L;
 
 	/**
@@ -43,7 +43,7 @@ public class ResourceDetailDialog extends AbstractGenericElementDetailDialog<Res
 	 * @param allowEdition
 	 *            whether the tables can be edited.
 	 */
-	public ResourceDetailDialog(final Object itemId, final Resource resource,
+	public ResourceDetaislDialog(final Object itemId, final Resource resource,
 			final GenericElementDetailsCommittedListener<Resource> listener, final boolean allowEdition) {
 		super(itemId, resource, listener, allowEdition);
 		setUp();
@@ -158,7 +158,7 @@ public class ResourceDetailDialog extends AbstractGenericElementDetailDialog<Res
 				@Override
 				public void confirmationDialogClose(final boolean response) {
 					if (response) {
-						ResourceDetailDialog.this.close();
+						ResourceDetaislDialog.this.close();
 					}
 				}
 			};
@@ -167,7 +167,7 @@ public class ResourceDetailDialog extends AbstractGenericElementDetailDialog<Res
 					"There are unsaved changes. Do you want to proceed without saving?", listener);
 			confirmationDialog.display();
 		} else {
-			ResourceDetailDialog.this.close();
+			ResourceDetaislDialog.this.close();
 		}
 	}
 

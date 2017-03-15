@@ -9,7 +9,6 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.server.ThemeResource;
-import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
@@ -27,6 +26,7 @@ import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
+import com.workflowconversion.portlet.ui.table.resource.ResourcesTable;
 import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourceTableFactory;
 import com.workflowconversion.portlet.ui.upload.resource.BulkUploadResourcesDialog;
 
@@ -50,26 +50,14 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getApplicationProviders());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected Layout prepareContent() {
-		final Layout mainLayout = new VerticalLayout();
 		final Layout resourceTableLayout = new VerticalLayout();
-
-		mainLayout.addComponent(setUpTopControls(resourceTableLayout));
-		mainLayout.addComponent(new HorizontalSeparator());
-		mainLayout.addComponent(resourceTableLayout);
-
-		return mainLayout;
-	}
-
-	// returns a layout containing a combo box for the resource providers,
-	// a checkbox with the legend "Editable" and a save button
-	@SuppressWarnings("unchecked")
-	private Layout setUpTopControls(final Layout resourceTableLayout) {
 		final ComboBox resourceProviderComboBox = getResourceProviderComboBox();
 		final CheckBox enableEditionCheckBox = new CheckBox("Enable edition");
 		enableEditionCheckBox.setImmediate(true);
-		enableEditionCheckBox.setWidth(20, Unit.EM);
+		enableEditionCheckBox.setWidth(650, Unit.PIXELS);
 		final Button saveButton = new Button("Save changes");
 		saveButton.setImmediate(true);
 		saveButton.setEnabled(false);
@@ -175,27 +163,20 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		editControlsLayout.addComponent(enableEditionCheckBox);
 		editControlsLayout.addComponent(saveButton);
 		editControlsLayout.addComponent(bulkUploadButton);
-		editControlsLayout.setComponentAlignment(enableEditionCheckBox, Alignment.BOTTOM_RIGHT);
-		editControlsLayout.setComponentAlignment(saveButton, Alignment.BOTTOM_RIGHT);
-		editControlsLayout.setComponentAlignment(bulkUploadButton, Alignment.BOTTOM_RIGHT);
+		editControlsLayout.setWidth(ResourcesTable.WIDTH_PIXELS, Unit.PIXELS);
 
-		final HorizontalLayout controlsLayout = new HorizontalLayout();
-		controlsLayout.addComponent(resourceProviderComboBox);
-		controlsLayout.addComponent(editControlsLayout);
-		controlsLayout.setComponentAlignment(editControlsLayout, Alignment.BOTTOM_RIGHT);
-		controlsLayout.setComponentAlignment(resourceProviderComboBox, Alignment.BOTTOM_LEFT);
-		controlsLayout.setMargin(false);
-		controlsLayout.setSpacing(true);
-
-		final Layout layout = new VerticalLayout();
-		layout.setWidth(100, Unit.PERCENTAGE);
-		layout.addComponent(controlsLayout);
-		layout.addComponent(new HorizontalSeparator());
+		final VerticalLayout mainLayout = new VerticalLayout();
+		mainLayout.addComponent(resourceProviderComboBox);
+		mainLayout.addComponent(new HorizontalSeparator());
+		mainLayout.addComponent(resourceTableLayout);
+		mainLayout.addComponent(new HorizontalSeparator());
+		mainLayout.addComponent(editControlsLayout);
+		mainLayout.setMargin(true);
 
 		// select the first provider
 		resourceProviderComboBox.select(0);
 
-		return layout;
+		return mainLayout;
 	}
 
 	private void bulkUploadButtonClicked(final UIComponents uiComponents) {
@@ -239,7 +220,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		resourceProviderComboBox.setImmediate(true);
 		resourceProviderComboBox.setDescription("Select a resource database to manage");
 		resourceProviderComboBox.setInputPrompt("Select a resource database to manage");
-		resourceProviderComboBox.setWidth(45, Unit.EM);
+		resourceProviderComboBox.setWidth(ResourcesTable.WIDTH_PIXELS, Unit.PIXELS);
 
 		resourceProviderComboBox.addContainerProperty(PROPERTY_NAME_CAPTION, String.class, null);
 		resourceProviderComboBox.addContainerProperty(PROPERTY_NAME_ICON, com.vaadin.server.Resource.class, null);

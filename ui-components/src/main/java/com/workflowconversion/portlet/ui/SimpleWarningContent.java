@@ -45,7 +45,7 @@ public class SimpleWarningContent extends VerticalLayout {
 		final Embedded icon = new Embedded(null, new ThemeResource(iconLocation));
 		icon.setWidth(Integer.toString(iconWidth) + "px");
 		icon.setHeight(Integer.toString(iconHeight) + "px");
-		final Label warningLabel = new Label("<h2>" + longDescription + "</h2>", ContentMode.HTML);
+		final Label warningLabel = new Label("<h3>" + longDescription + "</h3>", ContentMode.HTML);
 
 		final HorizontalLayout layout = new HorizontalLayout();
 		layout.addComponent(icon);
@@ -144,7 +144,7 @@ public class SimpleWarningContent extends VerticalLayout {
 		 * Sets the long description.
 		 * 
 		 * @param longDescription
-		 *            The long description.
+		 *            The long description. HTML tags are allowed.
 		 * @return this instance of the {@link Builder}.
 		 */
 		public Builder setLongDescription(final String longDescription) {

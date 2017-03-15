@@ -1,10 +1,11 @@
 package com.workflowconversion.portlet.core.resource.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -15,11 +16,11 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
+import com.workflowconversion.portlet.core.resource.impl.jaxb.ResourcesXmlAdapter;
 
 /**
  * Represents all of the available computing resources together with their applications.
@@ -47,9 +49,8 @@ public class JAXBResourceDatabase implements ResourceProvider {
 	private final static long serialVersionUID = -1654143705161576414L;
 	private final static Logger LOG = LoggerFactory.getLogger(JAXBResourceDatabase.class);
 
-	@XmlElementWrapper(name = "resources")
-	@XmlElement(name = "resource")
-	private final Set<Resource> resources;
+	@XmlJavaTypeAdapter(ResourcesXmlAdapter.class)
+	private final Map<String, Resource> resources;
 
 	// we don't need these members to be serialized/deserialized
 	@XmlTransient
@@ -68,7 +69,7 @@ public class JAXBResourceDatabase implements ResourceProvider {
 				"xmlFileLocation cannot be null, empty or contain only whitespaces");
 		this.xmlFile = new File(xmlFileLocation);
 		this.readWriteLock = new ReentrantReadWriteLock();
-		this.resources = new TreeSet<Resource>();
+		this.resources = new TreeMap<String, Resource>();
 	}
 
 	/**
@@ -98,7 +99,7 @@ public class JAXBResourceDatabase implements ResourceProvider {
 		final Lock readLock = readWriteLock.readLock();
 		readLock.lock();
 		try {
-			return Collections.unmodifiableCollection(resources);
+			return Collections.unmodifiableCollection(resources.values());
 		} finally {
 			readLock.unlock();
 		}
@@ -110,8 +111,9 @@ public class JAXBResourceDatabase implements ResourceProvider {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();
 		try {
-			if (!resources.contains(resource)) {
-				resources.add(resource);
+			final String key = resource.generateKey();
+			if (!resources.containsKey(key)) {
+				resources.put(key, resource);
 			} else {
 				throw new DuplicateResourceException(resource);
 			}
@@ -126,7 +128,7 @@ public class JAXBResourceDatabase implements ResourceProvider {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();
 		try {
-			if (!resources.remove(resource)) {
+			if (resources.remove(resource.generateKey()) == null) {
 				throw new ResourceNotFoundException(resource);
 			}
 		} finally {
@@ -151,9 +153,9 @@ public class JAXBResourceDatabase implements ResourceProvider {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();
 		try {
-			if (resources.contains(resource)) {
-				resources.remove(resource);
-				resources.add(resource);
+			final String key = resource.generateKey();
+			if (resources.containsKey(key)) {
+				resources.put(key, resource);
 			} else {
 				throw new ResourceNotFoundException(resource);
 			}
@@ -179,7 +181,7 @@ public class JAXBResourceDatabase implements ResourceProvider {
 		final Lock readLock = readWriteLock.readLock();
 		readLock.lock();
 		try {
-			return resources.contains(resource);
+			return resources.containsKey(resource.generateKey());
 		} finally {
 			readLock.unlock();
 		}
@@ -217,14 +219,26 @@ public class JAXBResourceDatabase implements ResourceProvider {
 	// poor naming convention, but it has to be clear that the load/save methods are to be externally made thread safe
 	private void saveToFile_notThreadSafe() {
 		try {
+			ensureParentFolderExists_notThreadSafe();
 			final JAXBContext jaxbContext = JAXBContext.newInstance(JAXBResourceDatabase.class);
 			final Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
 
 			jaxbMarshaller.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, true);
 
 			jaxbMarshaller.marshal(this, xmlFile);
-		} catch (final JAXBException e) {
+		} catch (final JAXBException | IOException e) {
 			throw new ApplicationException("Could not save resources", e);
+		}
+	}
+
+	private void ensureParentFolderExists_notThreadSafe() throws IOException {
+		if (!xmlFile.exists()) {
+			final File parentDirectory = xmlFile.getParentFile();
+			if (parentDirectory == null) {
+				throw new IOException(
+						"Invalid location of applications database file! File location: " + xmlFile.getCanonicalPath());
+			}
+			FileUtils.forceMkdir(parentDirectory);
 		}
 	}
 
@@ -241,9 +255,9 @@ public class JAXBResourceDatabase implements ResourceProvider {
 						.unmarshal(xmlFile);
 
 				// copy the contents of the unmarshalled class
-				resources.addAll(resourceDatabase.resources);
+				resources.putAll(resourceDatabase.resources);
 				// go through all applications, queues and set their owning resource
-				for (final Resource resource : resources) {
+				for (final Resource resource : resources.values()) {
 					for (final Application application : resource.getApplications()) {
 						application.setResource(resource);
 					}
@@ -252,8 +266,9 @@ public class JAXBResourceDatabase implements ResourceProvider {
 					}
 				}
 			} else {
-				LOG.warn("The xml file in which the resources/applications are stored does not exist. File location: "
-						+ xmlFile.getAbsolutePath());
+				LOG.info(
+						"The xml file in which the resources/applications are stored does not exist yet. It will be created once a save operation is performed. File location: "
+								+ xmlFile.getAbsolutePath());
 			}
 		} catch (final JAXBException e) {
 			throw new ApplicationException("Could not load resources", e);

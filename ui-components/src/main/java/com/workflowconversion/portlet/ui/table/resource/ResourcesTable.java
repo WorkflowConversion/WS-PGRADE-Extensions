@@ -28,6 +28,8 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
 public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	private static final long serialVersionUID = 4634915248824534764L;
 
+	public static final int WIDTH_PIXELS = 650;
+
 	private final ResourceProvider resourceProvider;
 	private final Collection<String> middlewareTypes;
 
@@ -54,7 +56,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	@Override
 	public Size getSize() {
 		final Size tableDimensions = new Size();
-		tableDimensions.width = 550;
+		tableDimensions.width = WIDTH_PIXELS;
 		tableDimensions.widthUnit = Unit.PIXELS;
 		tableDimensions.height = 350;
 		tableDimensions.heightUnit = Unit.PIXELS;
@@ -121,7 +123,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	@Override
 	protected AbstractGenericElementDetailDialog<Resource> createElementDetailDialog(final Object itemId,
 			final Resource element) {
-		return new ResourceDetailDialog(itemId, element, this, super.allowEdition);
+		return new ResourceDetaislDialog(itemId, element, this, super.allowEdition);
 	}
 
 	/**
