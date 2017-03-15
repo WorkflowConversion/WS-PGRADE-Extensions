@@ -27,13 +27,10 @@
 	<modules>
 		<module>core-lib</module>
 		<module>ui-components</module>
-	 	<module>application-manager</module> 
-	 	<!-- 
+		<module>application-manager</module>
 		<module>workflow-importer</module>
-		 -->
 	</modules>
 
-	<!-- other repositories -->
 	<repositories>
 		<repository>
 			<id>gUSE</id>
@@ -46,7 +43,7 @@
 		<repository>
 			<id>WorkflowConversion_local_repo</id>
 			<name>Local project Maven repository</name>
-			<url>${project.basedir}/lib/mvnrepo/</url>
+			<url>file://${project.basedir}/lib/mvnrepo/</url>
 		</repository>
 		<repository>
 			<id>vaadin-addons</id>
@@ -61,6 +58,38 @@
 			<snapshots>
 				<enabled>true</enabled>
 			</snapshots>
+		</repository>
+		<!-- repositories copied from https://sourceforge.net/p/guse/asmsp/code/ci/master/tree/pom.xml -->
+		<repository>
+			<id>Trianacode</id>
+			<name>Trianacode Maven Repository</name>
+			<url>http://trianacode.org/maven</url>
+		</repository>
+		<repository>
+			<id>unicore.eu</id>
+			<name>UNICORE repository</name>
+			<url>http://unicore-dev.zam.kfa-juelich.de/maven</url>
+		</repository>
+		<repository>
+			<id>in2p3</id>
+			<name>IN2P3 Maven repository</name>
+			<url>http://grid.in2p3.fr/maven2/</url>
+		</repository>
+		<!-- old url doesn't work anymore, using new maven.java.net repository -->
+		<repository>
+			<id>java.net-Public</id>
+			<name>Maven Java Net Snapshots and Releases</name>
+			<url>https://maven.java.net/content/groups/public/</url>
+		</repository>
+		<repository>
+			<id>myproxy</id>
+			<name>MyProxy API and Client</name>
+			<url>https://cilogon.svn.sourceforge.net/svnroot/cilogon/m2-repo/</url>
+		</repository>
+		<repository>
+			<id>eviware.com</id>
+			<name>Eviware Maven Repository</name>
+			<url>http://www.eviware.com/repository/maven2/</url>
 		</repository>
 	</repositories>
 
@@ -358,7 +387,8 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.4</version>
 				<configuration>
-					<!-- vaadin portlets don't need a web.xml, but, as of gUSE 3.7.4, WS-PGRADE portlets need a web.xml -->
+					<!-- vaadin portlets don't need a web.xml, but, as of gUSE 3.7.4, WS-PGRADE 
+						portlets need a web.xml -->
 					<failOnMissingWebXml>true</failOnMissingWebXml>
 					<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar,WEB-INF/classes/VAADIN/gwt-unitCache/**,WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
 					<warName>${portlet.name}</warName>
@@ -432,8 +462,7 @@
 		<pluginManagement>
 			<plugins>
 				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself.
-					See: https://dev.vaadin.com/ticket/8899 -->
+					only. It has no influence on the Maven build itself. See: https://dev.vaadin.com/ticket/8899 -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
