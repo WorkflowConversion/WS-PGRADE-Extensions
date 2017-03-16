@@ -28,6 +28,9 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
 public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	private static final long serialVersionUID = 4634915248824534764L;
 
+	/**
+	 * The size of a couple of components depends on the width of this table.
+	 */
 	public static final int WIDTH_PIXELS = 650;
 
 	private final ResourceProvider resourceProvider;

@@ -9,6 +9,7 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.server.ThemeResource;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.CheckBox;
@@ -157,12 +158,20 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 			}
 		});
 
+		final HorizontalLayout buttonsLayout = new HorizontalLayout();
+		buttonsLayout.setMargin(false);
+		buttonsLayout.setSpacing(true);
+		buttonsLayout.addComponent(saveButton);
+		buttonsLayout.addComponent(bulkUploadButton);
+
 		final HorizontalLayout editControlsLayout = new HorizontalLayout();
 		editControlsLayout.setMargin(false);
 		editControlsLayout.setSpacing(true);
 		editControlsLayout.addComponent(enableEditionCheckBox);
-		editControlsLayout.addComponent(saveButton);
-		editControlsLayout.addComponent(bulkUploadButton);
+		editControlsLayout.addComponent(buttonsLayout);
+		editControlsLayout.setComponentAlignment(enableEditionCheckBox, Alignment.BOTTOM_LEFT);
+		editControlsLayout.setComponentAlignment(buttonsLayout, Alignment.MIDDLE_RIGHT);
+
 		editControlsLayout.setWidth(ResourcesTable.WIDTH_PIXELS, Unit.PIXELS);
 
 		final VerticalLayout mainLayout = new VerticalLayout();
@@ -171,7 +180,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		mainLayout.addComponent(resourceTableLayout);
 		mainLayout.addComponent(new HorizontalSeparator());
 		mainLayout.addComponent(editControlsLayout);
-		mainLayout.setMargin(true);
 
 		// select the first provider
 		resourceProviderComboBox.select(0);

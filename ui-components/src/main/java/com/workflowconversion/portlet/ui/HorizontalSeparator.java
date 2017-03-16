@@ -1,5 +1,6 @@
 package com.workflowconversion.portlet.ui;
 
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Label;
 
 /**
@@ -19,7 +20,7 @@ public class HorizontalSeparator extends Label {
 	 * Constructor.
 	 */
 	public HorizontalSeparator() {
-		super("<hr width='100%'/>", Label.CONTENT_XHTML);
+		super("<hr width='100%'/>", ContentMode.HTML);
 		this.setHeight("10px");
 	}
 }

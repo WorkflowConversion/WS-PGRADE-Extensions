@@ -43,7 +43,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 	@Override
 	public Size getSize() {
 		final Size tableDimensions = new Size();
-		tableDimensions.width = 800;
+		tableDimensions.width = 1100;
 		tableDimensions.widthUnit = Unit.PIXELS;
 		tableDimensions.height = 450;
 		tableDimensions.heightUnit = Unit.PIXELS;
