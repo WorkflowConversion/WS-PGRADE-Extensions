@@ -49,6 +49,15 @@ public interface TableWithControlsFactory<T extends HasKey> {
 	TableWithControlsFactory<T> allowDuplicates(final boolean allowDuplicates);
 
 	/**
+	 * Sets whether the table will allow multiple selections.
+	 * 
+	 * @param allowMultipleSelection
+	 *            whether the table will allow multiple selections.
+	 * @return a reference to {@code this} factory.
+	 */
+	TableWithControlsFactory<T> allowMultipleSelection(final boolean allowMultipleSelection);
+
+	/**
 	 * Sets the title of the table to build.
 	 * 
 	 * @param title

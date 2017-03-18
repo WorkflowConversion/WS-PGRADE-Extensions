@@ -85,16 +85,17 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
-		settingsBuilder.withApplicationProviders(applicationProviders)
-				.withStringSimilaritySettings(stringSimilaritySettings).withMiddlewareProvider(middlewareProvider)
+		settingsBuilder.withApplicationProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
 				.withWorkflowProviderFactoryClass(workflowProviderFactoryClass)
-				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass);
+				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)
+				.withStringSimilaritySettings(stringSimilaritySettings);
+
 		Settings.setInstance(settingsBuilder.newSettings());
 	}
 
 	private Class<? extends WorkflowExporterFactory> extractWorkflowExporterFactoryClass(
-			ServletContextEvent servletContextEvent) {
+			final ServletContextEvent servletContextEvent) {
 		if (useMocks(servletContextEvent)) {
 			return MockWorkflowExporterFactory.class;
 		}
@@ -102,7 +103,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 	}
 
 	private Class<? extends WorkflowProviderFactory> extractWorkflowProviderFactoryClass(
-			ServletContextEvent servletContextEvent) {
+			final ServletContextEvent servletContextEvent) {
 		if (useMocks(servletContextEvent)) {
 			return MockWorkflowProviderFactory.class;
 		}
@@ -184,22 +185,32 @@ public class WorkflowConversionContextListener implements ServletContextListener
 	}
 
 	// extracts cut-off score and StringSimilarity algorithm to use
-	private StringSimilaritySettings extractStringSimilaritySettings(ServletContext servletContext) {
+	private StringSimilaritySettings extractStringSimilaritySettings(final ServletContext servletContext) {
+		final String cutOffValueRaw = servletContext.getInitParameter("cutOff.filter.value");
+		final String algorithmRaw = servletContext.getInitParameter("stringSimilarityAlgorithm.implementation");
 		final StringSimilaritySettings.Builder builder = new StringSimilaritySettings.Builder();
-		builder.setCutOffValue(Double.parseDouble(servletContext.getInitParameter("cutOff.filter.value")))
-				.setAlgorithm(newInstance(servletContext.getInitParameter("stringSimilarityAlgorithm.implementation"),
-						StringSimilarityAlgorithm.class));
+		if (StringUtils.isEmpty(cutOffValueRaw)) {
+			LOG.info("Missing cut off value for string similarity settings. Using default.");
+		} else {
+			builder.setCutOffValue(Double.parseDouble(cutOffValueRaw));
+		}
+
+		if (StringUtils.isEmpty(algorithmRaw)) {
+			LOG.info("Missing algorithm for string similarity settings. Using default.");
+		} else {
+			builder.setAlgorithm(newInstance(algorithmRaw, StringSimilarityAlgorithm.class));
+		}
 		return builder.newStringSimilaritySettings();
 	}
 
 	@Override
-	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+	public void contextDestroyed(final ServletContextEvent servletContextEvent) {
 		LOG.info("Performing cleanup tasks for a com.workflowconversion portlet");
 		Settings.clearInstance();
 		// shutdown mysql cleanup thread
 		try {
 			AbandonedConnectionCleanupThread.shutdown();
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 			LOG.error("could not shutdown MySQL's Cleanup Thread: " + e.getMessage());
 			// but there's not much we can do anyway...
 		}

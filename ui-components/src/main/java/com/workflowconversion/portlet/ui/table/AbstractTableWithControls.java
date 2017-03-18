@@ -58,6 +58,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	private final Button detailsButton;
 	private final boolean withDetails;
 	private final boolean allowDuplicates;
+	private final boolean allowMultipleSelection;
 	private final Table table;
 	private final Collection<ContainerProperty> containerProperties;
 
@@ -74,14 +75,17 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	 *            whether a "display details" button will be displayed.
 	 * @param allowDuplicates
 	 *            whether duplicates in the table (based on the keys produced by the elements) are allowed.
+	 * @param allowMultipleSelection
+	 *            whether users can select multiple items.
 	 */
 	protected AbstractTableWithControls(final String title, final boolean allowEdition, final boolean withDetails,
-			final boolean allowDuplicates) {
+			final boolean allowDuplicates, final boolean allowMultipleSelection) {
 		Validate.isTrue(StringUtils.isNotBlank(title),
 				"title cannot be null, empty or contain only whitespace characters.");
 		this.dirty = false;
 		this.title = title;
 		this.allowEdition = allowEdition;
+		this.allowMultipleSelection = allowMultipleSelection;
 		this.withDetails = withDetails;
 		this.allowDuplicates = allowDuplicates;
 		this.addButton = createButton("Add new item", FontAwesome.PLUS_CIRCLE);
@@ -298,7 +302,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 
 		table.addStyleName("tableWithControls");
 		table.setSelectable(true);
-		table.setMultiSelect(true);
+		table.setMultiSelect(allowMultipleSelection);
 		table.setBuffered(false);
 		table.setEditable(false);
 		table.setSortEnabled(false);

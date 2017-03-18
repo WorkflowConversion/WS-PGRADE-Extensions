@@ -32,8 +32,9 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 	private final Application.Field[] visibleColumns;
 
 	private ApplicationsTable(final Resource owningResource, final Application.Field[] visibleColumns,
-			final String title, final boolean allowEdition, final boolean withDetails, final boolean allowDuplicates) {
-		super(title, allowEdition, withDetails, allowDuplicates);
+			final String title, final boolean allowEdition, final boolean withDetails, final boolean allowDuplicates,
+			final boolean allowMultipleSelection) {
+		super(title, allowEdition, withDetails, allowDuplicates, allowMultipleSelection);
 		Validate.notNull(owningResource, "owningResource cannot be null");
 		Validate.notEmpty(visibleColumns, "visibleColumns cannot be null or empty");
 		this.owningResource = owningResource;
@@ -126,7 +127,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 		@Override
 		public TableWithControls<Application> build() {
 			return new ApplicationsTable(owningResource, visibleColumns, super.title, super.allowEdition,
-					super.withDetails, super.allowDuplicates);
+					super.withDetails, super.allowDuplicates, super.allowMultipleSelection);
 		}
 
 		/**

@@ -26,8 +26,8 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 	private final Resource owningResource;
 
 	private QueueTable(final Resource resource, final String title, final boolean withEditControls,
-			final boolean withDetails, final boolean allowDuplicates) {
-		super(title, withEditControls, withDetails, allowDuplicates);
+			final boolean withDetails, final boolean allowDuplicates, final boolean allowMultipleSelection) {
+		super(title, withEditControls, withDetails, allowDuplicates, allowMultipleSelection);
 		this.owningResource = resource;
 	}
 
@@ -97,7 +97,7 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 		@Override
 		public TableWithControls<Queue> build() {
 			return new QueueTable(owningResource, super.title, super.allowEdition, super.withDetails,
-					super.allowDuplicates);
+					super.allowDuplicates, super.allowMultipleSelection);
 		}
 
 		public QueueTableFactory withOwningResource(final Resource owningResource) {

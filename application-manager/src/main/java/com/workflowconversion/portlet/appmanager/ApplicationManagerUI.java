@@ -212,7 +212,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		factory.withResourceProvider(resourceProvider)
 				.withMiddlewareTypes(Settings.getInstance().getMiddlewareProvider().getAllMiddlewareTypes())
 				.withDetails(true).withTitle("Resources").allowEdition(resourceProvider.isEditable())
-				.allowDuplicates(false);
+				.allowDuplicates(false).allowMultipleSelection(true);
 		final TableWithControls<Resource> resourceTable = factory.build();
 		resourceTable.init(resourceProvider.getResources());
 		final UIComponents uiComponents = new UIComponents(resourceProvider, resourceTable);

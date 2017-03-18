@@ -15,6 +15,7 @@ public abstract class AbstractTableWithControlsFactory<T extends HasKey> impleme
 	protected boolean allowEdition;
 	protected boolean withDetails;
 	protected boolean allowDuplicates;
+	protected boolean allowMultipleSelection;
 	protected String title;
 
 	@Override
@@ -38,6 +39,12 @@ public abstract class AbstractTableWithControlsFactory<T extends HasKey> impleme
 	@Override
 	public TableWithControlsFactory<T> allowDuplicates(final boolean allowDuplicates) {
 		this.allowDuplicates = allowDuplicates;
+		return this;
+	}
+
+	@Override
+	public TableWithControlsFactory<T> allowMultipleSelection(final boolean allowMultipleSelection) {
+		this.allowMultipleSelection = allowMultipleSelection;
 		return this;
 	}
 }

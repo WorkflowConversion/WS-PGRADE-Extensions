@@ -42,6 +42,13 @@ public class StringSimilaritySettings implements Serializable {
 	/**
 	 * Builder for {@link StringSimilaritySettings}.
 	 * 
+	 * Default values:
+	 * <ul>
+	 * <li>{@code cutOffValue = 0.25}
+	 * <li>{@code algorithm = com.workflowconversion.portlet.core.text.impl.FuzzySimilarity}
+	 * </ul>
+	 * 
+	 * 
 	 * @author delagarza
 	 *
 	 */

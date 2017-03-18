@@ -38,8 +38,8 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 
 	private ResourcesTable(final ResourceProvider resourceProvider, final String title,
 			final Collection<String> middlewareTypes, final boolean allowEdition, final boolean withDetails,
-			final boolean allowDuplicates) {
-		super(title, allowEdition, withDetails, allowDuplicates);
+			final boolean allowDuplicates, final boolean allowMultipleSelection) {
+		super(title, allowEdition, withDetails, allowDuplicates, allowMultipleSelection);
 		Validate.notEmpty(middlewareTypes, "middlewareTypes cannot be null or empty");
 		Validate.notNull(resourceProvider, "resourceProvider cannot be null");
 		this.resourceProvider = resourceProvider;
@@ -141,7 +141,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 		@Override
 		public TableWithControls<Resource> build() {
 			return new ResourcesTable(resourceProvider, super.title, middlewareTypes, super.allowEdition,
-					super.withDetails, super.allowDuplicates);
+					super.withDetails, super.allowDuplicates, super.allowMultipleSelection);
 		}
 
 		/**

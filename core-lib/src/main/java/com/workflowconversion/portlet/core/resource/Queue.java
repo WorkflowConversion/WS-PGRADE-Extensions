@@ -1,5 +1,7 @@
 package com.workflowconversion.portlet.core.resource;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -15,7 +17,8 @@ import org.apache.commons.lang.Validate;
  *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-public class Queue implements Comparable<Queue>, HasKey {
+public class Queue implements Comparable<Queue>, Serializable, HasKey {
+	private static final long serialVersionUID = -1202346412388738016L;
 
 	@XmlAttribute
 	private String name = "";
@@ -93,11 +96,6 @@ public class Queue implements Comparable<Queue>, HasKey {
 		return true;
 	}
 
-	@Override
-	public int compareTo(final Queue other) {
-		return name.compareTo(other.name);
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -106,6 +104,11 @@ public class Queue implements Comparable<Queue>, HasKey {
 	@Override
 	public String toString() {
 		return "Queue [name=" + name + "]";
+	}
+
+	@Override
+	public int compareTo(final Queue other) {
+		return name.compareTo(other.name);
 	}
 
 	public enum Field implements FormField {
