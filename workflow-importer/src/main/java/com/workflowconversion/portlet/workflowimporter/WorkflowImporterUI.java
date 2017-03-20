@@ -1,11 +1,11 @@
 package com.workflowconversion.portlet.workflowimporter;
 
 import com.vaadin.data.Item;
+import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.VerticalLayout;
 import com.workflowconversion.portlet.core.settings.Settings;
@@ -45,24 +45,19 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		comboBoxLayout.setComponentAlignment(workflowComboBox, Alignment.BOTTOM_LEFT);
 		comboBoxLayout.setComponentAlignment(importButton, Alignment.BOTTOM_RIGHT);
 
-		final VerticalLayout workflowDetailsLayout = new VerticalLayout();
+		// final VerticalLayout workflowDetailsLayout = new VerticalLayout();
+		final Accordion workflowDetailsAccordion = new Accordion();
 		// ******
-		final Label titleLabel = new Label("The name of the workflow");
-		workflowDetailsLayout.addComponent(titleLabel);
-
 		// add some fake jobs
 		for (int i = 0; i < 6; i++) {
-
-			final Label jobNameLabel = new Label("Job_" + i);
-
 			final ComboBox binaryComboBox = new ComboBox();
 			binaryComboBox.setCaptionAsHtml(true);
 			binaryComboBox.setCaption("<h3>Binary</h3>");
 			binaryComboBox.setNullSelectionAllowed(false);
 			binaryComboBox.setImmediate(true);
-			binaryComboBox.setDescription("Select a binary for this job");
-			binaryComboBox.setInputPrompt("Select a binary for this job");
-			binaryComboBox.setWidth(350, Unit.PIXELS);
+			binaryComboBox.setDescription("Select a binary");
+			binaryComboBox.setInputPrompt("Select a binary");
+			binaryComboBox.setWidth(450, Unit.PIXELS);
 			binaryComboBox.addContainerProperty("binary.name", String.class, null);
 			binaryComboBox.setItemCaptionPropertyId("binary.name");
 			final Item item = binaryComboBox.addItem(i);
@@ -73,25 +68,36 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 			queueComboBox.setCaption("<h3>Queue</h3>");
 			queueComboBox.setNullSelectionAllowed(false);
 			queueComboBox.setImmediate(true);
-			queueComboBox.setDescription("Select a queue for this job");
-			queueComboBox.setInputPrompt("Select a queue for this job");
-			queueComboBox.setWidth(150, Unit.PIXELS);
+			queueComboBox.setDescription("Select a queue");
+			queueComboBox.setInputPrompt("Select a queue");
+			queueComboBox.setWidth(200, Unit.PIXELS);
 			queueComboBox.addContainerProperty("queue.name", String.class, null);
 			queueComboBox.setItemCaptionPropertyId("queue.name");
 			final Item queueItem = queueComboBox.addItem(i);
 			queueItem.getItemProperty("queue.name").setValue("fast");
 
-			final HorizontalLayout jobDetailsLayout = new HorizontalLayout();
-			jobDetailsLayout.setMargin(false);
-			jobDetailsLayout.setSpacing(true);
-			jobDetailsLayout.addComponent(jobNameLabel);
-			jobDetailsLayout.addComponent(binaryComboBox);
-			jobDetailsLayout.addComponent(queueComboBox);
-			jobDetailsLayout.setComponentAlignment(jobNameLabel, Alignment.MIDDLE_LEFT);
-			jobDetailsLayout.setComponentAlignment(binaryComboBox, Alignment.BOTTOM_CENTER);
-			jobDetailsLayout.setComponentAlignment(queueComboBox, Alignment.BOTTOM_RIGHT);
+			final HorizontalLayout binarySelectionLayout = new HorizontalLayout();
+			binarySelectionLayout.setMargin(false);
+			binarySelectionLayout.setSpacing(true);
+			binarySelectionLayout.addComponent(binaryComboBox);
+			binarySelectionLayout.addComponent(queueComboBox);
+			binarySelectionLayout.setComponentAlignment(binaryComboBox, Alignment.TOP_LEFT);
+			binarySelectionLayout.setComponentAlignment(queueComboBox, Alignment.TOP_RIGHT);
 
-			workflowDetailsLayout.addComponent(jobDetailsLayout);
+			// final HorizontalLayout jobNameLayout = new HorizontalLayout();
+			// jobNameLayout.setMargin(false);
+			// jobNameLayout.setSpacing(true);
+			// jobNameLayout.addComponent(jobNameLabel);
+			// jobNameLayout.setComponentAlignment(jobNameLabel, Alignment.BOTTOM_LEFT);
+
+			// final VerticalLayout jobDetailsLayout = new VerticalLayout();
+			// jobDetailsLayout.setMargin(false);
+			// jobDetailsLayout.setSpacing(true);
+			// jobDetailsLayout.addComponent(jobNameLayout);
+			// jobDetailsLayout.addComponent(binarySelectionLayout);
+
+			workflowDetailsAccordion.addTab(binarySelectionLayout, "Job_" + i);
+			// workflowDetailsLayout.addComponent(new HorizontalSeparator());
 		}
 		// ******
 
@@ -108,8 +114,7 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		final Layout mainLayout = new VerticalLayout();
 		mainLayout.addComponent(comboBoxLayout);
 		mainLayout.addComponent(new HorizontalSeparator());
-		mainLayout.addComponent(workflowDetailsLayout);
-		mainLayout.addComponent(new HorizontalSeparator());
+		mainLayout.addComponent(workflowDetailsAccordion);
 		mainLayout.addComponent(buttonLayout);
 
 		return mainLayout;
