@@ -74,13 +74,13 @@ public class ResourceDetaislDialog extends AbstractGenericElementDetailDialog<Re
 		applicationsTableFactory.withOwningResource(super.element).withVisibleColumns(Application.Field.values())
 				.withTitle("Applications").allowEdition(allowEdition).withDetails(false).allowDuplicates(false)
 				.allowMultipleSelection(true);
-		final TableWithControls<Application> applicationsTable = applicationsTableFactory.build();
+		final TableWithControls<Application> applicationsTable = applicationsTableFactory.newInstance();
 		applicationsTable.init(super.element.getApplications());
 
 		final QueueTableFactory queueTableFactory = new QueueTableFactory();
 		queueTableFactory.withOwningResource(super.element).withTitle("Queues").allowEdition(allowEdition)
 				.withDetails(false).allowDuplicates(false).allowMultipleSelection(true);
-		final TableWithControls<Queue> queueTable = queueTableFactory.build();
+		final TableWithControls<Queue> queueTable = queueTableFactory.newInstance();
 		queueTable.init(super.element.getQueues());
 
 		if (allowEdition) {

@@ -1,7 +1,6 @@
 package com.workflowconversion.portlet.core.workflow;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -10,7 +9,17 @@ import java.util.Collection;
  * @author delagarza
  *
  */
-public interface WorkflowProvider {
+public interface WorkflowManager {
+
+	/**
+	 * Initializes the workflow manager.
+	 */
+	public void init();
+
+	/**
+	 * Commits changes.
+	 */
+	public void commitChanges();
 
 	/**
 	 * Imports a workflow into the <i>staging</i> area, which is a place on which workflow can be edited before being
@@ -18,11 +27,10 @@ public interface WorkflowProvider {
 	 * 
 	 * @param serverSideWorkflowLocation
 	 *            the location of the file containing the workflow to import.
+	 * 
 	 * @return the imported workflow.
-	 * @throws IOException
-	 *             if any file handling goes wrong.
 	 */
-	public Workflow importToStagingArea(final File serverSideWorkflowLocation) throws IOException;
+	public Workflow importWorkflow(final File serverSideWorkflowLocation);
 
 	/**
 	 * Deletes a workflow from the staging area.

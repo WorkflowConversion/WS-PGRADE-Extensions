@@ -3,7 +3,7 @@ package com.workflowconversion.portlet.ui.table;
 import com.workflowconversion.portlet.core.resource.HasKey;
 
 /**
- * Base class for table factories. Concrete implementations must implement the {@link #build()} method.
+ * Base class for table factories. Concrete implementations must implement the {@link #newInstance()} method.
  * 
  * @author delagarza
  *

@@ -58,7 +58,7 @@ public class Queue implements Comparable<Queue>, Serializable, HasKey {
 
 	@Override
 	public String generateKey() {
-		return name;
+		return "_name=" + name;
 	}
 
 	/*

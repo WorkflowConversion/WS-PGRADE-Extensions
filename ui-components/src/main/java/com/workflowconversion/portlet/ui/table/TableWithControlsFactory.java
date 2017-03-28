@@ -18,7 +18,7 @@ public interface TableWithControlsFactory<T extends HasKey> {
 	 * 
 	 * @return a new instance of a {@link TableWithControls}.
 	 */
-	TableWithControls<T> build();
+	TableWithControls<T> newInstance();
 
 	/**
 	 * Sets whether the instance to build will have a button to display details.

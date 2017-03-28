@@ -25,7 +25,7 @@ public class MockWorkflowExporterFactory implements WorkflowExporterFactory {
 	}
 
 	@Override
-	public WorkflowExporter newWorkflowExporter() {
+	public WorkflowExporter newInstance() {
 		return new WorkflowExporter() {
 
 			@Override

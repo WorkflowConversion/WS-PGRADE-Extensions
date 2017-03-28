@@ -95,7 +95,7 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 		private Resource owningResource;
 
 		@Override
-		public TableWithControls<Queue> build() {
+		public TableWithControls<Queue> newInstance() {
 			return new QueueTable(owningResource, super.title, super.allowEdition, super.withDetails,
 					super.allowDuplicates, super.allowMultipleSelection);
 		}

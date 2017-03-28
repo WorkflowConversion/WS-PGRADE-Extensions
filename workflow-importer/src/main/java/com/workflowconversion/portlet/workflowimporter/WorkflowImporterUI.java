@@ -1,16 +1,35 @@
 package com.workflowconversion.portlet.workflowimporter;
 
+import java.io.File;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
+
 import com.vaadin.data.Item;
-import com.vaadin.ui.Accordion;
+import com.vaadin.data.Property.ValueChangeEvent;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
+import com.workflowconversion.portlet.core.resource.Application;
+import com.workflowconversion.portlet.core.resource.Resource;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
+import com.workflowconversion.portlet.core.workflow.Workflow;
+import com.workflowconversion.portlet.core.workflow.WorkflowManager;
+import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
+import com.workflowconversion.portlet.ui.workflow.WorkflowView;
+import com.workflowconversion.portlet.ui.workflow.export.WorkflowExportDialog;
+import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadDialog;
+import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadedListener;
 
 /**
  * Entry point for this portlet.
@@ -19,23 +38,49 @@ import com.workflowconversion.portlet.ui.WorkflowConversionUI;
  *
  */
 public class WorkflowImporterUI extends WorkflowConversionUI {
-
-	private static final String PROPERTY_NAME_CAPTION = "workflow.name";
 	private static final long serialVersionUID = 712483663690909775L;
+
+	private static final String PROPERTY_NAME_CAPTION = "WorkflowImporterUI_property_name";
+
+	private final Map<Integer, WorkflowView> workflowViewMap;
 
 	/**
 	 * Constructor.
 	 */
 	public WorkflowImporterUI() {
-		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getApplicationProviders());
-
+		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getResourceProviders());
+		workflowViewMap = new TreeMap<Integer, WorkflowView>();
 	}
 
 	@Override
 	protected Layout prepareContent() {
+		final WorkflowManagerFactory workflowManagerFactory = Settings.getInstance().getWorkflowManagerFactory();
+		workflowManagerFactory.withPortletUser(currentUser);
+		final WorkflowManager workflowManager = workflowManagerFactory.newInstance();
+
+		final Map<String, Application> applicationMap = getApplications();
 
 		final ComboBox workflowComboBox = getWorkflowComboBox();
 		final Button importButton = createButton("Import...", "Import a workflow");
+
+		// fill the combobox with workflows
+		for (final Workflow workflow : workflowManager.getStagedWorkflows()) {
+			addWorkflowToComboBox(workflow, workflowComboBox, applicationMap);
+		}
+
+		final VerticalLayout workflowDetailsLayout = new VerticalLayout();
+
+		workflowComboBox.addValueChangeListener(new ValueChangeListener() {
+			private static final long serialVersionUID = 2950115407239159416L;
+
+			@Override
+			public void valueChange(final ValueChangeEvent event) {
+				workflowDetailsLayout.removeAllComponents();
+				final int workflowViewId = (int) event.getProperty().getValue();
+				workflowDetailsLayout.addComponent(workflowViewMap.get(workflowViewId));
+				workflowDetailsLayout.markAsDirtyRecursive();
+			}
+		});
 
 		final HorizontalLayout comboBoxLayout = new HorizontalLayout();
 		comboBoxLayout.setSpacing(true);
@@ -45,95 +90,126 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		comboBoxLayout.setComponentAlignment(workflowComboBox, Alignment.BOTTOM_LEFT);
 		comboBoxLayout.setComponentAlignment(importButton, Alignment.BOTTOM_RIGHT);
 
-		// final VerticalLayout workflowDetailsLayout = new VerticalLayout();
-		final Accordion workflowDetailsAccordion = new Accordion();
-		// ******
-		// add some fake jobs
-		for (int i = 0; i < 6; i++) {
-			final ComboBox binaryComboBox = new ComboBox();
-			binaryComboBox.setCaptionAsHtml(true);
-			binaryComboBox.setCaption("<h3>Binary</h3>");
-			binaryComboBox.setNullSelectionAllowed(false);
-			binaryComboBox.setImmediate(true);
-			binaryComboBox.setDescription("Select a binary");
-			binaryComboBox.setInputPrompt("Select a binary");
-			binaryComboBox.setWidth(450, Unit.PIXELS);
-			binaryComboBox.addContainerProperty("binary.name", String.class, null);
-			binaryComboBox.setItemCaptionPropertyId("binary.name");
-			final Item item = binaryComboBox.addItem(i);
-			item.getItemProperty("binary.name").setValue("Some program running somewhere");
-
-			final ComboBox queueComboBox = new ComboBox();
-			queueComboBox.setCaptionAsHtml(true);
-			queueComboBox.setCaption("<h3>Queue</h3>");
-			queueComboBox.setNullSelectionAllowed(false);
-			queueComboBox.setImmediate(true);
-			queueComboBox.setDescription("Select a queue");
-			queueComboBox.setInputPrompt("Select a queue");
-			queueComboBox.setWidth(200, Unit.PIXELS);
-			queueComboBox.addContainerProperty("queue.name", String.class, null);
-			queueComboBox.setItemCaptionPropertyId("queue.name");
-			final Item queueItem = queueComboBox.addItem(i);
-			queueItem.getItemProperty("queue.name").setValue("fast");
-
-			final HorizontalLayout binarySelectionLayout = new HorizontalLayout();
-			binarySelectionLayout.setMargin(false);
-			binarySelectionLayout.setSpacing(true);
-			binarySelectionLayout.addComponent(binaryComboBox);
-			binarySelectionLayout.addComponent(queueComboBox);
-			binarySelectionLayout.setComponentAlignment(binaryComboBox, Alignment.TOP_LEFT);
-			binarySelectionLayout.setComponentAlignment(queueComboBox, Alignment.TOP_RIGHT);
-
-			// final HorizontalLayout jobNameLayout = new HorizontalLayout();
-			// jobNameLayout.setMargin(false);
-			// jobNameLayout.setSpacing(true);
-			// jobNameLayout.addComponent(jobNameLabel);
-			// jobNameLayout.setComponentAlignment(jobNameLabel, Alignment.BOTTOM_LEFT);
-
-			// final VerticalLayout jobDetailsLayout = new VerticalLayout();
-			// jobDetailsLayout.setMargin(false);
-			// jobDetailsLayout.setSpacing(true);
-			// jobDetailsLayout.addComponent(jobNameLayout);
-			// jobDetailsLayout.addComponent(binarySelectionLayout);
-
-			workflowDetailsAccordion.addTab(binarySelectionLayout, "Job_" + i);
-			// workflowDetailsLayout.addComponent(new HorizontalSeparator());
-		}
-		// ******
-
 		final Button saveButton = createButton("Save", "Save changes");
 		final Button saveAsButton = createButton("Save as...", "Save current workflow under a different name");
-		final Button copyButton = createButton("Export...", "Export current workflow");
+		final Button exportButton = createButton("Export...", "Export current workflow");
+		final Button deleteButton = createButton("Delete", "Delete current workflow");
 		final HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
 		buttonLayout.setMargin(false);
 		buttonLayout.addComponent(saveButton);
 		buttonLayout.addComponent(saveAsButton);
-		buttonLayout.addComponent(copyButton);
+		buttonLayout.addComponent(exportButton);
+		buttonLayout.addComponent(deleteButton);
+
+		importButton.addClickListener(new Button.ClickListener() {
+			private static final long serialVersionUID = 6816115357145595183L;
+
+			@Override
+			public void buttonClick(final ClickEvent event) {
+				final Window importWorkflowDialog = new WorkflowUploadDialog(new WorkflowUploadedListener() {
+					@Override
+					public void workflowUploaded(final File location) {
+						final Workflow uploadedWorkflow = workflowManager.importWorkflow(location);
+						addWorkflowToComboBox(uploadedWorkflow, workflowComboBox, applicationMap);
+					}
+				});
+				UI.getCurrent().addWindow(importWorkflowDialog);
+			}
+		});
+
+		saveButton.addClickListener(new Button.ClickListener() {
+			private static final long serialVersionUID = 7508331027519882976L;
+
+			@Override
+			public void buttonClick(final ClickEvent event) {
+				saveAllWorkflows();
+			}
+		});
+
+		exportButton.addClickListener(new Button.ClickListener() {
+			private static final long serialVersionUID = -4658323736597834818L;
+
+			@Override
+			public void buttonClick(final ClickEvent event) {
+				final int workflowViewId = (Integer) workflowComboBox.getValue();
+				final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
+				final Window exportDialog = new WorkflowExportDialog(workflowView.getWorkflow(), currentUser);
+				UI.getCurrent().addWindow(exportDialog);
+			}
+		});
+
+		deleteButton.addClickListener(new Button.ClickListener() {
+			private static final long serialVersionUID = -3385835445931117051L;
+
+			@Override
+			public void buttonClick(final ClickEvent event) {
+				final int workflowViewId = (Integer) workflowComboBox.getValue();
+				final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
+				workflowManager.deleteWorkflow(workflowView.getWorkflow());
+				workflowViewMap.remove(workflowViewId);
+				workflowComboBox.removeItem(workflowViewId);
+			}
+		});
 
 		final Layout mainLayout = new VerticalLayout();
 		mainLayout.addComponent(comboBoxLayout);
 		mainLayout.addComponent(new HorizontalSeparator());
-		mainLayout.addComponent(workflowDetailsAccordion);
+		mainLayout.addComponent(workflowDetailsLayout);
 		mainLayout.addComponent(buttonLayout);
 
 		return mainLayout;
 	}
 
+	private Map<String, Application> getApplications() {
+		final Map<String, Application> applicationMap = new TreeMap<String, Application>();
+		for (final ResourceProvider resourceProvider : resourceProviders) {
+			for (final Resource resource : resourceProvider.getResources()) {
+				for (final Application application : resource.getApplications()) {
+					applicationMap.put(application.generateKey(), application);
+				}
+			}
+		}
+		return Collections.unmodifiableMap(applicationMap);
+	}
+
 	private ComboBox getWorkflowComboBox() {
-		final ComboBox workflowComboBox = new ComboBox();
-		workflowComboBox.setCaptionAsHtml(true);
-		workflowComboBox.setCaption("<h3>Workflow</h3>");
-		workflowComboBox.setNullSelectionAllowed(false);
-		workflowComboBox.setImmediate(true);
-		workflowComboBox.setDescription("Select a workflow to edit");
-		workflowComboBox.setInputPrompt("Select a workflow to edit");
+		final ComboBox workflowComboBox = getComboBox("Workflow", "Select a workflow to edit");
 		workflowComboBox.setWidth(650, Unit.PIXELS);
 
 		workflowComboBox.addContainerProperty(PROPERTY_NAME_CAPTION, String.class, null);
 		workflowComboBox.setItemCaptionPropertyId(PROPERTY_NAME_CAPTION);
 
 		return workflowComboBox;
+	}
+
+	private ComboBox getComboBox(final String caption, final String description) {
+		final ComboBox comboBox = new ComboBox();
+		comboBox.setCaptionAsHtml(true);
+		comboBox.setCaption("<h3>" + caption + "</h3>");
+		comboBox.setNullSelectionAllowed(false);
+		comboBox.setImmediate(true);
+		comboBox.setDescription(description);
+		comboBox.setInputPrompt(description);
+		return comboBox;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void addWorkflowToComboBox(final Workflow workflow, final ComboBox workflowComboBox,
+			final Map<String, Application> applicationMap) {
+		final int id = workflowViewMap.size();
+		final Item item = workflowComboBox.addItem(id);
+		item.getItemProperty(PROPERTY_NAME_CAPTION).setValue(workflow.getName());
+		workflowViewMap.put(id, new WorkflowView(workflow, applicationMap));
+	}
+
+	private void saveAllWorkflows() {
+		final WorkflowManagerFactory workflowManagerFactory = Settings.getInstance().getWorkflowManagerFactory();
+		workflowManagerFactory.withPortletUser(currentUser);
+		final WorkflowManager workflowManager = workflowManagerFactory.newInstance();
+		for (final WorkflowView workflowView : workflowViewMap.values()) {
+			workflowManager.saveWorkflow(workflowView.getWorkflow());
+		}
 	}
 
 	private Button createButton(final String caption, final String description) {

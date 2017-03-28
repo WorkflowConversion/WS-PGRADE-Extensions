@@ -162,11 +162,6 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public boolean needsInit() {
-		return false;
-	}
-
-	@Override
 	public void init() {
 		// nop
 	}

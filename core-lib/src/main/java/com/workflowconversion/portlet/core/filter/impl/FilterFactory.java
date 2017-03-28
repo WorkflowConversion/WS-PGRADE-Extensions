@@ -72,7 +72,7 @@ public class FilterFactory {
 	 * 
 	 * @return a new instance of a {@link ItemFilter}.
 	 */
-	public Filter<Item> newItemFilter() {
+	public Filter<Item> newInstance() {
 		final Collection<Criterion<Item>> criteria = new LinkedList<Criterion<Item>>();
 		// for items, we need name and availability
 		if (name != null) {

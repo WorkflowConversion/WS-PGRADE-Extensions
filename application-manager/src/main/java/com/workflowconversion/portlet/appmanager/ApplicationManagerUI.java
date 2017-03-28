@@ -26,10 +26,10 @@ import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
+import com.workflowconversion.portlet.ui.resource.upload.BulkUploadResourcesDialog;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
 import com.workflowconversion.portlet.ui.table.resource.ResourcesTable;
 import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourceTableFactory;
-import com.workflowconversion.portlet.ui.upload.resource.BulkUploadResourcesDialog;
 
 /**
  * Entry point for this portlet.
@@ -48,7 +48,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	 * Constructor.
 	 */
 	public ApplicationManagerUI() {
-		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getApplicationProviders());
+		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getResourceProviders());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -213,7 +213,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 				.withMiddlewareTypes(Settings.getInstance().getMiddlewareProvider().getAllMiddlewareTypes())
 				.withDetails(true).withTitle("Resources").allowEdition(resourceProvider.isEditable())
 				.allowDuplicates(false).allowMultipleSelection(true);
-		final TableWithControls<Resource> resourceTable = factory.build();
+		final TableWithControls<Resource> resourceTable = factory.newInstance();
 		resourceTable.init(resourceProvider.getResources());
 		final UIComponents uiComponents = new UIComponents(resourceProvider, resourceTable);
 

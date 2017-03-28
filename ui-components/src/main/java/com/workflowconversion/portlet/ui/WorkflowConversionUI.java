@@ -114,17 +114,10 @@ public abstract class WorkflowConversionUI extends UI {
 		// init any provider that needs initialization
 		LOG.info("initializing ApplicationProviders");
 		for (final ResourceProvider provider : resourceProviders) {
-			if (provider.needsInit()) {
-				if (LOG.isInfoEnabled()) {
-					LOG.info("initializing " + provider.getClass());
-				}
-				provider.init();
-			} else {
-				if (LOG.isInfoEnabled()) {
-					LOG.info("ApplicationProvider " + provider.getClass()
-							+ " does not require initialization or has already been initialized.");
-				}
+			if (LOG.isInfoEnabled()) {
+				LOG.info("initializing " + provider.getClass());
 			}
+			provider.init();
 		}
 	}
 

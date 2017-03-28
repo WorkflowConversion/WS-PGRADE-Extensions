@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.resource.Application;
+import com.workflowconversion.portlet.core.resource.Queue;
 
 /**
  * Simple class that represents jobs in imported workflows.
@@ -11,12 +12,12 @@ import com.workflowconversion.portlet.core.resource.Application;
  * @author delagarza
  *
  */
-public class Job implements Comparable<Job> {
+public class Job {
 
 	private final String id;
 	private String name;
 	private Application application;
-	private ConfigurationState state;
+	private Queue queue;
 
 	/**
 	 * Constructor.
@@ -47,7 +48,7 @@ public class Job implements Comparable<Job> {
 	 * @param name
 	 *            the name to set
 	 */
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
@@ -62,76 +63,22 @@ public class Job implements Comparable<Job> {
 	 * @param application
 	 *            the application to set
 	 */
-	public void setApplication(Application application) {
+	public void setApplication(final Application application) {
 		this.application = application;
 	}
 
 	/**
-	 * @return the state
+	 * @return the queue
 	 */
-	public ConfigurationState getState() {
-		return state;
+	public Queue getQueue() {
+		return queue;
 	}
 
 	/**
-	 * @param state
-	 *            the state to set
+	 * @param queue
+	 *            the queue to set
 	 */
-	public void setConfigurationState(ConfigurationState state) {
-		this.state = state;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		return result;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(final Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final Job other = (Job) obj;
-		if (!id.equals(other.id)) {
-			return false;
-		}
-		return true;
-	}
-
-	@Override
-	public int compareTo(final Job o) {
-		return this.id.compareTo(o.id);
-	}
-
-	/**
-	 * Enum to represent the possible configuration state of a job.
-	 * 
-	 * @author delagarza
-	 */
-	public enum ConfigurationState {
-		/**
-		 * Job is fully configured to be executed on a WS-PGRADE workflow.
-		 */
-		Complete,
-		/**
-		 * Job is partially configured.
-		 */
-		Incomplete
+	public void setQueue(final Queue queue) {
+		this.queue = queue;
 	}
 }

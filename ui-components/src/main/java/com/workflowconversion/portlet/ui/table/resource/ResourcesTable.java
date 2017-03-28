@@ -139,7 +139,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 		private Collection<String> middlewareTypes;
 
 		@Override
-		public TableWithControls<Resource> build() {
+		public TableWithControls<Resource> newInstance() {
 			return new ResourcesTable(resourceProvider, super.title, middlewareTypes, super.allowEdition,
 					super.withDetails, super.allowDuplicates, super.allowMultipleSelection);
 		}

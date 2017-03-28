@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.upload.workflow;
+package com.workflowconversion.portlet.ui.workflow.upload;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

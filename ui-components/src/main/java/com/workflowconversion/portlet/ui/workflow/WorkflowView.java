@@ -1,261 +1,66 @@
 package com.workflowconversion.portlet.ui.workflow;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.commons.lang.Validate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.vaadin.data.util.IndexedContainer;
-import com.vaadin.server.Resource;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.HorizontalSplitPanel;
-import com.vaadin.ui.Layout;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.UI;
+import com.vaadin.ui.Accordion;
+import com.vaadin.ui.TabSheet.Tab;
 import com.vaadin.ui.VerticalLayout;
-import com.workflowconversion.portlet.core.settings.Settings;
-import com.workflowconversion.portlet.core.user.PortletUser;
+import com.workflowconversion.portlet.core.resource.Application;
+import com.workflowconversion.portlet.core.workflow.Job;
 import com.workflowconversion.portlet.core.workflow.Workflow;
-import com.workflowconversion.portlet.core.workflow.WorkflowProvider;
-import com.workflowconversion.portlet.ui.NotificationUtils;
-import com.workflowconversion.portlet.ui.upload.workflow.WorkflowUploadDialog;
-import com.workflowconversion.portlet.ui.upload.workflow.WorkflowUploadedListener;
-import com.workflowconversion.portlet.ui.workflow.export.WorkflowExportDialog;
 
 /**
- * Class containing all of the ui components needed to upload, save, delete, export workflows.
+ * Class that displays a single workflow.
  * 
  * @author delagarza
  *
  */
-public class WorkflowView extends VerticalLayout implements WorkflowUploadedListener {
+public class WorkflowView extends VerticalLayout {
 
 	private static final long serialVersionUID = 3843347539780676302L;
 
-	private final static Logger LOG = LoggerFactory.getLogger(WorkflowView.class);
-
-	private static final String WF_PROPERTY_ID = "wfid";
-	private static final String WF_PROPERTY_NAME = "wfname";
-	private static final String WF_PROPERTY_STATUS = "wfstatus";
-
-	private final Table workflowTable;
-	private final PortletUser portletUser;
-	private final VerticalLayout selectedWorkflowDisplayLayout;
-	private final Map<String, Workflow> currentlyDisplayedWorkflows;
-	private final Set<String> dirtyWorkflowsId;
-	private final WorkflowProvider workflowProvider;
+	private final String workflowId;
+	private final String workflowName;
+	private final Accordion workflowDetailsAccordion;
 
 	/**
-	 * Constructor.
-	 * 
-	 * @param portletUser
-	 *            the user requesting this view. the workflow provider for the user requesting this view.
-	 * @param workflowExporter
-	 *            the workflow exporter for the user requesting this view.
+	 * @param workflow
+	 *            the workflow to display.
+	 * @param applicationMap
+	 *            the map of all available applications.
 	 */
-	public WorkflowView(final PortletUser portletUser) {
-		Validate.notNull(portletUser, "portletUser cannot be null");
-		this.portletUser = portletUser;
-
-		this.dirtyWorkflowsId = new TreeSet<String>();
-		this.workflowProvider = Settings.getInstance().getWorkflowProviderFactory().withPortletUser(portletUser)
-				.newWorkflowProvider();
-		this.currentlyDisplayedWorkflows = new TreeMap<String, Workflow>();
-		this.workflowTable = new Table("Your workflows");
-		// this.workflowTableContainer = new IndexedContainer();
-		this.selectedWorkflowDisplayLayout = new VerticalLayout();
-
-		getInitialWorkflows();
-		initUI();
+	public WorkflowView(final Workflow workflow, final Map<String, Application> applicationMap) {
+		Validate.notNull(workflow,
+				"workflow cannot be null. This seems to be a coding problem and should be reported.");
+		Validate.notNull(applicationMap,
+				"applications cannot be null. This seems to be a coding problem and should be reported.");
+		this.workflowId = workflow.getId();
+		this.workflowName = workflow.getName();
+		this.workflowDetailsAccordion = new Accordion();
+		initUI(workflow, applicationMap);
 	}
 
-	private void getInitialWorkflows() {
-		for (final Workflow stagedWorkflow : workflowProvider.getStagedWorkflows()) {
-			currentlyDisplayedWorkflows.put(stagedWorkflow.getId(), stagedWorkflow);
+	private void initUI(final Workflow workflow, final Map<String, Application> applicationMap) {
+		for (final Job job : workflow.getJobs()) {
+			workflowDetailsAccordion.addTab(new JobView(job, applicationMap));
 		}
+
+		addComponent(workflowDetailsAccordion);
 	}
 
-	private void initUI() {
-		final Button uploadButton = createButton("Upload...", "Click to upload a workflow");
-		final Button saveButton = createButton("Save", "Save changes");
-		final Button deleteButton = createButton("Delete", "Delete selected workflows");
-		final Button exportButton = createButton("Export...", "Export selected workflow");
-
-		uploadButton.addClickListener(new Button.ClickListener() {
-			private static final long serialVersionUID = 3920929249905705698L;
-
-			@Override
-			public void buttonClick(final ClickEvent event) {
-				try {
-					uploadButtonClick();
-				} finally {
-					uploadButton.setEnabled(true);
-				}
-			}
-		});
-		saveButton.addClickListener(new Button.ClickListener() {
-			private static final long serialVersionUID = 6892804972706972688L;
-
-			@Override
-			public void buttonClick(final ClickEvent event) {
-				try {
-					saveButtonClick();
-				} finally {
-					saveButton.setEnabled(true);
-				}
-			}
-		});
-		deleteButton.addClickListener(new Button.ClickListener() {
-			private static final long serialVersionUID = 7562987128061971035L;
-
-			@Override
-			public void buttonClick(final ClickEvent event) {
-				try {
-					deleteButtonClick();
-				} finally {
-					deleteButton.setEnabled(true);
-				}
-			}
-		});
-		exportButton.addClickListener(new Button.ClickListener() {
-			private static final long serialVersionUID = -5910585413586746243L;
-
-			@Override
-			public void buttonClick(final ClickEvent event) {
-				try {
-					exportButtonClick();
-				} finally {
-					exportButton.setEnabled(true);
-				}
-			}
-		});
-
-		final IndexedContainer workflowTableContainer = new IndexedContainer();
-		workflowTableContainer.addContainerProperty(WF_PROPERTY_ID, String.class, null);
-		workflowTableContainer.addContainerProperty(WF_PROPERTY_STATUS, Resource.class, null);
-		workflowTableContainer.addContainerProperty(WF_PROPERTY_NAME, String.class, null);
-		fillContainerWithWorkflows(workflowTableContainer);
-		workflowTable.setContainerDataSource(workflowTableContainer);
-		workflowTable.addStyleName("stagingAreaWorkflowTable");
-		workflowTable.setReadOnly(true);
-		workflowTable.setImmediate(true);
-		workflowTable.setMultiSelect(true);
-
-		final HorizontalSplitPanel splitPanel = new HorizontalSplitPanel();
-		splitPanel.setFirstComponent(workflowTable);
-		splitPanel.setSecondComponent(selectedWorkflowDisplayLayout);
-
-		final Layout buttonLayout = new HorizontalLayout();
-		buttonLayout.addComponent(uploadButton);
-		buttonLayout.addComponent(saveButton);
-		buttonLayout.addComponent(deleteButton);
-		buttonLayout.addComponent(exportButton);
-
-		super.addComponent(buttonLayout);
-	}
-
-	private void fillContainerWithWorkflows(final IndexedContainer workflowTableContainer) {
-
-	}
-
-	protected void exportButtonClick() {
-		final Set<?> selectedItems = (Set<?>) workflowTable.getValue();
-		if (selectedItems.size() == 1) {
-			final Workflow workflowToExport = currentlyDisplayedWorkflows.get(selectedItems.iterator().next());
-			final WorkflowExportDialog workflowExportDialog = new WorkflowExportDialog(workflowToExport, portletUser);
-			UI.getCurrent().addWindow(workflowExportDialog);
-
-		} else {
-			NotificationUtils.displayMessage("Please select a single workflow to export.");
+	/**
+	 * @return the workflow, as configured in this view.
+	 */
+	public Workflow getWorkflow() {
+		final Workflow workflow = new Workflow(workflowId);
+		workflow.setName(workflowName);
+		for (int i = 0; i < workflowDetailsAccordion.getComponentCount(); i++) {
+			final Tab tab = workflowDetailsAccordion.getTab(i);
+			final JobView jobView = (JobView) tab.getComponent();
+			workflow.addJob(jobView.getJob());
 		}
+		return workflow;
 	}
-
-	protected void deleteButtonClick() {
-		final Set<?> selectedItems = (Set<?>) workflowTable.getValue();
-		if (selectedItems.isEmpty()) {
-			NotificationUtils.displayMessage("Please select at least one workflow to delete.");
-		} else {
-			final Collection<String> errors = new LinkedList<String>();
-			for (final Object workflowId : selectedItems) {
-				try {
-					workflowProvider.deleteWorkflow(currentlyDisplayedWorkflows.get((String) workflowId));
-					workflowTable.removeItem(workflowId);
-				} catch (Exception e) {
-					LOG.error("Could not delete workflow with id: " + workflowId, e);
-					errors.add("Workflow with id " + workflowId + " could not be removed, reason: " + e.getMessage());
-				}
-			}
-			displayErrorsAsUnorderedList("The following errors occurred while removing workflows:", errors);
-		}
-	}
-
-	protected void saveButtonClick() {
-		final Set<String> savedWorkflowsId = new TreeSet<String>();
-		final Collection<String> errors = new LinkedList<String>();
-		for (final String workflowId : dirtyWorkflowsId) {
-			try {
-				savedWorkflowsId.add(workflowId);
-				workflowProvider.deleteWorkflow(currentlyDisplayedWorkflows.get(workflowId));
-			} catch (Exception e) {
-				LOG.error("Could not save workflow with id " + workflowId, e);
-				errors.add("Workflow with id " + workflowId + " could not be saved, reason: " + e.getMessage());
-			}
-		}
-		dirtyWorkflowsId.removeAll(savedWorkflowsId);
-		displayErrorsAsUnorderedList("The following errors occurred while saving changes:", errors);
-	}
-
-	private void displayErrorsAsUnorderedList(final String caption, final Collection<String> errors) {
-		if (!errors.isEmpty()) {
-			final StringBuilder errorMessage = new StringBuilder(caption + "<ul>");
-			for (final String error : errors) {
-				errorMessage.append("<li>");
-				errorMessage.append(error);
-			}
-			errorMessage.append("</ul>");
-			NotificationUtils.displayError(errorMessage.toString());
-		}
-	}
-
-	protected void uploadButtonClick() {
-		final WorkflowUploadDialog workflowUploadDialog = new WorkflowUploadDialog(this);
-		if (workflowUploadDialog.getParent() != null) {
-			NotificationUtils.displayWarning("The 'Workflow Upload Dialog' is already open.");
-		} else {
-			UI.getCurrent().addWindow(workflowUploadDialog);
-		}
-	}
-
-	private Button createButton(final String caption, final String description) {
-		final Button button = new Button(caption);
-		button.setDescription(description);
-		button.setDisableOnClick(true);
-		button.setImmediate(true);
-		return button;
-	}
-
-	@Override
-	public void workflowUploaded(final File location) {
-		try {
-			final Workflow newWorkflow = workflowProvider.importToStagingArea(location);
-			// TODO: 1. validate the location contains a valid workflow file
-			// TODO: 2. extract a Workflow object from the file
-			// TODO: 3. move the file to the user's staging area
-			// TODO: 3.1 set an icon based on the workflow status
-			// TODO: 4. add the workflow using the workflowprovider
-		} catch (IOException e) {
-
-		}
-	}
-
 }

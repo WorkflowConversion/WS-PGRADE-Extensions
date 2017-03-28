@@ -56,7 +56,7 @@ public abstract class AbstractFilteredMiddlewareProvider implements MiddlewarePr
 
 		// filter the available items for each of the available middlewares
 		final Collection<Item> availableItems = new LinkedList<Item>();
-		final Filter<Item> itemFilter = new FilterFactory().setEnabled(true).newItemFilter();
+		final Filter<Item> itemFilter = new FilterFactory().setEnabled(true).newInstance();
 		for (final Middleware availableMiddleware : availableMiddlewares) {
 			availableItems.addAll(itemFilter.apply(availableMiddleware.getItem()));
 		}

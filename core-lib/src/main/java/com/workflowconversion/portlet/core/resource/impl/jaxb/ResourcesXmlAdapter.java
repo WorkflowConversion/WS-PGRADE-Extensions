@@ -8,7 +8,6 @@ import java.util.TreeMap;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import com.workflowconversion.portlet.core.resource.Resource;
@@ -46,7 +45,6 @@ public class ResourcesXmlAdapter extends XmlAdapter<ResourcesXmlAdapter.Resource
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class Resources {
 
-		@XmlElementWrapper(name = "resources")
 		@XmlElement(name = "resource")
 		private final List<Resource> resources = new LinkedList<Resource>();
 	}

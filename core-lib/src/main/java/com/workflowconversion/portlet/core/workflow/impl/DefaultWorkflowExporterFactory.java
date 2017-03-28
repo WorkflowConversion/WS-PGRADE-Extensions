@@ -26,7 +26,7 @@ public class DefaultWorkflowExporterFactory implements WorkflowExporterFactory {
 	}
 
 	@Override
-	public WorkflowExporter newWorkflowExporter() {
+	public WorkflowExporter newInstance() {
 		Validate.notNull(portletUser,
 				"portletUser cannot be null; please use the withPortletUser() method to set a valid portlet user.");
 		Validate.notNull(destination,

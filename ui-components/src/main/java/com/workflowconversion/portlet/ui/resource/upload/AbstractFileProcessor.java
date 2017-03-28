@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.ui.upload.resource;
+package com.workflowconversion.portlet.ui.resource.upload;
 
 import java.io.File;
 import java.util.Map;

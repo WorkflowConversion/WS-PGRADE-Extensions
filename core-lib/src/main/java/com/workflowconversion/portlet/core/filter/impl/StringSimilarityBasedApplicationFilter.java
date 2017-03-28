@@ -10,7 +10,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
-import com.workflowconversion.portlet.core.exception.InvalidApplicationFieldException;
+import com.workflowconversion.portlet.core.exception.InvalidFieldException;
 import com.workflowconversion.portlet.core.filter.Filter;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.FormField;
@@ -64,7 +64,7 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 					case Version:
 						return application.getVersion();
 					default:
-						throw new InvalidApplicationFieldException(formField);
+						throw new InvalidFieldException(formField);
 					}
 				} else if (Resource.Field.class.isAssignableFrom(formField.getClass())) {
 					switch ((Resource.Field) formField) {
@@ -73,10 +73,10 @@ public class StringSimilarityBasedApplicationFilter implements Filter<Applicatio
 					case Type:
 						return application.getResource().getType();
 					default:
-						throw new InvalidApplicationFieldException(formField);
+						throw new InvalidFieldException(formField);
 					}
 				} else {
-					throw new InvalidApplicationFieldException(formField);
+					throw new InvalidFieldException(formField);
 				}
 			}
 		};

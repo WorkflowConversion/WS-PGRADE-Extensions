@@ -286,8 +286,8 @@ public class Resource implements Serializable, HasKey {
 	 */
 	public static enum Field implements FormField {
 
-		OriginalResource(1, "originalResource", "Original Resource"), Applications(1, "applications",
-				"Applications"), Queues(1, "queues", "Queues"), Name(256, "name", "Name"), Type(64, "type", "Type");
+		Applications(1, "applications", "Applications"), Queues(1, "queues", "Queues"), Name(256, "name",
+				"Name"), Type(64, "type", "Type");
 
 		private final int maxLength;
 		private final String displayName;

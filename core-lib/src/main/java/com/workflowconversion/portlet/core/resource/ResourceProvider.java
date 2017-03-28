@@ -30,13 +30,6 @@ public interface ResourceProvider extends Serializable {
 	public String getName();
 
 	/**
-	 * Whether the provider needs to be initialized.
-	 * 
-	 * @return {@code true} if this provider needs to be initialized, {@code false} otherwise.
-	 */
-	public boolean needsInit();
-
-	/**
 	 * Initializes this provider. It is the responsibility of the caller to query if this provider requires
 	 * initialization (i.e., call the {@link #needsInit()} method) and to invoke this method if required.
 	 */

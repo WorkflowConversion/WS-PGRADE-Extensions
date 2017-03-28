@@ -33,6 +33,6 @@ public interface WorkflowExporterFactory {
 	 * 
 	 * @return a new workflow provider
 	 */
-	public WorkflowExporter newWorkflowExporter();
+	public WorkflowExporter newInstance();
 
 }

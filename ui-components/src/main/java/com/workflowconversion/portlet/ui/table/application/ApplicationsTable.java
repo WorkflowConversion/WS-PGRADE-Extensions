@@ -125,7 +125,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 		private Application.Field[] visibleColumns;
 
 		@Override
-		public TableWithControls<Application> build() {
+		public TableWithControls<Application> newInstance() {
 			return new ApplicationsTable(owningResource, visibleColumns, super.title, super.allowEdition,
 					super.withDetails, super.allowDuplicates, super.allowMultipleSelection);
 		}

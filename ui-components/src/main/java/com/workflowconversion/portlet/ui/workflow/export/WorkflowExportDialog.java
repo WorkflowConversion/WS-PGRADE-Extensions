@@ -127,7 +127,7 @@ public class WorkflowExportDialog extends Window {
 			throw new InvalidExportDestinationException(destination);
 		}
 		final WorkflowExporter workflowExporter = workflowExporterFactory.withPortletUser(portletUser)
-				.newWorkflowExporter();
+				.newInstance();
 		try {
 			workflowExporter.export(workflowToExport);
 		} catch (Exception e) {

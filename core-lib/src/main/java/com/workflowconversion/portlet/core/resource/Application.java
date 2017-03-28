@@ -117,7 +117,7 @@ public class Application implements Serializable, HasKey {
 
 	@Override
 	public String generateKey() {
-		return "name=" + name + "-version=" + version + "-path=" + path;
+		return "_name=" + name + "-version=" + version + "-path=" + path;
 	}
 
 	/*

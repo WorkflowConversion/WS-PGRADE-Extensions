@@ -5,10 +5,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.workflow.Workflow;
-import com.workflowconversion.portlet.core.workflow.WorkflowProvider;
-import com.workflowconversion.portlet.core.workflow.WorkflowProviderFactory;
+import com.workflowconversion.portlet.core.workflow.WorkflowManager;
+import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
 
 /**
  * Mock factory. Useful for testing purposes.
@@ -16,19 +17,24 @@ import com.workflowconversion.portlet.core.workflow.WorkflowProviderFactory;
  * @author delagarza
  *
  */
-public class MockWorkflowProviderFactory implements WorkflowProviderFactory {
+public class MockWorkflowManagerFactory implements WorkflowManagerFactory {
 
 	@Override
-	public WorkflowProviderFactory withPortletUser(PortletUser portletUser) {
+	public WorkflowManagerFactory withPortletUser(final PortletUser portletUser) {
 		return this;
 	}
 
 	@Override
-	public WorkflowProvider newWorkflowProvider() {
+	public WorkflowManagerFactory withResourceProviders(final Collection<ResourceProvider> resourceProviders) {
+		return this;
+	}
+
+	@Override
+	public WorkflowManager newInstance() {
 		return new MockWorkflowProvider();
 	}
 
-	private static class MockWorkflowProvider implements WorkflowProvider {
+	private static class MockWorkflowProvider implements WorkflowManager {
 		final Map<String, Workflow> workflows;
 		private static int CURRENT_WF_ID = 0;
 
@@ -42,14 +48,15 @@ public class MockWorkflowProviderFactory implements WorkflowProviderFactory {
 		}
 
 		@Override
-		public Workflow importToStagingArea(final File serverSideWorkflowLocation) {
+		public Workflow importWorkflow(final File serverSideWorkflowLocation) {
 			final Workflow newWorkflow = addNewWorkflow();
 			newWorkflow.setLocation(serverSideWorkflowLocation);
 			return newWorkflow;
 		}
 
 		private Workflow addNewWorkflow() {
-			final Workflow newWorkflow = new Workflow(Integer.toString(CURRENT_WF_ID));
+			final Workflow newWorkflow = new Workflow();
+			newWorkflow.setId(Integer.toString(CURRENT_WF_ID));
 			newWorkflow.setName("MockWorkflow_" + CURRENT_WF_ID++);
 			workflows.put(newWorkflow.getId(), newWorkflow);
 			return newWorkflow;
@@ -68,6 +75,16 @@ public class MockWorkflowProviderFactory implements WorkflowProviderFactory {
 		@Override
 		public Collection<Workflow> getStagedWorkflows() {
 			return workflows.values();
+		}
+
+		@Override
+		public void init() {
+			// nop
+		}
+
+		@Override
+		public void commitChanges() {
+			// nop
 		}
 	}
 

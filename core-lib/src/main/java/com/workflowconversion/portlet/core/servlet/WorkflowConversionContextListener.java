@@ -32,11 +32,11 @@ import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.GUSEPortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.MockPortletSanityCheck;
 import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;
-import com.workflowconversion.portlet.core.workflow.WorkflowProviderFactory;
+import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
 import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowExporterFactory;
-import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowProviderFactory;
+import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowManagerFactory;
 import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowExporterFactory;
-import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowProviderFactory;
+import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowManagerFactory;
 
 /**
  * Class that deals with cleaning/init up of webapps by reading configuration values from the servlet descriptor
@@ -72,7 +72,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
 				servletContextEvent.getServletContext());
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
-		final Class<? extends WorkflowProviderFactory> workflowProviderFactoryClass = extractWorkflowProviderFactoryClass(
+		final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass = extractWorkflowManagerFactoryClass(
 				servletContextEvent);
 		final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass = extractWorkflowExporterFactoryClass(
 				servletContextEvent);
@@ -87,7 +87,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 		settingsBuilder.withApplicationProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
-				.withWorkflowProviderFactoryClass(workflowProviderFactoryClass)
+				.withWorkflowManagerFactoryClass(workflowManagerFactoryClass)
 				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)
 				.withStringSimilaritySettings(stringSimilaritySettings);
 
@@ -102,12 +102,12 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		return DefaultWorkflowExporterFactory.class;
 	}
 
-	private Class<? extends WorkflowProviderFactory> extractWorkflowProviderFactoryClass(
+	private Class<? extends WorkflowManagerFactory> extractWorkflowManagerFactoryClass(
 			final ServletContextEvent servletContextEvent) {
 		if (useMocks(servletContextEvent)) {
-			return MockWorkflowProviderFactory.class;
+			return MockWorkflowManagerFactory.class;
 		}
-		return DefaultWorkflowProviderFactory.class;
+		return DefaultWorkflowManagerFactory.class;
 	}
 
 	private String extractInitParam(final String paramName, final ServletContextEvent servletContextEvent) {

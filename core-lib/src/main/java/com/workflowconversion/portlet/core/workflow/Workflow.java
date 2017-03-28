@@ -6,8 +6,10 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Simple class that represents workflows uploaded to the portlet.
@@ -15,18 +17,24 @@ import org.apache.commons.lang.Validate;
  * @author delagarza
  *
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Workflow {
-	// TODO: add status based on jobs: if the jobs are fully configured, then the workflow is ready, otherwise, flag it
-	// as not ready
 
-	private final String id;
+	@XmlAttribute
+	private String id;
+	@XmlAttribute
 	private String name;
+	@XmlAttribute
 	private File location;
+
+	// we won't serialize the jobs to an xml file
+	@XmlTransient
 	private final Set<Job> jobs;
 
-	public Workflow(final String id) {
-		Validate.isTrue(StringUtils.isNotBlank(id), "id cannot be null, contain only whitespaces or be empty");
-		this.id = id;
+	/**
+	 * Constructor.
+	 */
+	public Workflow() {
 		jobs = new TreeSet<Job>();
 	}
 
@@ -47,6 +55,10 @@ public class Workflow {
 		return new ArrayList<Job>(jobs);
 	}
 
+	public void setId(final String id) {
+		this.id = id;
+	}
+
 	/**
 	 * @return the id
 	 */
@@ -65,7 +77,7 @@ public class Workflow {
 	 * @param name
 	 *            the name to set
 	 */
-	public void setName(String name) {
+	public void setName(final String name) {
 		this.name = name;
 	}
 
@@ -80,7 +92,7 @@ public class Workflow {
 	 * @param location
 	 *            the location to set
 	 */
-	public void setLocation(File location) {
+	public void setLocation(final File location) {
 		this.location = location;
 	}
 

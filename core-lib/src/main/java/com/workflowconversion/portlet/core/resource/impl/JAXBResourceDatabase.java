@@ -90,11 +90,6 @@ public class JAXBResourceDatabase implements ResourceProvider {
 	}
 
 	@Override
-	public boolean needsInit() {
-		return true;
-	}
-
-	@Override
 	public Collection<Resource> getResources() {
 		final Lock readLock = readWriteLock.readLock();
 		readLock.lock();
