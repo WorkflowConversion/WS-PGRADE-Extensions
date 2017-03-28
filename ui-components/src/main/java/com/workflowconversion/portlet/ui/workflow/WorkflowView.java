@@ -54,7 +54,8 @@ public class WorkflowView extends VerticalLayout {
 	 * @return the workflow, as configured in this view.
 	 */
 	public Workflow getWorkflow() {
-		final Workflow workflow = new Workflow(workflowId);
+		final Workflow workflow = new Workflow();
+		workflow.setId(workflowId);
 		workflow.setName(workflowName);
 		for (int i = 0; i < workflowDetailsAccordion.getComponentCount(); i++) {
 			final Tab tab = workflowDetailsAccordion.getTab(i);
