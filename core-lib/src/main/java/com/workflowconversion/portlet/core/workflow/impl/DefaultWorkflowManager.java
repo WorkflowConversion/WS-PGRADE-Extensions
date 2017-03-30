@@ -69,6 +69,13 @@ import com.workflowconversion.portlet.core.workflow.WorkflowManager;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DefaultWorkflowManager implements WorkflowManager {
 
+	private static final String ATTRIBUTE_VALUE = "value";
+	private static final String ATTRIBUTE_KEY = "key";
+	private static final String NODE_JOB_DESCRIPTION = "description";
+	private static final String ATTRIBUTE_JOB_NAME = "name";
+	private static final String XPATH_JOBS = "/workflow/real/job";
+	private static final String XPATH_WORKFLOW_NAME = "/workflow/@name";
+	private static final String ZIP_ENTRY_WORKFLOW_XML = "workflow.xml";
 	private static final String USER_WORKFLOWS_XML_FILE_LOCATION = "user_workflows.xml";
 	private static final String PROPERTY_PREFIX = "workflowconversion.";
 	private static final String PROPERTY_RESOURCE_NAME = PROPERTY_PREFIX + "resourceName";
@@ -171,13 +178,13 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		final NodeList children = node.getChildNodes();
 		for (int i = 0; i < children.getLength(); i++) {
 			final Node child = children.item(i);
-			if (child.getNodeType() == Node.ELEMENT_NODE && "description".equals(child.getNodeName())) {
+			if (child.getNodeType() == Node.ELEMENT_NODE && NODE_JOB_DESCRIPTION.equals(child.getNodeName())) {
 				// it is a description element, now, extract all attributes whose name starts with our prefix
-				final Node keyNode = child.getAttributes().getNamedItem("key");
+				final Node keyNode = child.getAttributes().getNamedItem(ATTRIBUTE_KEY);
 				if (keyNode != null) {
 					final String key = keyNode.getNodeValue();
 					if (key.startsWith(PROPERTY_PREFIX)) {
-						final Node valueNode = child.getAttributes().getNamedItem("value");
+						final Node valueNode = child.getAttributes().getNamedItem(ATTRIBUTE_VALUE);
 						if (valueNode != null) {
 							propertyMap.put(key, valueNode.getNodeValue());
 						}
@@ -265,7 +272,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 	private Workflow loadWorkflowFromFile_notThreadSafe(final File serverSideWorkflowLocation) throws IOException {
 		try (final ZipFile zippedWorkflow = new ZipFile(serverSideWorkflowLocation)) {
 			// we're just interested in workflow.xml
-			final ZipEntry workflowXmlEntry = zippedWorkflow.getEntry("workflow.xml");
+			final ZipEntry workflowXmlEntry = zippedWorkflow.getEntry(ZIP_ENTRY_WORKFLOW_XML);
 			if (workflowXmlEntry == null) {
 				throw new InvalidWorkflowException("The file doesn't contain a 'workflow.xml' entry.",
 						serverSideWorkflowLocation);
@@ -274,7 +281,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 			final InputSource inputSource = new InputSource(zippedWorkflow.getInputStream(workflowXmlEntry));
 			final String workflowName;
 			try {
-				workflowName = (String) xPath.evaluate("/workflow/@name", inputSource, XPathConstants.STRING);
+				workflowName = (String) xPath.evaluate(XPATH_WORKFLOW_NAME, inputSource, XPathConstants.STRING);
 			} catch (final XPathExpressionException e) {
 				throw new InvalidWorkflowException("Error while evaluation XPath expression '/workflow/@name'",
 						serverSideWorkflowLocation, e);
@@ -288,7 +295,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 
 			final NodeList jobNodeList;
 			try {
-				jobNodeList = (NodeList) xPath.evaluate("/workflow/real/job", inputSource, XPathConstants.NODESET);
+				jobNodeList = (NodeList) xPath.evaluate(XPATH_JOBS, inputSource, XPathConstants.NODESET);
 			} catch (final XPathExpressionException e) {
 				throw new InvalidWorkflowException("Error while evaluation XPath expression '/workflow/real/job'",
 						serverSideWorkflowLocation, e);
@@ -296,7 +303,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 
 			for (int i = 0; i < jobNodeList.getLength(); i++) {
 				final Node node = jobNodeList.item(i);
-				final String jobName = extractAttribute(node, "name");
+				final String jobName = extractAttribute(node, ATTRIBUTE_JOB_NAME);
 				final Job parsedJob = new Job(jobName);
 				final Map<String, String> jobProperties = extractJobProperties(node);
 				assetFinder.clearAllFields();
