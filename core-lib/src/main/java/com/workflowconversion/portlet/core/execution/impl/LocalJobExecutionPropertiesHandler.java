@@ -11,7 +11,7 @@ import com.workflowconversion.portlet.core.workflow.Job;
  * @author delagarza
  *
  */
-public class LocalJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
+class LocalJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
 
 	private final String GRID_LOCAL = "dci-bridge host(64bit)";
 	private final String GRID_TYPE_LOCAL = "local";

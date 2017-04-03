@@ -11,7 +11,7 @@ import com.workflowconversion.portlet.core.workflow.Job;
  * @author delagarza
  *
  */
-public class UnicoreJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
+class UnicoreJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
 
 	private static final String GRID_TYPE_UNICORE = "unicore";
 

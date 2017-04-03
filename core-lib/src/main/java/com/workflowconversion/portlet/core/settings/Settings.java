@@ -149,7 +149,7 @@ public class Settings implements Serializable {
 		this.middlewareProvider = middlewareProvider;
 		this.workflowExporterFactoryClass = workflowExporterFactoryClass;
 		this.workflowManagerFactoryClass = workflowManagerFactoryClass;
-		// this could very well be empty, so no need to validate
+		// stating area could very well be empty, so no need to validate
 		this.workflowStagingAreaPath = workflowStagingAreaPath;
 	}
 

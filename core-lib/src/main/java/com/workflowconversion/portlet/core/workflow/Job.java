@@ -14,27 +14,19 @@ import com.workflowconversion.portlet.core.resource.Queue;
  */
 public class Job {
 
-	private final String id;
-	private String name;
+	private final String name;
 	private Application application;
 	private Queue queue;
 
 	/**
 	 * Constructor.
 	 * 
-	 * @param id
-	 *            the id of this job.
+	 * @param name
+	 *            the name of this job.
 	 */
-	public Job(final String id) {
-		Validate.isTrue(StringUtils.isNotBlank(id), "id cannot be null, contain only whitespaces or be empty");
-		this.id = id;
-	}
-
-	/**
-	 * @return the id
-	 */
-	public String getId() {
-		return id;
+	public Job(final String name) {
+		Validate.isTrue(StringUtils.isNotBlank(name), "name cannot be null, contain only whitespaces or be empty");
+		this.name = name;
 	}
 
 	/**
@@ -42,14 +34,6 @@ public class Job {
 	 */
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * @param name
-	 *            the name to set
-	 */
-	public void setName(final String name) {
-		this.name = name;
 	}
 
 	/**

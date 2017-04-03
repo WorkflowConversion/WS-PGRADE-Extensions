@@ -1,10 +1,9 @@
 package com.workflowconversion.portlet.core.workflow;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.Collections;
+import java.util.LinkedList;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -29,13 +28,13 @@ public class Workflow {
 
 	// we won't serialize the jobs to an xml file
 	@XmlTransient
-	private final Set<Job> jobs;
+	private final Collection<Job> jobs;
 
 	/**
 	 * Constructor.
 	 */
 	public Workflow() {
-		jobs = new TreeSet<Job>();
+		jobs = new LinkedList<Job>();
 	}
 
 	/**
@@ -52,9 +51,13 @@ public class Workflow {
 	 * @return a collection containing all jobs.
 	 */
 	public Collection<Job> getJobs() {
-		return new ArrayList<Job>(jobs);
+		return Collections.unmodifiableCollection(jobs);
 	}
 
+	/**
+	 * @param id
+	 *            the id.
+	 */
 	public void setId(final String id) {
 		this.id = id;
 	}
@@ -84,7 +87,7 @@ public class Workflow {
 	/**
 	 * @return the location
 	 */
-	public File getLocation() {
+	public File getWorkflowArchiveLocation() {
 		return location;
 	}
 

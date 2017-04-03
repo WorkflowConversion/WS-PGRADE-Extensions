@@ -1,15 +1,21 @@
 package com.workflowconversion.portlet.core.workflow.impl;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -25,6 +31,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -35,13 +44,19 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.exception.InvalidWorkflowException;
+import com.workflowconversion.portlet.core.exception.JobExecutionPropertiesHandlerNotFoundException;
+import com.workflowconversion.portlet.core.exception.JobNotFoundException;
 import com.workflowconversion.portlet.core.exception.WorkflowNotFoundException;
+import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
@@ -72,8 +87,10 @@ public class DefaultWorkflowManager implements WorkflowManager {
 	private static final String ATTRIBUTE_VALUE = "value";
 	private static final String ATTRIBUTE_KEY = "key";
 	private static final String NODE_JOB_DESCRIPTION = "description";
+	private static final String NODE_JOB_EXECUTE = "execute";
 	private static final String ATTRIBUTE_JOB_NAME = "name";
-	private static final String XPATH_JOBS = "/workflow/real/job";
+	private static final String XPATH_ALL_JOBS_SELECTOR = "/workflow/real/job";
+	private static final String XPATH_SINGLE_JOB_SELECTOR = "/workflow/real/job[@name='{0}']";
 	private static final String XPATH_WORKFLOW_NAME = "/workflow/@name";
 	private static final String ZIP_ENTRY_WORKFLOW_XML = "workflow.xml";
 	private static final String USER_WORKFLOWS_XML_FILE_LOCATION = "user_workflows.xml";
@@ -99,8 +116,11 @@ public class DefaultWorkflowManager implements WorkflowManager {
 	private final File userWorkflowsXmlFile;
 	@XmlTransient
 	private final AssetFinder assetFinder;
+	@XmlTransient
+	private final JobExecutionPropertiesHandler jobHandler;
 
-	DefaultWorkflowManager(final File userStagingArea, final AssetFinder assetFinder) {
+	DefaultWorkflowManager(final File userStagingArea, final AssetFinder assetFinder,
+			final JobExecutionPropertiesHandler jobHandler) {
 		Validate.isTrue(userStagingArea.exists(),
 				"The user's staging area does not exist, this is probably a coding problem and should be reported.");
 		this.userStagingArea = userStagingArea;
@@ -108,13 +128,14 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		this.readWriteLock = new ReentrantReadWriteLock(false);
 		this.workflows = new TreeMap<String, Workflow>();
 		this.userWorkflowsXmlFile = new File(userStagingArea, USER_WORKFLOWS_XML_FILE_LOCATION);
+		this.jobHandler = jobHandler;
 	}
 
 	/**
 	 * JAXB serialization requires a default constructor.
 	 */
 	public DefaultWorkflowManager() {
-		this(new File(""), null);
+		this(new File(""), null, null);
 	}
 
 	@Override
@@ -133,7 +154,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();
 		try {
-			final Workflow parsedWorkflow = loadWorkflowFromFile_notThreadSafe(serverSideWorkflowLocation);
+			final Workflow parsedWorkflow = loadWorkflowFromArchive_notThreadSafe(serverSideWorkflowLocation);
 			moveWorkflowToStagingArea_notThreadSafe(parsedWorkflow);
 			workflows.put(parsedWorkflow.getId(), parsedWorkflow);
 			return parsedWorkflow;
@@ -172,18 +193,18 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		return StringUtils.trimToNull(jobProperties.get(propertyName));
 	}
 
-	// returns the attribute values for all <description> elements with a 'key' attribute starting with PROPERTY_PREFIX
-	private Map<String, String> extractJobProperties(final Node node) {
+	private Map<String, String> extractJobProperties(final Node parentNode, final String childrenNodeName,
+			final String propertyPrefix) {
 		final Map<String, String> propertyMap = new TreeMap<String, String>();
-		final NodeList children = node.getChildNodes();
+		final NodeList children = parentNode.getChildNodes();
 		for (int i = 0; i < children.getLength(); i++) {
 			final Node child = children.item(i);
-			if (child.getNodeType() == Node.ELEMENT_NODE && NODE_JOB_DESCRIPTION.equals(child.getNodeName())) {
+			if (child.getNodeType() == Node.ELEMENT_NODE && childrenNodeName.equals(child.getNodeName())) {
 				// it is a description element, now, extract all attributes whose name starts with our prefix
 				final Node keyNode = child.getAttributes().getNamedItem(ATTRIBUTE_KEY);
 				if (keyNode != null) {
 					final String key = keyNode.getNodeValue();
-					if (key.startsWith(PROPERTY_PREFIX)) {
+					if (StringUtils.isBlank(propertyPrefix) || key.startsWith(propertyPrefix)) {
 						final Node valueNode = child.getAttributes().getNamedItem(ATTRIBUTE_VALUE);
 						if (valueNode != null) {
 							propertyMap.put(key, valueNode.getNodeValue());
@@ -206,7 +227,8 @@ public class DefaultWorkflowManager implements WorkflowManager {
 			}
 			// in case the passed workflow contains a different location than the
 			// current one, we need to delete both locations
-			for (final File fileLocation : new File[] { workflow.getLocation(), currentWorkflow.getLocation() }) {
+			for (final File fileLocation : new File[] { workflow.getWorkflowArchiveLocation(),
+					currentWorkflow.getWorkflowArchiveLocation() }) {
 				if (fileLocation.exists()) {
 					FileUtils.forceDelete(fileLocation);
 				}
@@ -226,14 +248,16 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		try {
 			if (workflows.containsKey(workflow.getId())) {
 				final Workflow previousWorkflow = workflows.put(workflow.getId(), workflow);
-				if (previousWorkflow.getLocation().exists()) {
-					FileUtils.forceDelete(previousWorkflow.getLocation());
+				if (previousWorkflow.getWorkflowArchiveLocation().exists()) {
+					saveWorkflowToArchive_notThreadSafe(workflow);
+				} else {
+					throw new FileNotFoundException("The workflow archive does not exist. Archive location: "
+							+ workflow.getWorkflowArchiveLocation().getAbsolutePath());
 				}
-				saveWorkflowToFile_notThreadSafe(workflow);
 			} else {
 				throw new WorkflowNotFoundException(workflow);
 			}
-		} catch (final IOException e) {
+		} catch (final SAXException | ParserConfigurationException | IOException e) {
 			throw new ApplicationException("Could not save workflow", e);
 		} finally {
 			writeLock.unlock();
@@ -265,57 +289,164 @@ public class DefaultWorkflowManager implements WorkflowManager {
 	//////////////////////////////////
 	////// NOT THREAD SAFE METHODS
 	//////////////////////////////////
-	private void saveWorkflowToFile_notThreadSafe(final Workflow workflow) {
-
-	}
-
-	private Workflow loadWorkflowFromFile_notThreadSafe(final File serverSideWorkflowLocation) throws IOException {
-		try (final ZipFile zippedWorkflow = new ZipFile(serverSideWorkflowLocation)) {
+	private void saveWorkflowToArchive_notThreadSafe(final Workflow workflow)
+			throws IOException, SAXException, ParserConfigurationException {
+		final File workflowArchiveLocation = workflow.getWorkflowArchiveLocation();
+		try (final ZipFile zippedWorkflow = new ZipFile(workflowArchiveLocation)) {
 			// we're just interested in workflow.xml
 			final ZipEntry workflowXmlEntry = zippedWorkflow.getEntry(ZIP_ENTRY_WORKFLOW_XML);
 			if (workflowXmlEntry == null) {
 				throw new InvalidWorkflowException("The file doesn't contain a 'workflow.xml' entry.",
-						serverSideWorkflowLocation);
+						workflowArchiveLocation);
 			}
+			// get the modified DOM document that reflects the changes in execution properties
+			final Document modifiedWorkflowDocument = getModifiedDocument(workflow,
+					zippedWorkflow.getInputStream(workflowXmlEntry));
+			// modify the zipentry to reflect the changes in the document
+		}
+	}
+
+	private Document getModifiedDocument(final Workflow workflow, final InputStream workflowXmlInputStream)
+			throws ParserConfigurationException, SAXException, IOException {
+		// get the workflow.xml descriptor from the current workflow archive and load it on a DOM
+		final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+		final Document currentWorkflowDocument = documentBuilder.parse(workflowXmlInputStream);
+		// go through each job and modify the DOM
+		final XPath xPath = XPathFactory.newInstance().newXPath();
+		final MessageFormat singleJobSelectorFormat = new MessageFormat(XPATH_SINGLE_JOB_SELECTOR);
+		for (final Job job : workflow.getJobs()) {
+			final String xPathExpression = singleJobSelectorFormat.format(job.getName());
+			final NodeList jobList;
+			try {
+				jobList = (NodeList) xPath.evaluate(xPathExpression, currentWorkflowDocument.getDocumentElement(),
+						XPathConstants.NODESET);
+			} catch (final XPathExpressionException e) {
+				throw new InvalidWorkflowException("Error while evaluating XPath expression " + xPathExpression,
+						workflow.getWorkflowArchiveLocation(), e);
+			}
+			if (jobList.getLength() == 0) {
+				throw new JobNotFoundException(job.getName());
+			} else if (jobList.getLength() > 1) {
+				throw new InvalidWorkflowException("More than job with the name '" + job.getName() + "' was found.",
+						workflow.getWorkflowArchiveLocation());
+			}
+			// we know we have only one job, extract the execution properties
+			final Node jobNode = jobList.item(0);
+			final Map<String, String> jobExecutionProperties = new TreeMap<String, String>();
+			extractJobProperties(jobNode, NODE_JOB_EXECUTE, "");
+			// transform the properties accordingly
+			if (jobHandler.canHandle(job)) {
+				jobHandler.handle(job, jobExecutionProperties);
+			} else {
+				throw new JobExecutionPropertiesHandlerNotFoundException(job);
+			}
+			// write the modified properties to the dom
+			writeExecutionProperties(jobNode, jobExecutionProperties);
+		}
+		return currentWorkflowDocument;
+	}
+
+	// private Document
+
+	private void writeExecutionProperties(final Node jobNode, final Map<String, String> executionProperties) {
+		final NodeList childNodes = jobNode.getChildNodes();
+		final Collection<Node> nodesToRemove = new LinkedList<Node>();
+		final Collection<Element> nodesToInsert = new LinkedList<Element>();
+		final Set<String> processedProperties = new TreeSet<String>();
+		for (int i = 0; i < childNodes.getLength(); i++) {
+			final Node childNode = childNodes.item(i);
+			if (childNode.getNodeType() == Node.ELEMENT_NODE && NODE_JOB_EXECUTE.equals(childNode.getNodeName())) {
+				// if the property is not in the map, it means that this node is to be removed
+				final String propertyKey = childNode.getAttributes().getNamedItem(ATTRIBUTE_KEY).getNodeValue();
+				final String propertyValue = executionProperties.get(propertyKey);
+				if (propertyValue == null) {
+					// not found on the properties, it means that this node has to be removed
+					nodesToRemove.add(childNode);
+				} else {
+					// found on the properties, update the 'value' attribute
+					childNode.getAttributes().getNamedItem(ATTRIBUTE_VALUE).setNodeValue(propertyValue);
+				}
+				processedProperties.add(propertyKey);
+			}
+		}
+		// find out which properties were not processed yet
+		for (final Map.Entry<String, String> entry : executionProperties.entrySet()) {
+			if (!processedProperties.contains(entry.getKey())) {
+				// if a property is present on the properties but has not been processed,
+				// it means that we need to add a new node
+				final Element newNode = jobNode.getOwnerDocument().createElement(NODE_JOB_EXECUTE);
+				// <execute desc="null" inh="null" key="binary" label="null" value="ARI.sh"/>
+				newNode.setAttribute("desc", "null");
+				newNode.setAttribute("inh", "null");
+				newNode.setAttribute("label", "null");
+				newNode.setAttribute(ATTRIBUTE_KEY, entry.getKey());
+				newNode.setAttribute(ATTRIBUTE_VALUE, entry.getValue());
+				nodesToInsert.add(newNode);
+			}
+		}
+		// add/remove nodes accordingly
+		for (final Node nodeToRemove : nodesToRemove) {
+			jobNode.removeChild(nodeToRemove);
+		}
+		for (final Element nodeToInsert : nodesToInsert) {
+			jobNode.appendChild(nodeToInsert);
+		}
+	}
+
+	private Workflow loadWorkflowFromArchive_notThreadSafe(final File workflowArchiveLocation) throws IOException {
+		try (final InputStream workflowXmlInputStream = extractWorkflowXml(workflowArchiveLocation)) {
+			final InputSource inputSource = new InputSource(workflowXmlInputStream);
+
 			final XPath xPath = XPathFactory.newInstance().newXPath();
-			final InputSource inputSource = new InputSource(zippedWorkflow.getInputStream(workflowXmlEntry));
 			final String workflowName;
 			try {
 				workflowName = (String) xPath.evaluate(XPATH_WORKFLOW_NAME, inputSource, XPathConstants.STRING);
 			} catch (final XPathExpressionException e) {
 				throw new InvalidWorkflowException("Error while evaluation XPath expression '/workflow/@name'",
-						serverSideWorkflowLocation, e);
+						workflowArchiveLocation, e);
 			}
 
 			final String workflowId = new SimpleDateFormat(WORKFLOW_ID_FORMAT).format(new Date());
 			final Workflow parsedWorkflow = new Workflow();
 			parsedWorkflow.setId(workflowId);
 			parsedWorkflow.setName(workflowName);
-			parsedWorkflow.setLocation(serverSideWorkflowLocation);
+			parsedWorkflow.setLocation(workflowArchiveLocation);
 
 			final NodeList jobNodeList;
 			try {
-				jobNodeList = (NodeList) xPath.evaluate(XPATH_JOBS, inputSource, XPathConstants.NODESET);
+				jobNodeList = (NodeList) xPath.evaluate(XPATH_ALL_JOBS_SELECTOR, inputSource, XPathConstants.NODESET);
 			} catch (final XPathExpressionException e) {
 				throw new InvalidWorkflowException("Error while evaluation XPath expression '/workflow/real/job'",
-						serverSideWorkflowLocation, e);
+						workflowArchiveLocation, e);
 			}
 
 			for (int i = 0; i < jobNodeList.getLength(); i++) {
 				final Node node = jobNodeList.item(i);
 				final String jobName = extractAttribute(node, ATTRIBUTE_JOB_NAME);
 				final Job parsedJob = new Job(jobName);
-				final Map<String, String> jobProperties = extractJobProperties(node);
+				final Map<String, String> jobProperties = extractJobProperties(node, NODE_JOB_DESCRIPTION,
+						PROPERTY_PREFIX);
 				assetFinder.clearAllFields();
 				parsedJob.setApplication(extractApplication(node, jobProperties));
 				parsedJob.setQueue(extractQueue(node, jobProperties));
-				parsedJob.setName(jobName);
 				parsedWorkflow.addJob(parsedJob);
 			}
 
-			zippedWorkflow.close();
-
 			return parsedWorkflow;
+		}
+	}
+
+	// extracts workflow.xml from a workflow
+	private InputStream extractWorkflowXml(final File workflowArchiveLocation) throws IOException {
+		try (final ZipFile zippedWorkflow = new ZipFile(workflowArchiveLocation)) {
+			// we're just interested in workflow.xml
+			final ZipEntry workflowXmlEntry = zippedWorkflow.getEntry(ZIP_ENTRY_WORKFLOW_XML);
+			if (workflowXmlEntry == null) {
+				throw new InvalidWorkflowException("The file doesn't contain a 'workflow.xml' entry.",
+						workflowArchiveLocation);
+			}
+			return zippedWorkflow.getInputStream(workflowXmlEntry);
 		}
 	}
 
@@ -358,7 +489,8 @@ public class DefaultWorkflowManager implements WorkflowManager {
 
 	private void moveWorkflowToStagingArea_notThreadSafe(final Workflow workflow) throws IOException {
 		final File newLocation = new File(userStagingArea, workflow.getId() + ".zip");
-		Files.move(workflow.getLocation().toPath(), newLocation.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		Files.move(workflow.getWorkflowArchiveLocation().toPath(), newLocation.toPath(),
+				StandardCopyOption.REPLACE_EXISTING);
 		workflow.setLocation(newLocation);
 	}
 }

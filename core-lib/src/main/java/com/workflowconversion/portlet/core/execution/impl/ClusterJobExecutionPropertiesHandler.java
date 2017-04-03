@@ -20,7 +20,7 @@ import com.workflowconversion.portlet.core.workflow.Job;
  * @author delagarza
  *
  */
-public class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
+class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
 
 	private final static Set<String> SUPPORTED_CLUSTERS = new TreeSet<String>(
 			Arrays.asList("pbs", "lsf", "sge", "moab"));
