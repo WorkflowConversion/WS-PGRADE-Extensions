@@ -99,7 +99,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 	private static final String NODE_JOB_EXECUTE = "execute";
 	private static final String ATTRIBUTE_JOB_NAME = "name";
 	private static final String XPATH_ALL_JOBS_SELECTOR = "/workflow/real/job";
-	private static final String XPATH_SINGLE_JOB_SELECTOR = "/workflow/real/job[@name='{0}']";
+	private static final String XPATH_SINGLE_JOB_SELECTOR = "/workflow/real/job[@name=''{0}'']";
 	private static final String XPATH_WORKFLOW_NAME = "/workflow/@name";
 	private static final String PATH_WORKFLOW_XML = "/workflow.xml";
 	private static final String USER_WORKFLOWS_ARCHIVE_SUFFIX = ".zip";
@@ -303,22 +303,24 @@ public class DefaultWorkflowManager implements WorkflowManager {
 	//////////////////////////////////
 	private void saveWorkflowToArchive_notThreadSafe(final Workflow workflow)
 			throws IOException, SAXException, ParserConfigurationException, TransformerException {
-		final FileSystem fileSystem = FileSystems.newFileSystem(workflow.getArchivePath(), null);
-		// we're just interested in workflow.xml
-		final Path workflowXmlPath = fileSystem.getPath(PATH_WORKFLOW_XML);
-		// get the modified DOM document that reflects the changes in execution properties
-		final Document modifiedWorkflowDocument = getModifiedDocument(workflow, Files.newInputStream(workflowXmlPath));
-		// transform the modified DOM to an OutputStream
-		final TransformerFactory tFactory = TransformerFactory.newInstance();
-		final Transformer transformer = tFactory.newTransformer();
-		final DOMSource source = new DOMSource(modifiedWorkflowDocument);
-		final ByteArrayOutputStream modifiedWorkflowXmlOutputStream = new ByteArrayOutputStream();
-		final StreamResult result = new StreamResult(modifiedWorkflowXmlOutputStream);
-		transformer.transform(source, result);
-		// modify the zipfile directly
-		final InputStream modifiedWorkflowXmlInputStream = new ByteArrayInputStream(
-				modifiedWorkflowXmlOutputStream.toByteArray());
-		Files.copy(modifiedWorkflowXmlInputStream, workflowXmlPath, StandardCopyOption.REPLACE_EXISTING);
+		try (final FileSystem fileSystem = FileSystems.newFileSystem(workflow.getArchivePath(), null)) {
+			// we're just interested in workflow.xml
+			final Path workflowXmlPath = fileSystem.getPath(PATH_WORKFLOW_XML);
+			// get the modified DOM document that reflects the changes in execution properties
+			final Document modifiedWorkflowDocument = getModifiedDocument(workflow,
+					Files.newInputStream(workflowXmlPath));
+			// transform the modified DOM to an OutputStream
+			final TransformerFactory tFactory = TransformerFactory.newInstance();
+			final Transformer transformer = tFactory.newTransformer();
+			final DOMSource source = new DOMSource(modifiedWorkflowDocument);
+			final ByteArrayOutputStream modifiedWorkflowXmlOutputStream = new ByteArrayOutputStream();
+			final StreamResult result = new StreamResult(modifiedWorkflowXmlOutputStream);
+			transformer.transform(source, result);
+			// modify the zipfile directly
+			final InputStream modifiedWorkflowXmlInputStream = new ByteArrayInputStream(
+					modifiedWorkflowXmlOutputStream.toByteArray());
+			Files.copy(modifiedWorkflowXmlInputStream, workflowXmlPath, StandardCopyOption.REPLACE_EXISTING);
+		}
 	}
 
 	private Document getModifiedDocument(final Workflow workflow, final InputStream workflowXmlInputStream)
@@ -331,7 +333,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		final XPath xPath = XPathFactory.newInstance().newXPath();
 		final MessageFormat singleJobSelectorFormat = new MessageFormat(XPATH_SINGLE_JOB_SELECTOR);
 		for (final Job job : workflow.getJobs()) {
-			final String xPathExpression = singleJobSelectorFormat.format(job.getName());
+			final String xPathExpression = singleJobSelectorFormat.format(new Object[] { job.getName() });
 			final NodeList jobList;
 			try {
 				jobList = (NodeList) xPath.evaluate(xPathExpression, currentWorkflowDocument.getDocumentElement(),
