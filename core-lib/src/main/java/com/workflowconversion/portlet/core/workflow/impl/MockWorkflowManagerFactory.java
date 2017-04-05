@@ -50,7 +50,7 @@ public class MockWorkflowManagerFactory implements WorkflowManagerFactory {
 		@Override
 		public Workflow importWorkflow(final File serverSideWorkflowLocation) {
 			final Workflow newWorkflow = addNewWorkflow();
-			newWorkflow.setLocation(serverSideWorkflowLocation);
+			newWorkflow.setArchivePath(serverSideWorkflowLocation.toPath());
 			return newWorkflow;
 		}
 

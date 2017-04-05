@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.core.exception;
 
-import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Exception thrown when a file doesn't contain the expected workflow.
@@ -17,8 +17,8 @@ public class InvalidWorkflowException extends ApplicationException {
 	 * @param archive
 	 *            the file that allegedly contains a workflow.
 	 */
-	public InvalidWorkflowException(final File archive) {
-		this("The provided file doesn't contain a valid WS-PGRADE workflow.", archive);
+	public InvalidWorkflowException(final Path archive) {
+		this("The provided archive doesn't contain a valid WS-PGRADE workflow.", archive);
 	}
 
 	/**
@@ -29,8 +29,8 @@ public class InvalidWorkflowException extends ApplicationException {
 	 * @param archive
 	 *            the file that allegedly contains a workflow.
 	 */
-	public InvalidWorkflowException(final String message, final File archive) {
-		super(message + " File location: " + archive.getAbsolutePath());
+	public InvalidWorkflowException(final String message, final Path archive) {
+		super(message + ", archive location: " + archive.toString());
 	}
 
 	/**
@@ -41,8 +41,8 @@ public class InvalidWorkflowException extends ApplicationException {
 	 * @param cause
 	 *            the root cause of this exception.
 	 */
-	public InvalidWorkflowException(final File archive, final Exception cause) {
-		this("There was a problem while processing the workflow. Perhaps the provided file doesn't contain a valid WS-PGRADE workflow?",
+	public InvalidWorkflowException(final Path archive, final Exception cause) {
+		this("There was a problem while processing the workflow. Perhaps the provided archive doesn't contain a valid WS-PGRADE workflow?",
 				archive, cause);
 	}
 
@@ -56,7 +56,7 @@ public class InvalidWorkflowException extends ApplicationException {
 	 * @param cause
 	 *            the root cause of this exception.
 	 */
-	public InvalidWorkflowException(final String message, final File archive, final Exception cause) {
-		super(message + " File location: " + archive.getAbsolutePath(), cause);
+	public InvalidWorkflowException(final String message, final Path archive, final Exception cause) {
+		super(message + ", archive location: " + archive.toString(), cause);
 	}
 }

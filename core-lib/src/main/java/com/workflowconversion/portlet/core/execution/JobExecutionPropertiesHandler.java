@@ -2,6 +2,7 @@ package com.workflowconversion.portlet.core.execution;
 
 import java.util.Map;
 
+import com.workflowconversion.portlet.core.exception.JobExecutionPropertiesHandlerNotFoundException;
 import com.workflowconversion.portlet.core.workflow.Job;
 
 /**
@@ -49,6 +50,9 @@ public interface JobExecutionPropertiesHandler {
 	 * @param jobExecutionProperties
 	 *            the execution properties. The keys of the map are the names of the properties and the values are the
 	 *            value of the properties.
+	 * @throws JobExecutionPropertiesHandlerNotFoundException
+	 *             if a handler cannot properly handle the passed job.
 	 */
-	void handle(final Job job, final Map<String, String> jobExecutionProperties);
+	void handle(final Job job, final Map<String, String> jobExecutionProperties)
+			throws JobExecutionPropertiesHandlerNotFoundException;
 }

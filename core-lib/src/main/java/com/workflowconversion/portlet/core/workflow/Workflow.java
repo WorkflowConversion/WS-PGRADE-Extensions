@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.core.workflow;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -24,7 +24,7 @@ public class Workflow {
 	@XmlAttribute
 	private String name;
 	@XmlAttribute
-	private File location;
+	private Path archivePath;
 
 	// we won't serialize the jobs to an xml file
 	@XmlTransient
@@ -87,16 +87,16 @@ public class Workflow {
 	/**
 	 * @return the location
 	 */
-	public File getWorkflowArchiveLocation() {
-		return location;
+	public Path getArchivePath() {
+		return archivePath;
 	}
 
 	/**
-	 * @param location
-	 *            the location to set
+	 * @param archivePath
+	 *            the path.
 	 */
-	public void setLocation(final File location) {
-		this.location = location;
+	public void setArchivePath(final Path archivePath) {
+		this.archivePath = archivePath;
 	}
 
 }

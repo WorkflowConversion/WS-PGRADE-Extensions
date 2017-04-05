@@ -29,13 +29,11 @@ public class JobView extends HorizontalLayout {
 	private final ComboBox applicationComboBox;
 	private final ComboBox queueComboBox;
 	private final Map<String, Application> applicationMap;
-	private final String jobId;
 	private final String jobName;
 
 	JobView(final Job job, final Map<String, Application> applicationMap) {
 		this.applicationComboBox = getComboBox("Application", "Select an application");
 		this.queueComboBox = getComboBox("Queue", "Select a queue");
-		this.jobId = job.getId();
 		this.jobName = job.getName();
 		this.applicationMap = applicationMap;
 		initUI(job);
@@ -100,8 +98,7 @@ public class JobView extends HorizontalLayout {
 	 * @return the job, as configured.
 	 */
 	Job getJob() {
-		final Job job = new Job(jobId);
-		job.setName(jobName);
+		final Job job = new Job(jobName);
 		final String applicationKey = (String) applicationComboBox.getValue();
 		if (StringUtils.isNotBlank(applicationKey)) {
 			final Application application = applicationMap.get(applicationKey);

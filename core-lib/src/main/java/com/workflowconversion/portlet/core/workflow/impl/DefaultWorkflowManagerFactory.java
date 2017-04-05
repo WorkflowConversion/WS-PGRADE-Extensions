@@ -1,10 +1,11 @@
 package com.workflowconversion.portlet.core.workflow.impl;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
@@ -50,10 +51,9 @@ public class DefaultWorkflowManagerFactory implements WorkflowManagerFactory {
 		Validate.isTrue(StringUtils.isNotBlank(stagingAreaPath),
 				"invalid staging area, please configure the 'workflow.stagingArea.path' property in the web.xml file.");
 		try {
-			final File stagingArea = new File(stagingAreaPath + File.pathSeparator + portletUser.getUserId())
-					.getCanonicalFile();
-			if (!stagingArea.exists()) {
-				FileUtils.forceMkdir(stagingArea);
+			final Path stagingArea = Paths.get(stagingAreaPath, Long.toString(portletUser.getUserId()));
+			if (!Files.exists(stagingArea)) {
+				Files.createDirectories(stagingArea);
 			}
 			final AssetFinder assetFinder = new AssetFinder();
 			assetFinder.init(resourceProviders);

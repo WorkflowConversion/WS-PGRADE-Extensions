@@ -1,14 +1,10 @@
 package com.workflowconversion.portlet.core.servlet;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -17,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
-import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.WSPGRADEMiddlewareProvider;
@@ -26,8 +21,6 @@ import com.workflowconversion.portlet.core.resource.impl.InMemoryMockResourcePro
 import com.workflowconversion.portlet.core.resource.impl.JAXBResourceDatabase;
 import com.workflowconversion.portlet.core.resource.impl.UnicoreResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
-import com.workflowconversion.portlet.core.text.StringSimilarityAlgorithm;
-import com.workflowconversion.portlet.core.text.StringSimilaritySettings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.GUSEPortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.MockPortletSanityCheck;
@@ -69,8 +62,6 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent);
 		final Collection<ResourceProvider> applicationProviders = extractResourceProviders(servletContextEvent,
 				middlewareProvider);
-		final StringSimilaritySettings stringSimilaritySettings = extractStringSimilaritySettings(
-				servletContextEvent.getServletContext());
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
 		final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass = extractWorkflowManagerFactoryClass(
 				servletContextEvent);
@@ -88,8 +79,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		settingsBuilder.withApplicationProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
 				.withWorkflowManagerFactoryClass(workflowManagerFactoryClass)
-				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)
-				.withStringSimilaritySettings(stringSimilaritySettings);
+				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass);
 
 		Settings.setInstance(settingsBuilder.newSettings());
 	}
@@ -112,37 +102,6 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 	private String extractInitParam(final String paramName, final ServletContextEvent servletContextEvent) {
 		return servletContextEvent.getServletContext().getInitParameter(paramName);
-	}
-
-	private <T> T newInstance(final String className, final Class<T> interfaceClass,
-			final Object... constructorParams) {
-		try {
-			// find the class
-			@SuppressWarnings("unchecked")
-			final Class<? extends T> implClass = (Class<T>) Class.forName(className.trim());
-			// find the constructor
-			final Constructor<? extends T> constructor;
-			if (constructorParams.length == 0) {
-				// default constructor
-				constructor = implClass.getConstructor();
-			} else {
-				final Class<?>[] constructorParameterClasses = new Class<?>[constructorParams.length];
-				for (int i = 0; i < constructorParams.length; i++) {
-					constructorParameterClasses[i] = constructorParams[i].getClass();
-				}
-				constructor = implClass.getConstructor(constructorParameterClasses);
-			}
-			if (LOG.isInfoEnabled()) {
-				LOG.info("Obtaining a new instance of " + implClass.getName() + " using the constructor "
-						+ constructor.toGenericString() + " and the following parameters "
-						+ Arrays.toString(constructorParams));
-			}
-			return constructor.newInstance(constructorParams);
-		} catch (ClassNotFoundException | IllegalAccessException | InstantiationException | InvocationTargetException
-				| NoSuchMethodException e) {
-			// make it all fail, it's not safe to keep going
-			throw new ApplicationException("Could not instantiate class with class name " + className, e);
-		}
 	}
 
 	private Collection<ResourceProvider> extractResourceProviders(final ServletContextEvent servletContextEvent,
@@ -182,25 +141,6 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		} else {
 			return new WSPGRADEMiddlewareProvider();
 		}
-	}
-
-	// extracts cut-off score and StringSimilarity algorithm to use
-	private StringSimilaritySettings extractStringSimilaritySettings(final ServletContext servletContext) {
-		final String cutOffValueRaw = servletContext.getInitParameter("cutOff.filter.value");
-		final String algorithmRaw = servletContext.getInitParameter("stringSimilarityAlgorithm.implementation");
-		final StringSimilaritySettings.Builder builder = new StringSimilaritySettings.Builder();
-		if (StringUtils.isEmpty(cutOffValueRaw)) {
-			LOG.info("Missing cut off value for string similarity settings. Using default.");
-		} else {
-			builder.setCutOffValue(Double.parseDouble(cutOffValueRaw));
-		}
-
-		if (StringUtils.isEmpty(algorithmRaw)) {
-			LOG.info("Missing algorithm for string similarity settings. Using default.");
-		} else {
-			builder.setAlgorithm(newInstance(algorithmRaw, StringSimilarityAlgorithm.class));
-		}
-		return builder.newStringSimilaritySettings();
 	}
 
 	@Override
