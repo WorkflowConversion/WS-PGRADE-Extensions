@@ -20,8 +20,10 @@ public class LocalRepositoryWorkflowExporter implements WorkflowExporter {
 
 	@Override
 	public void export(final Workflow workflow) throws Exception {
-		// TODO Auto-generated method stub
-
+		// TODO it seems that gUSE needs a refactoring to actually be able to export
+		// a workflow from an ASM portlet
+		throw new UnsupportedOperationException(
+				"Exporting workflows to the local WS-PGRADE repository has not been implemented yet. Sorry.");
 	}
 
 }

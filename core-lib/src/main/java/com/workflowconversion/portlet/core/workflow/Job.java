@@ -15,6 +15,7 @@ import com.workflowconversion.portlet.core.resource.Queue;
 public class Job {
 
 	private final String name;
+	private String parameters;
 	private Application application;
 	private Queue queue;
 
@@ -34,6 +35,21 @@ public class Job {
 	 */
 	public String getName() {
 		return name;
+	}
+
+	/**
+	 * @return the parameters
+	 */
+	public String getParameters() {
+		return parameters;
+	}
+
+	/**
+	 * @param parameters
+	 *            the parameters to set
+	 */
+	public void setParameters(final String parameters) {
+		this.parameters = parameters;
 	}
 
 	/**
@@ -64,5 +80,31 @@ public class Job {
 	 */
 	public void setQueue(final Queue queue) {
 		this.queue = queue;
+	}
+
+	/**
+	 * Shortcut method to obtain the resource type.
+	 * 
+	 * @return the resource type associated with this job's application or {@code null} if there's no application or
+	 *         resource associated to this job.
+	 */
+	public String getResourceType() {
+		if (application != null && application.getResource() != null) {
+			return application.getResource().getType();
+		}
+		return null;
+	}
+
+	/**
+	 * Shortcut method to obtain the resource name.
+	 * 
+	 * @return the resource name associated with this job's application or {@code null} if there's no application or
+	 *         resource associated to this job.
+	 */
+	public String getResourceName() {
+		if (application != null && application.getResource() != null) {
+			return application.getResource().getName();
+		}
+		return null;
 	}
 }

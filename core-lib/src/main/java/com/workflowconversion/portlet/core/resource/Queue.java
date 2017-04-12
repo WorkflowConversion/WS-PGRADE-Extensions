@@ -118,7 +118,7 @@ public class Queue implements Comparable<Queue>, Serializable, HasKey {
 		private final String memberName;
 		private final String displayName;
 
-		Field(final int maxLength, final String memberName, final String displayName) {
+		private Field(final int maxLength, final String memberName, final String displayName) {
 			this.maxLength = maxLength;
 			this.memberName = memberName;
 			this.displayName = displayName;

@@ -5,7 +5,7 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 
 /**
- * Simple class used to display html messages.
+ * Simple class used to display HTML messages.
  * 
  * @author delagarza
  *

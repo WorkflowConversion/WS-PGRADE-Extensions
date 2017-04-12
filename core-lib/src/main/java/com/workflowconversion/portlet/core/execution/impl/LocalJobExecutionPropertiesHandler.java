@@ -24,6 +24,8 @@ class LocalJobExecutionPropertiesHandler implements JobExecutionPropertiesHandle
 	public void handle(final Job job, final Map<String, String> jobExecutionProperties) {
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID_TYPE, GRID_TYPE_LOCAL);
 		// jobExecutionProperties.remove(JOB_EXECUTION_PROPERTY_JOB_MANAGER);
+		jobExecutionProperties.put(JOB_EXECUTION_COMMAND_LINE,
+				job.getApplication().getPath() + ' ' + job.getParameters());
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_TYPE, "binary");
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID, job.getApplication().getResource().getName());
 	}

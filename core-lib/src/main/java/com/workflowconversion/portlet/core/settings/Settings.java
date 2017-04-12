@@ -7,6 +7,7 @@ import java.util.Collections;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.exception.ApplicationException;
+import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
@@ -28,6 +29,7 @@ public class Settings implements Serializable {
 	private final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass;
 	private final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
 	private final String workflowStagingAreaPath;
+	private final JobExecutionPropertiesHandler jobExecutionPropertiesHandler;
 	private static Settings INSTANCE;
 
 	/**
@@ -116,11 +118,18 @@ public class Settings implements Serializable {
 		return workflowStagingAreaPath;
 	}
 
+	/**
+	 * @return the execution properties handler.
+	 */
+	public JobExecutionPropertiesHandler getJobExecutionPropertiesHandler() {
+		return jobExecutionPropertiesHandler;
+	}
+
 	private Settings(final PortletSanityCheck portletSanityCheck,
 			final Collection<ResourceProvider> applicationProviders, final MiddlewareProvider middlewareProvider,
 			final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass,
 			final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass,
-			final String workflowStagingAreaPath) {
+			final String workflowStagingAreaPath, final JobExecutionPropertiesHandler jobExecutionPropertiesHandler) {
 		Validate.notNull(portletSanityCheck,
 				"portletSanityCheck cannot be null, please use the Builder.withPortletSanityCheck() method to set a non-null value");
 		Validate.notEmpty(applicationProviders,
@@ -138,6 +147,8 @@ public class Settings implements Serializable {
 		this.workflowManagerFactoryClass = workflowManagerFactoryClass;
 		// stating area could very well be empty, so no need to validate
 		this.workflowStagingAreaPath = workflowStagingAreaPath;
+		// execution properties handler might be unused
+		this.jobExecutionPropertiesHandler = jobExecutionPropertiesHandler;
 	}
 
 	/**
@@ -153,6 +164,7 @@ public class Settings implements Serializable {
 		private Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass;
 		private Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
 		private String workflowStagingAreaPath;
+		private JobExecutionPropertiesHandler jobExecutionPropertiesHandler;
 
 		/**
 		 * Sets the application providers.
@@ -229,13 +241,27 @@ public class Settings implements Serializable {
 		}
 
 		/**
+		 * Sets the job execution properties handler to use.
+		 * 
+		 * @param jobExecutionPropertiesHandler
+		 *            the handler.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withJobExecutionPropertiesHandler(
+				final JobExecutionPropertiesHandler jobExecutionPropertiesHandler) {
+			this.jobExecutionPropertiesHandler = jobExecutionPropertiesHandler;
+			return this;
+		}
+
+		/**
 		 * Builds a new {@link Settings}.
 		 * 
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newSettings() {
 			return new Settings(portletSanityCheck, applicationProviders, middlewareProvider,
-					workflowExporterFactoryClass, workflowManagerFactoryClass, workflowStagingAreaPath);
+					workflowExporterFactoryClass, workflowManagerFactoryClass, workflowStagingAreaPath,
+					jobExecutionPropertiesHandler);
 		}
 	}
 }

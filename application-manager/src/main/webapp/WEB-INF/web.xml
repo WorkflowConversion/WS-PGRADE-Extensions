@@ -15,7 +15,7 @@
     		the portal because resources depending on gUSE will be simple mocks.
     	</description>
     	<param-name>ui.development.mode</param-name>
-    	<param-value>true</param-value>
+    	<param-value>false</param-value>
     </context-param>
     <context-param>
     	<description>Location of the XML file containing the resources/applications</description>

@@ -10,7 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.exception.ApplicationException;
-import com.workflowconversion.portlet.core.execution.impl.DefaultJobExecutionPropertiesHandler;
+import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.search.AssetFinder;
 import com.workflowconversion.portlet.core.settings.Settings;
@@ -57,7 +57,9 @@ public class DefaultWorkflowManagerFactory implements WorkflowManagerFactory {
 			}
 			final AssetFinder assetFinder = new AssetFinder();
 			assetFinder.init(resourceProviders);
-			return new DefaultWorkflowManager(stagingArea, assetFinder, new DefaultJobExecutionPropertiesHandler());
+			final JobExecutionPropertiesHandler executionPropertiesHandler = Settings.getInstance()
+					.getJobExecutionPropertiesHandler();
+			return new DefaultWorkflowManager(stagingArea, assetFinder, executionPropertiesHandler);
 		} catch (final IOException e) {
 			throw new ApplicationException(
 					"There was a problem in creating the staging area for the user with id " + portletUser.getUserId(),

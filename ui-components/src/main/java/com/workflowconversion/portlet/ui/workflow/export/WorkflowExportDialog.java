@@ -17,6 +17,7 @@ import com.workflowconversion.portlet.core.workflow.WorkflowExportDestination;
 import com.workflowconversion.portlet.core.workflow.WorkflowExporter;
 import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
+import com.workflowconversion.portlet.ui.NotificationUtils;
 
 /**
  * Dialog to export workflows from the staging area to either gUSE or to a zip file to be downloaded to the user's
@@ -27,8 +28,6 @@ import com.workflowconversion.portlet.ui.HorizontalSeparator;
  */
 public class WorkflowExportDialog extends Window {
 	private static final long serialVersionUID = 2247174725490181004L;
-	private static final String EXPORT_WSPGRADE = "WS-PGRADE local repository";
-	private static final String CAPTION_EXPORT_DOWNLOAD = "Download to your computer";
 	private static final String PROPERTY_ID = "id";
 	private static final String PROPERTY_CAPTION = "caption";
 
@@ -64,17 +63,17 @@ public class WorkflowExportDialog extends Window {
 		exportDestinationOptionGroup.setImmediate(true);
 		exportDestinationOptionGroup.setNullSelectionAllowed(false);
 		exportDestinationOptionGroup.setMultiSelect(false);
-		exportDestinationOptionGroup.select(EXPORT_WSPGRADE);
+		exportDestinationOptionGroup.select(WorkflowExportDestination.Archive);
 
 		final Button exportButton = new Button("Export");
 		exportButton.setDescription("Export your workflow to the selected destination");
 		exportButton.setImmediate(true);
 		exportButton.setDisableOnClick(true);
-		exportButton.addListener(new Button.ClickListener() {
+		exportButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = -6734041359258651966L;
 
 			@Override
-			public void buttonClick(ClickEvent event) {
+			public void buttonClick(final ClickEvent event) {
 				try {
 					exportButtonClicked((WorkflowExportDestination) exportDestinationOptionGroup.getValue());
 				} finally {
@@ -91,25 +90,15 @@ public class WorkflowExportDialog extends Window {
 		layout.setMargin(true);
 	}
 
+	@SuppressWarnings("unchecked")
 	private IndexedContainer getIndexedContainer() {
 		final IndexedContainer container = new IndexedContainer();
 		container.addContainerProperty(PROPERTY_ID, WorkflowExportDestination.class, null);
 		container.addContainerProperty(PROPERTY_CAPTION, String.class, null);
 
 		for (final WorkflowExportDestination destination : WorkflowExportDestination.values()) {
-			final String caption;
-			switch (destination) {
-			case Archive:
-				caption = CAPTION_EXPORT_DOWNLOAD;
-				break;
-			case LocalRepository:
-				caption = EXPORT_WSPGRADE;
-				break;
-			default:
-				throw new InvalidExportDestinationException(destination);
-			}
 			final Item newItem = container.addItem(destination);
-			newItem.getItemProperty(PROPERTY_CAPTION).setValue(caption);
+			newItem.getItemProperty(PROPERTY_CAPTION).setValue(destination.getLongCaption());
 			newItem.getItemProperty(PROPERTY_ID).setValue(destination);
 		}
 
@@ -118,21 +107,30 @@ public class WorkflowExportDialog extends Window {
 
 	protected void exportButtonClicked(final WorkflowExportDestination destination) {
 		final WorkflowExporterFactory workflowExporterFactory = Settings.getInstance().getWorkflowExporterFactory();
+		boolean handled = false;
 		switch (destination) {
 		case Archive:
-		case LocalRepository:
 			workflowExporterFactory.withDestination(destination);
+			handled = true;
+			break;
+		case LocalRepository:
+			NotificationUtils
+					.displayWarning("Exporting to the local WS-PGRADE repository is not yet supported. Sorry.");
+			// not supported, by now
 			break;
 		default:
 			throw new InvalidExportDestinationException(destination);
 		}
-		final WorkflowExporter workflowExporter = workflowExporterFactory.withPortletUser(portletUser)
-				.newInstance();
-		try {
-			workflowExporter.export(workflowToExport);
-		} catch (Exception e) {
+		if (handled) {
+			final WorkflowExporter workflowExporter = workflowExporterFactory.withPortletUser(portletUser)
+					.newInstance();
+			try {
+				workflowExporter.export(workflowToExport);
+			} catch (final Exception e) {
 
+			}
 		}
+		// else NOP
 	}
 
 }

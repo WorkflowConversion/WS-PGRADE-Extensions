@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
+import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
+import com.workflowconversion.portlet.core.execution.impl.DefaultJobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.WSPGRADEMiddlewareProvider;
@@ -73,13 +75,16 @@ public class WorkflowConversionContextListener implements ServletContextListener
 			LOG.info("Creating workflow staging area folder");
 			new File(workflowStagingAreaPath).mkdirs();
 		}
+		// use the same instance, the default implementation is thread-safe
+		final JobExecutionPropertiesHandler jobExecutionPropertiesHandler = new DefaultJobExecutionPropertiesHandler();
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
 		settingsBuilder.withApplicationProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
 				.withWorkflowManagerFactoryClass(workflowManagerFactoryClass)
-				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass);
+				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)
+				.withJobExecutionPropertiesHandler(jobExecutionPropertiesHandler);
 
 		Settings.setInstance(settingsBuilder.newSettings());
 	}

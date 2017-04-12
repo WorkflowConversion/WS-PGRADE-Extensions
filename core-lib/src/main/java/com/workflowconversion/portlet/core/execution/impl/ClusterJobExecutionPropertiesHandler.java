@@ -27,16 +27,18 @@ class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHand
 
 	@Override
 	public boolean canHandle(final Job job) {
-		return SUPPORTED_CLUSTERS.contains(job.getApplication().getResource().getType());
+		return SUPPORTED_CLUSTERS.contains(job.getResourceType());
 	}
 
 	@Override
 	public void handle(final Job job, final Map<String, String> jobExecutionProperties) {
-		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID_TYPE, job.getApplication().getResource().getType());
+		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID_TYPE, job.getResourceType());
+		jobExecutionProperties.put(JOB_EXECUTION_COMMAND_LINE,
+				job.getApplication().getPath() + ' ' + job.getParameters());
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_MANAGER, "-");
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_TYPE, "binary");
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_RESOURCE, job.getQueue().getName());
-		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID, job.getApplication().getResource().getName());
+		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID, job.getResourceName());
 	}
 
 }

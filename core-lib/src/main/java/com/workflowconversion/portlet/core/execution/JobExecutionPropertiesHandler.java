@@ -34,6 +34,10 @@ public interface JobExecutionPropertiesHandler {
 	 * Resource property name.
 	 */
 	public final static String JOB_EXECUTION_PROPERTY_RESOURCE = "resource";
+	/**
+	 * Command line.
+	 */
+	public final static String JOB_EXECUTION_COMMAND_LINE = "params";
 
 	/**
 	 * @param job

@@ -2,11 +2,13 @@ package com.workflowconversion.portlet.core.workflow.impl;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.user.PortletUser;
+import com.workflowconversion.portlet.core.workflow.Job;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowManager;
 import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
@@ -75,6 +77,11 @@ public class MockWorkflowManagerFactory implements WorkflowManagerFactory {
 		@Override
 		public Collection<Workflow> getStagedWorkflows() {
 			return workflows.values();
+		}
+
+		@Override
+		public Collection<Job> getUnsupportedJobs(final Workflow workflow) {
+			return Collections.<Job>emptyList();
 		}
 
 		@Override

@@ -1,9 +1,13 @@
 package com.workflowconversion.portlet.workflowimporter;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -21,10 +25,12 @@ import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
+import com.workflowconversion.portlet.core.workflow.Job;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowManager;
 import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
+import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
 import com.workflowconversion.portlet.ui.workflow.WorkflowView;
 import com.workflowconversion.portlet.ui.workflow.export.WorkflowExportDialog;
@@ -43,6 +49,7 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 	private static final String PROPERTY_NAME_CAPTION = "WorkflowImporterUI_property_name";
 
 	private final Map<Integer, WorkflowView> workflowViewMap;
+	private WorkflowManager workflowManager;
 
 	/**
 	 * Constructor.
@@ -50,13 +57,15 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 	public WorkflowImporterUI() {
 		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getResourceProviders());
 		workflowViewMap = new TreeMap<Integer, WorkflowView>();
+
 	}
 
 	@Override
 	protected Layout prepareContent() {
 		final WorkflowManagerFactory workflowManagerFactory = Settings.getInstance().getWorkflowManagerFactory();
 		workflowManagerFactory.withPortletUser(currentUser);
-		final WorkflowManager workflowManager = workflowManagerFactory.newInstance();
+		workflowManagerFactory.withResourceProviders(Settings.getInstance().getResourceProviders());
+		workflowManager = workflowManagerFactory.newInstance();
 
 		final Map<String, Application> applicationMap = getApplications();
 
@@ -204,12 +213,42 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 	}
 
 	private void saveAllWorkflows() {
-		final WorkflowManagerFactory workflowManagerFactory = Settings.getInstance().getWorkflowManagerFactory();
-		workflowManagerFactory.withPortletUser(currentUser);
-		final WorkflowManager workflowManager = workflowManagerFactory.newInstance();
+		final StringBuilder error = new StringBuilder();
+		boolean changesDone = false;
 		for (final WorkflowView workflowView : workflowViewMap.values()) {
-			workflowManager.saveWorkflow(workflowView.getWorkflow());
+			final Workflow workflow = workflowView.getWorkflow();
+			final Collection<Job> unsupportedJobs = workflowManager.getUnsupportedJobs(workflow);
+			if (unsupportedJobs.isEmpty()) {
+				workflowManager.saveWorkflow(workflow);
+				changesDone = true;
+			} else {
+				appendUnsupportedJobsErrorMessage(workflow, unsupportedJobs, error);
+			}
 		}
+		if (changesDone) {
+			workflowManager.commitChanges();
+		}
+		if (error.length() > 0) {
+			NotificationUtils.displayWarning(error.toString());
+		}
+	}
+
+	private void appendUnsupportedJobsErrorMessage(final Workflow workflow, final Collection<Job> unsupportedJobs,
+			final StringBuilder error) {
+		Validate.notEmpty(unsupportedJobs,
+				"Expected an empty collection. This is a coding problem and should be reported.");
+		error.append("The workflow ").append(workflow.getName())
+				.append(" contains the following unsupported resource types:<ul>");
+		for (final Job unsupportedJob : unsupportedJobs) {
+			error.append("<li>Job ").append(unsupportedJob.getName());
+			final String resourceType = unsupportedJob.getResourceType();
+			if (StringUtils.isBlank(resourceType)) {
+				error.append(" contains no resource type.");
+			} else {
+				error.append(" of type ").append(resourceType);
+			}
+		}
+		error.append("</ul><br>");
 	}
 
 	private Button createButton(final String caption, final String description) {
