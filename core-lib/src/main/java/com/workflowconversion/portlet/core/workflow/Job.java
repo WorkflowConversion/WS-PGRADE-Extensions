@@ -64,6 +64,7 @@ public class Job {
 	 *            the application to set
 	 */
 	public void setApplication(final Application application) {
+		Validate.notNull(application, "application cannot be null, this is a coding problem and should be reported.");
 		this.application = application;
 	}
 
@@ -79,6 +80,7 @@ public class Job {
 	 *            the queue to set
 	 */
 	public void setQueue(final Queue queue) {
+		Validate.notNull(queue, "queue cannot be null, this is a coding problem and should be reported.");
 		this.queue = queue;
 	}
 
@@ -107,4 +109,16 @@ public class Job {
 		}
 		return null;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Job [name=" + name + ", parameters=" + parameters + ", application=" + application + ", queue=" + queue
+				+ "]";
+	}
+
 }

@@ -21,7 +21,7 @@ import com.workflowconversion.portlet.ui.NotificationUtils;
 
 /**
  * Dialog to export workflows from the staging area to either gUSE or to a zip file to be downloaded to the user's
- * computer.
+ * computer. This dialog is, by now, unused.
  * 
  * @author delagarza
  *
@@ -33,6 +33,7 @@ public class WorkflowExportDialog extends Window {
 
 	private final Workflow workflowToExport;
 	private final PortletUser portletUser;
+	private final WorkflowExportListener listener;
 
 	/**
 	 * Constructor.
@@ -41,13 +42,18 @@ public class WorkflowExportDialog extends Window {
 	 *            the workflow that will be exported.
 	 * @param portletUser
 	 *            the portlet user requesting this dialog.
+	 * @param listener
+	 *            the listener interested in events.
 	 */
-	public WorkflowExportDialog(final Workflow workflowToExport, final PortletUser portletUser) {
-		Validate.notNull(workflowToExport, "workflowToExport cannot be null");
-		Validate.notNull(portletUser, "portletUser cannot be null");
+	public WorkflowExportDialog(final Workflow workflowToExport, final PortletUser portletUser,
+			final WorkflowExportListener listener) {
+		Validate.notNull(workflowToExport,
+				"workflowToExport cannot be null. This is a coding problem and should be reported.");
+		Validate.notNull(portletUser, "portletUser cannot be null. This is a coding problem and should be reported.");
+		Validate.notNull(listener, "listener cannot be null. This is a coding problem and should be reported.");
 		this.workflowToExport = workflowToExport;
 		this.portletUser = portletUser;
-
+		this.listener = listener;
 		setModal(true);
 		setCaption("Workflow Export");
 		initUI();
@@ -82,12 +88,13 @@ public class WorkflowExportDialog extends Window {
 			}
 		});
 
-		final VerticalLayout layout = (VerticalLayout) getContent();
+		final VerticalLayout layout = new VerticalLayout();
 		layout.addComponent(exportDestinationOptionGroup);
 		layout.addComponent(new HorizontalSeparator());
 		layout.addComponent(exportButton);
 		layout.setSpacing(true);
 		layout.setMargin(true);
+		setContent(layout);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -127,10 +134,9 @@ public class WorkflowExportDialog extends Window {
 			try {
 				workflowExporter.export(workflowToExport);
 			} catch (final Exception e) {
-
+				listener.exportFailed(e);
 			}
 		}
 		// else NOP
 	}
-
 }

@@ -39,11 +39,14 @@ public class Resource implements Serializable, HasKey {
 
 	// i.e. unicore, moab, lsf, etc.
 	@XmlAttribute
-	private String type;
+	private String type = "";
+
 	@XmlAttribute
 	private String name = "";
+
 	@XmlJavaTypeAdapter(ApplicationsXmlAdapter.class)
 	private final Map<String, Application> applications = new TreeMap<String, Application>();
+
 	@XmlElementWrapper(name = "queues")
 	@XmlElement(name = "queue")
 	private final Set<Queue> queues = new TreeSet<Queue>();

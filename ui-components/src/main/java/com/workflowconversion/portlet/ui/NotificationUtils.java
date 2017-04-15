@@ -15,27 +15,27 @@ public class NotificationUtils {
 	private final static String NOTIFICATION_TITLE = "Workflow Conversion";
 
 	/**
-	 * Displays a warning message.
+	 * Displays a warning dialog.
 	 * 
 	 * @param text
 	 *            the message to display.
 	 */
 	public static void displayWarning(final String text) {
-		displayHtmlNotification(NOTIFICATION_TITLE, text, Type.WARNING_MESSAGE);
+		displayDialog(text, Type.WARNING_MESSAGE);
 	}
 
 	/**
-	 * Displays an error message.
+	 * Displays an error dialog.
 	 * 
 	 * @param text
 	 *            the message to display.
 	 */
 	public static void displayError(final String text) {
-		displayHtmlNotification(NOTIFICATION_TITLE, text, Type.ERROR_MESSAGE);
+		displayDialog(text, Type.ERROR_MESSAGE);
 	}
 
 	/**
-	 * Displays an error message.
+	 * Displays an error dialog.
 	 * 
 	 * @param text
 	 *            the message to display.
@@ -43,7 +43,7 @@ public class NotificationUtils {
 	 *            the thrown exception.
 	 */
 	public static void displayError(final String text, final Exception e) {
-		displayHtmlNotification(NOTIFICATION_TITLE, text + " -- Reason: " + e.getMessage(), Type.ERROR_MESSAGE);
+		displayDialog(text + " -- Reason: " + e.getMessage(), Type.ERROR_MESSAGE);
 	}
 
 	/**
@@ -69,5 +69,10 @@ public class NotificationUtils {
 	private static void displayHtmlNotification(final String caption, final String text, final Type type) {
 		final Notification notification = new Notification(caption, text, type, true);
 		notification.show(Page.getCurrent());
+	}
+
+	private static void displayDialog(final String text, final Type type) {
+		final ModalMessageDialog dialog = new ModalMessageDialog(NOTIFICATION_TITLE, text, type);
+		dialog.display();
 	}
 }

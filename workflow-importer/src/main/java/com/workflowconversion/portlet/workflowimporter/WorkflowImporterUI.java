@@ -1,6 +1,10 @@
 package com.workflowconversion.portlet.workflowimporter;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -8,10 +12,15 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.server.StreamResource;
+import com.vaadin.server.StreamResource.StreamSource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -21,10 +30,12 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
+import com.workflowconversion.portlet.core.utils.SystemWideKeyUtils;
 import com.workflowconversion.portlet.core.workflow.Job;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowManager;
@@ -33,9 +44,8 @@ import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
 import com.workflowconversion.portlet.ui.workflow.WorkflowView;
-import com.workflowconversion.portlet.ui.workflow.export.WorkflowExportDialog;
 import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadDialog;
-import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadedListener;
+import com.workflowconversion.portlet.ui.workflow.upload.WorkflowUploadListener;
 
 /**
  * Entry point for this portlet.
@@ -47,6 +57,8 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 	private static final long serialVersionUID = 712483663690909775L;
 
 	private static final String PROPERTY_NAME_CAPTION = "WorkflowImporterUI_property_name";
+
+	private static final Logger LOG = LoggerFactory.getLogger(WorkflowImporterUI.class);
 
 	private final Map<Integer, WorkflowView> workflowViewMap;
 	private WorkflowManager workflowManager;
@@ -66,6 +78,7 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		workflowManagerFactory.withPortletUser(currentUser);
 		workflowManagerFactory.withResourceProviders(Settings.getInstance().getResourceProviders());
 		workflowManager = workflowManagerFactory.newInstance();
+		workflowManager.init();
 
 		final Map<String, Application> applicationMap = getApplications();
 
@@ -73,7 +86,7 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		final Button importButton = createButton("Import...", "Import a workflow");
 
 		// fill the combobox with workflows
-		for (final Workflow workflow : workflowManager.getStagedWorkflows()) {
+		for (final Workflow workflow : workflowManager.getImportedWorkflows()) {
 			addWorkflowToComboBox(workflow, workflowComboBox, applicationMap);
 		}
 
@@ -85,8 +98,11 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 			@Override
 			public void valueChange(final ValueChangeEvent event) {
 				workflowDetailsLayout.removeAllComponents();
-				final int workflowViewId = (int) event.getProperty().getValue();
-				workflowDetailsLayout.addComponent(workflowViewMap.get(workflowViewId));
+				// check for nulls in case an item was removed
+				if (event != null && event.getProperty() != null && event.getProperty().getValue() != null) {
+					final int workflowViewId = (int) event.getProperty().getValue();
+					workflowDetailsLayout.addComponent(workflowViewMap.get(workflowViewId));
+				}
 				workflowDetailsLayout.markAsDirtyRecursive();
 			}
 		});
@@ -99,15 +115,13 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		comboBoxLayout.setComponentAlignment(workflowComboBox, Alignment.BOTTOM_LEFT);
 		comboBoxLayout.setComponentAlignment(importButton, Alignment.BOTTOM_RIGHT);
 
-		final Button saveButton = createButton("Save", "Save changes");
-		final Button saveAsButton = createButton("Save as...", "Save current workflow under a different name");
+		final Button saveButton = createButton("Save All", "Save changes");
 		final Button exportButton = createButton("Export...", "Export current workflow");
 		final Button deleteButton = createButton("Delete", "Delete current workflow");
 		final HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
 		buttonLayout.setMargin(false);
 		buttonLayout.addComponent(saveButton);
-		buttonLayout.addComponent(saveAsButton);
 		buttonLayout.addComponent(exportButton);
 		buttonLayout.addComponent(deleteButton);
 
@@ -116,14 +130,11 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 
 			@Override
 			public void buttonClick(final ClickEvent event) {
-				final Window importWorkflowDialog = new WorkflowUploadDialog(new WorkflowUploadedListener() {
-					@Override
-					public void workflowUploaded(final File location) {
-						final Workflow uploadedWorkflow = workflowManager.importWorkflow(location);
-						addWorkflowToComboBox(uploadedWorkflow, workflowComboBox, applicationMap);
-					}
-				});
-				UI.getCurrent().addWindow(importWorkflowDialog);
+				try {
+					importButtonClicked(applicationMap, workflowComboBox);
+				} finally {
+					importButton.setEnabled(true);
+				}
 			}
 		});
 
@@ -132,7 +143,11 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 
 			@Override
 			public void buttonClick(final ClickEvent event) {
-				saveAllWorkflows();
+				try {
+					saveButtonClicked();
+				} finally {
+					saveButton.setEnabled(true);
+				}
 			}
 		});
 
@@ -141,23 +156,28 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 
 			@Override
 			public void buttonClick(final ClickEvent event) {
-				final int workflowViewId = (Integer) workflowComboBox.getValue();
-				final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
-				final Window exportDialog = new WorkflowExportDialog(workflowView.getWorkflow(), currentUser);
-				UI.getCurrent().addWindow(exportDialog);
+				try {
+					if (workflowComboBox.getValue() == null) {
+						NotificationUtils.displayMessage("Please select a workflow to export.");
+					}
+				} finally {
+					exportButton.setEnabled(true);
+				}
 			}
 		});
+		final FileDownloader fileDownloader = new FileDownloader(createWorkflowStreamResource(workflowComboBox));
+		fileDownloader.extend(exportButton);
 
 		deleteButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = -3385835445931117051L;
 
 			@Override
 			public void buttonClick(final ClickEvent event) {
-				final int workflowViewId = (Integer) workflowComboBox.getValue();
-				final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
-				workflowManager.deleteWorkflow(workflowView.getWorkflow());
-				workflowViewMap.remove(workflowViewId);
-				workflowComboBox.removeItem(workflowViewId);
+				try {
+					deleteButtonClicked(workflowComboBox);
+				} finally {
+					deleteButton.setEnabled(true);
+				}
 			}
 		});
 
@@ -170,12 +190,32 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		return mainLayout;
 	}
 
+	private void importButtonClicked(final Map<String, Application> applicationMap, final ComboBox workflowComboBox) {
+		final Window importWorkflowDialog = new WorkflowUploadDialog(new WorkflowUploadListener() {
+			@Override
+			public void workflowUploaded(final File location) {
+				final Workflow uploadedWorkflow = workflowManager.importWorkflow(location);
+				addWorkflowToComboBox(uploadedWorkflow, workflowComboBox, applicationMap);
+				NotificationUtils.displayTrayMessage(
+						"The workflow was uploaded successfully. Don't forget to commit your changes by clicking on the [Save All] button.");
+
+			}
+
+			@Override
+			public void uploadFailed(final Exception reason) {
+				NotificationUtils.displayError("There was an error adding the uploaded workflow to the staging area.",
+						reason);
+			}
+		});
+		UI.getCurrent().addWindow(importWorkflowDialog);
+	}
+
 	private Map<String, Application> getApplications() {
 		final Map<String, Application> applicationMap = new TreeMap<String, Application>();
 		for (final ResourceProvider resourceProvider : resourceProviders) {
 			for (final Resource resource : resourceProvider.getResources()) {
 				for (final Application application : resource.getApplications()) {
-					applicationMap.put(application.generateKey(), application);
+					applicationMap.put(SystemWideKeyUtils.generate(resource, application), application);
 				}
 			}
 		}
@@ -212,22 +252,17 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		workflowViewMap.put(id, new WorkflowView(workflow, applicationMap));
 	}
 
-	private void saveAllWorkflows() {
+	private void saveButtonClicked() {
 		final StringBuilder error = new StringBuilder();
-		boolean changesDone = false;
 		for (final WorkflowView workflowView : workflowViewMap.values()) {
 			final Workflow workflow = workflowView.getWorkflow();
 			final Collection<Job> unsupportedJobs = workflowManager.getUnsupportedJobs(workflow);
-			if (unsupportedJobs.isEmpty()) {
-				workflowManager.saveWorkflow(workflow);
-				changesDone = true;
-			} else {
+			if (!unsupportedJobs.isEmpty()) {
 				appendUnsupportedJobsErrorMessage(workflow, unsupportedJobs, error);
 			}
+			workflowManager.saveWorkflow(workflow);
 		}
-		if (changesDone) {
-			workflowManager.commitChanges();
-		}
+		workflowManager.commitChanges();
 		if (error.length() > 0) {
 			NotificationUtils.displayWarning(error.toString());
 		}
@@ -237,8 +272,8 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 			final StringBuilder error) {
 		Validate.notEmpty(unsupportedJobs,
 				"Expected an empty collection. This is a coding problem and should be reported.");
-		error.append("The workflow ").append(workflow.getName())
-				.append(" contains the following unsupported resource types:<ul>");
+		error.append("The workflow with name <br/>").append(workflow.getName())
+				.append("<br/>contains the following unsupported resource types:<ul>");
 		for (final Job unsupportedJob : unsupportedJobs) {
 			error.append("<li>Job ").append(unsupportedJob.getName());
 			final String resourceType = unsupportedJob.getResourceType();
@@ -261,4 +296,44 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		return button;
 	}
 
+	private void deleteButtonClicked(final ComboBox workflowComboBox) {
+		if (workflowComboBox.getValue() != null) {
+			final int workflowViewId = (Integer) workflowComboBox.getValue();
+			final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
+			workflowManager.deleteWorkflow(workflowView.getWorkflow());
+			workflowViewMap.remove(workflowViewId);
+			workflowComboBox.removeItem(workflowViewId);
+		} else {
+			NotificationUtils.displayMessage("Please select a workflow to delete.");
+		}
+	}
+
+	private Workflow getSelectedWorkflow(final ComboBox workflowComboBox) {
+		final int workflowViewId = (int) workflowComboBox.getValue();
+		final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
+		return workflowView.getWorkflow();
+	}
+
+	private StreamResource createWorkflowStreamResource(final ComboBox workflowComboBox) {
+		return new StreamResource(new StreamSource() {
+			private static final long serialVersionUID = -482825331518184714L;
+
+			@Override
+			public InputStream getStream() {
+				try {
+					if (LOG.isInfoEnabled()) {
+						LOG.info("Creating StreamResource to download workflow");
+					}
+					if (workflowComboBox.getValue() != null) {
+						final Workflow workflow = getSelectedWorkflow(workflowComboBox);
+						return new BufferedInputStream(Files.newInputStream(workflow.getArchivePath()));
+					}
+				} catch (final IOException e) {
+					throw new ApplicationException("Could not download workflow. Reason: " + e.getMessage(), e);
+				}
+				return null;
+
+			}
+		}, "workflow.zip");
+	}
 }

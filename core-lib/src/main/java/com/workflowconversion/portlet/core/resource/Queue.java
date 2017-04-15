@@ -37,7 +37,8 @@ public class Queue implements Comparable<Queue>, Serializable, HasKey {
 	 *            the name to set
 	 */
 	public void setName(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name), "name cannot be null, empty or contain only whitespaces.");
+		Validate.isTrue(StringUtils.isNotBlank(name),
+				"name cannot be null, empty or contain only whitespaces; this is a coding problem and should be reported.");
 		this.name = name;
 	}
 
@@ -53,6 +54,7 @@ public class Queue implements Comparable<Queue>, Serializable, HasKey {
 	 *            the resource to set
 	 */
 	public void setResource(final Resource resource) {
+		Validate.notNull(resource, "resource cannot be null, this is a coding problem and should be reported.");
 		this.resource = resource;
 	}
 

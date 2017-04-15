@@ -1,11 +1,11 @@
 package com.workflowconversion.portlet.ui.workflow;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.apache.commons.lang.Validate;
 
-import com.vaadin.ui.Accordion;
-import com.vaadin.ui.TabSheet.Tab;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.workflow.Job;
@@ -23,7 +23,7 @@ public class WorkflowView extends VerticalLayout {
 
 	private final String workflowId;
 	private final String workflowName;
-	private final Accordion workflowDetailsAccordion;
+	private final Path archivePath;
 
 	/**
 	 * @param workflow
@@ -38,16 +38,15 @@ public class WorkflowView extends VerticalLayout {
 				"applications cannot be null. This seems to be a coding problem and should be reported.");
 		this.workflowId = workflow.getId();
 		this.workflowName = workflow.getName();
-		this.workflowDetailsAccordion = new Accordion();
+		this.archivePath = workflow.getArchivePath();
 		initUI(workflow, applicationMap);
 	}
 
 	private void initUI(final Workflow workflow, final Map<String, Application> applicationMap) {
 		for (final Job job : workflow.getJobs()) {
-			workflowDetailsAccordion.addTab(new JobView(job, applicationMap));
+			final Panel jobPanel = new Panel(job.getName(), new JobView(job, applicationMap));
+			addComponent(jobPanel);
 		}
-
-		addComponent(workflowDetailsAccordion);
 	}
 
 	/**
@@ -57,9 +56,10 @@ public class WorkflowView extends VerticalLayout {
 		final Workflow workflow = new Workflow();
 		workflow.setId(workflowId);
 		workflow.setName(workflowName);
-		for (int i = 0; i < workflowDetailsAccordion.getComponentCount(); i++) {
-			final Tab tab = workflowDetailsAccordion.getTab(i);
-			final JobView jobView = (JobView) tab.getComponent();
+		workflow.setArchivePath(archivePath);
+		for (int i = 0; i < getComponentCount(); i++) {
+			final Panel jobViewPanel = (Panel) getComponent(i);
+			final JobView jobView = (JobView) jobViewPanel.getContent();
 			workflow.addJob(jobView.getJob());
 		}
 		return workflow;

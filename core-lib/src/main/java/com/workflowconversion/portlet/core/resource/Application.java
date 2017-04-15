@@ -47,7 +47,7 @@ public class Application implements Serializable, HasKey {
 	 */
 	public void setName(final String name) {
 		Validate.isTrue(StringUtils.isNotBlank(name),
-				"name cannot be null, empty or contain only whitespace characters.");
+				"name cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
 		this.name = name;
 	}
 
@@ -64,7 +64,7 @@ public class Application implements Serializable, HasKey {
 	 */
 	public void setVersion(final String version) {
 		Validate.isTrue(StringUtils.isNotBlank(version),
-				"version cannot be null, empty or contain only whitespace characters.");
+				"version cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
 		this.version = version;
 	}
 
@@ -96,7 +96,7 @@ public class Application implements Serializable, HasKey {
 	 */
 	public void setPath(final String path) {
 		Validate.isTrue(StringUtils.isNotBlank(path),
-				"path cannot be null, empty or contain only whitespace characters.");
+				"path cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
 		this.path = path;
 	}
 
@@ -112,12 +112,13 @@ public class Application implements Serializable, HasKey {
 	 *            the resource to set, can be null
 	 */
 	public void setResource(final Resource resource) {
+		Validate.notNull(resource, "resource cannot be null, this is a coding problem and should be reported.");
 		this.resource = resource;
 	}
 
 	@Override
 	public String generateKey() {
-		return "_name=" + name + "-version=" + version + "-path=" + path;
+		return "_name=" + name + "_version=" + version + "_path=" + path;
 	}
 
 	/*

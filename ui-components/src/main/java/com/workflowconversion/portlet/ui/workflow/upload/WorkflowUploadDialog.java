@@ -23,7 +23,6 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
-import com.workflowconversion.portlet.ui.NotificationUtils;
 
 /**
  * Modal dialog to upload workflows to the staging area.
@@ -36,12 +35,12 @@ public class WorkflowUploadDialog extends Window {
 
 	private final static Logger LOG = LoggerFactory.getLogger(WorkflowUploadDialog.class);
 
-	private final WorkflowUploadedListener listener;
+	private final WorkflowUploadListener listener;
 	private final Upload upload;
 	private final Label status;
 	private File serverSideFile;
 
-	public WorkflowUploadDialog(final WorkflowUploadedListener listener) {
+	public WorkflowUploadDialog(final WorkflowUploadListener listener) {
 		Validate.notNull(listener, "listener cannot be null");
 		this.listener = listener;
 
@@ -75,13 +74,10 @@ public class WorkflowUploadDialog extends Window {
 			@Override
 			public void uploadSucceeded(final SucceededEvent event) {
 				try {
-					status.setValue("Workflow uploaded");
+					status.setValue("File uploaded");
 					listener.workflowUploaded(serverSideFile);
-					NotificationUtils.displayTrayMessage("The workflow was uploaded to the staging area.");
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					LOG.error("Could not upload workflow file", e);
-					NotificationUtils
-							.displayError("There was an error adding the uploaded workflow to the staging area.", e);
 				} finally {
 					upload.setEnabled(true);
 				}
@@ -95,8 +91,8 @@ public class WorkflowUploadDialog extends Window {
 			public void uploadFailed(final FailedEvent event) {
 				status.setValue("Upload failed");
 				LOG.error("Could not upload workflow file", event.getReason());
-				NotificationUtils.displayError("Could not upload file.", event.getReason());
 				upload.setEnabled(true);
+				listener.uploadFailed(event.getReason());
 			}
 		});
 
@@ -107,12 +103,14 @@ public class WorkflowUploadDialog extends Window {
 		final Panel statusDisplayPanel = new Panel("Status");
 		statusDisplayPanel.setContent(statusDisplayLayout);
 
-		final VerticalLayout layout = (VerticalLayout) getContent();
+		final VerticalLayout layout = new VerticalLayout();
 		layout.addComponent(upload);
 		layout.addComponent(new HorizontalSeparator());
 		layout.addComponent(statusDisplayPanel);
 		layout.setMargin(true);
 		layout.setSpacing(true);
+		layout.setWidth(400, Unit.PIXELS);
+		setContent(layout);
 	}
 
 	private class FileReceiver implements Receiver {
@@ -125,7 +123,7 @@ public class WorkflowUploadDialog extends Window {
 			try {
 				serverSideFile = File.createTempFile("upload_", null);
 				return new BufferedOutputStream(new FileOutputStream(serverSideFile));
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				throw new ApplicationException("Could not upload file", e);
 			}
 		}

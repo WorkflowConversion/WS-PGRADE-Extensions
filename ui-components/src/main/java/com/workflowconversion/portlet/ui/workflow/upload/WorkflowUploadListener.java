@@ -8,7 +8,7 @@ import java.io.File;
  * @author delagarza
  *
  */
-public interface WorkflowUploadedListener {
+public interface WorkflowUploadListener {
 
 	/**
 	 * Invoked when a workflow was uploaded.
@@ -17,4 +17,11 @@ public interface WorkflowUploadedListener {
 	 *            the location on which the workflow was uploaded.
 	 */
 	public void workflowUploaded(final File location);
+
+	/**
+	 * Invoked when the upload failed.
+	 * 
+	 * @reason the failure reason.
+	 */
+	public void uploadFailed(final Exception reason);
 }

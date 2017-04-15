@@ -27,7 +27,8 @@ class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHand
 
 	@Override
 	public boolean canHandle(final Job job) {
-		return SUPPORTED_CLUSTERS.contains(job.getResourceType());
+		final String resourceType = job.getResourceType();
+		return resourceType != null && SUPPORTED_CLUSTERS.contains(resourceType);
 	}
 
 	@Override
@@ -37,7 +38,11 @@ class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHand
 				job.getApplication().getPath() + ' ' + job.getParameters());
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_MANAGER, "-");
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_TYPE, "binary");
-		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_RESOURCE, job.getQueue().getName());
+		if (job.getQueue() != null) {
+			jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_RESOURCE, job.getQueue().getName());
+		} else {
+			jobExecutionProperties.remove(JOB_EXECUTION_PROPERTY_RESOURCE);
+		}
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID, job.getResourceName());
 	}
 

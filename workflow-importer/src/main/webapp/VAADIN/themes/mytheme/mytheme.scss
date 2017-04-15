@@ -39,4 +39,32 @@
 		border-width: 5px;
 	}
 	
+   .v-window-header {
+		font-size: 16px;
+		color: black;
+		font-weight: bold;
+	}
+	
+	span.v-checkbox label {
+		display: inline-block;
+		padding-left: 5px;
+	}
+	
+	.left-padded {
+		padding-left: 5px;
+	}
+	
+	.disabled-component {
+		opacity: 0.5;
+		filter: alpha(opacity=50);
+	}
+	
+	.withError {
+		background-color: #f7a3a3;
+	}
+	
+	.withWarning {
+		background-color: #eee5b4;
+    }
+	
 }

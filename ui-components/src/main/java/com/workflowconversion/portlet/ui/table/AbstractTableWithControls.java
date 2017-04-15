@@ -33,6 +33,7 @@ import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.exception.TableIsReadOnlyException;
 import com.workflowconversion.portlet.core.resource.HasKey;
 import com.workflowconversion.portlet.ui.NotificationUtils;
+import com.workflowconversion.portlet.ui.UIConstants;
 
 /**
  * Abstract class to facilitate development of different tables displaying elements (such as resources, applications,
@@ -47,8 +48,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 
 	private static final long serialVersionUID = -8313705037279187002L;
 
-	// css style name for rows with error
-	private static final String STYLE_WITH_ERROR = "withError";
 	// id of the property to use to store any error occurred when saving.
 	private static final String PROPERTY_ERROR = "AbstractTableWithControls_Property_Error";
 
@@ -319,7 +318,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 				if (propertyId == null) {
 					final String error = (String) source.getItem(itemId).getItemProperty(PROPERTY_ERROR).getValue();
 					if (StringUtils.isNotBlank(error)) {
-						return STYLE_WITH_ERROR;
+						return UIConstants.ERROR_THEME;
 					}
 				}
 				return null;
@@ -547,7 +546,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 			@Override
 			public void performAction(final AbstractComponent component) {
 				component.setDescription("");
-				component.removeStyleName(STYLE_WITH_ERROR);
+				component.removeStyleName(UIConstants.ERROR_THEME);
 			}
 		});
 	}
@@ -561,7 +560,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 			@Override
 			public void performAction(final AbstractComponent component) {
 				component.setDescription(errorMessage);
-				component.addStyleName(STYLE_WITH_ERROR);
+				component.addStyleName(UIConstants.ERROR_THEME);
 			}
 		});
 	}

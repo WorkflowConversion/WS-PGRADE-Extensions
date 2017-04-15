@@ -59,7 +59,9 @@ public class DefaultWorkflowManagerFactory implements WorkflowManagerFactory {
 			assetFinder.init(resourceProviders);
 			final JobExecutionPropertiesHandler executionPropertiesHandler = Settings.getInstance()
 					.getJobExecutionPropertiesHandler();
-			return new DefaultWorkflowManager(stagingArea, assetFinder, executionPropertiesHandler);
+			final WorkflowManager workflowManager = new DefaultWorkflowManager(stagingArea, assetFinder,
+					executionPropertiesHandler);
+			return workflowManager;
 		} catch (final IOException e) {
 			throw new ApplicationException(
 					"There was a problem in creating the staging area for the user with id " + portletUser.getUserId(),

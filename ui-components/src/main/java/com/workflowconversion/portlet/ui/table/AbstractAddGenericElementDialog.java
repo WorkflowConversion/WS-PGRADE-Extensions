@@ -12,11 +12,13 @@ import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.FormLayout;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
@@ -51,7 +53,6 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 
 		setCaption(caption);
 		setModal(true);
-		setClosable(false);
 		setResizable(false);
 	}
 
@@ -99,7 +100,12 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 			}
 		});
 		addGenericElementButton.setDescription("Add new item");
-		formLayout.addComponent(addGenericElementButton);
+		final HorizontalLayout footerLayout = new HorizontalLayout();
+		footerLayout.setWidth(100, Unit.PERCENTAGE);
+		footerLayout.addComponent(addGenericElementButton);
+		footerLayout.setComponentAlignment(addGenericElementButton, Alignment.BOTTOM_RIGHT);
+
+		formLayout.addComponent(footerLayout);
 
 		final Label error = new Label("", ContentMode.HTML);
 		error.setVisible(false);

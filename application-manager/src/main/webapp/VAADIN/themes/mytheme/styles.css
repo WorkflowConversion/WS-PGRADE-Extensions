@@ -12470,3 +12470,7 @@ div.v-layout.v-horizontal.v-widget {
 .mytheme .withError {
 	background-color: #f7a3a3;
 }
+
+.mytheme .withWarning {
+	background-color: #eee5b4;
+}

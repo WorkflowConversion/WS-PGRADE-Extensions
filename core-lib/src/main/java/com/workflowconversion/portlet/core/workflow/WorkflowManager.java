@@ -14,12 +14,13 @@ import com.workflowconversion.portlet.core.exception.JobExecutionPropertiesHandl
 public interface WorkflowManager {
 
 	/**
-	 * Initializes the workflow manager.
+	 * Initializes this manager.
 	 */
 	public void init();
 
 	/**
-	 * Commits changes.
+	 * The methods {@link #importWorkflow(File)}, {@link #deleteWorkflow(Workflow)} and {@link #saveWorkflow(Workflow)}
+	 * do not store information on permanent media. This method commits all unsaved changes.
 	 */
 	public void commitChanges();
 
@@ -55,16 +56,16 @@ public interface WorkflowManager {
 	 * Saves changes.
 	 * 
 	 * @param workflow
-	 *            the workflow save.
+	 *            the workflow to save.
 	 * @throws JobExecutionPropertiesHandlerNotFoundException
 	 *             if the workflow contains jobs that cannot be handled.
 	 */
 	public void saveWorkflow(final Workflow workflow) throws JobExecutionPropertiesHandlerNotFoundException;
 
 	/**
-	 * Obtains a collection of all workflows in the staging area for the requesting user.
+	 * Obtains a collection of all imported workflows from the requesting user.
 	 * 
 	 * @return a collection with all imported workflows.
 	 */
-	public Collection<Workflow> getStagedWorkflows();
+	public Collection<Workflow> getImportedWorkflows();
 }

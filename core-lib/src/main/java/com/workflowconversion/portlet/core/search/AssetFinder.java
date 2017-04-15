@@ -17,6 +17,7 @@ import com.workflowconversion.portlet.core.resource.FormField;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
+import com.workflowconversion.portlet.core.utils.SystemWideKeyUtils;
 
 /**
  * Utility class to find applications, queues.
@@ -74,26 +75,18 @@ public class AssetFinder {
 					throw new DuplicateResourceException(resource);
 				}
 				for (final Queue queue : resource.getQueues()) {
-					if (queueMap.put(generateSystemWideQueueKey(resource, queue), queue) != null) {
+					if (queueMap.put(SystemWideKeyUtils.generate(resource, queue), queue) != null) {
 						throw new DuplicateQueueException(queue);
 					}
 				}
 				for (final Application application : resource.getApplications()) {
-					if (applicationMap.put(generateSystemWideApplicationKey(resource, application),
+					if (applicationMap.put(SystemWideKeyUtils.generate(resource, application),
 							application) != null) {
 						throw new DuplicateApplicationException(application);
 					}
 				}
 			}
 		}
-	}
-
-	private String generateSystemWideApplicationKey(final Resource resource, final Application application) {
-		return resource.generateKey() + '_' + application.generateKey();
-	}
-
-	private String generateSystemWideQueueKey(final Resource resource, final Queue queue) {
-		return resource.generateKey() + '_' + queue.generateKey();
 	}
 
 	/**
@@ -113,8 +106,13 @@ public class AssetFinder {
 
 	public Resource findResource() {
 		final Resource resource = new Resource();
-		resource.setType(StringUtils.trimToNull(resourceFields.get(Resource.Field.Type)));
-		resource.setName(StringUtils.trimToNull(resourceFields.get(Resource.Field.Name)));
+		final String type = StringUtils.trimToNull(resourceFields.get(Resource.Field.Type));
+		final String name = StringUtils.trimToNull(resourceFields.get(Resource.Field.Name));
+		if (type == null || name == null) {
+			return null;
+		}
+		resource.setType(type);
+		resource.setName(name);
 		return resourceMap.get(resource.generateKey());
 	}
 
@@ -131,10 +129,18 @@ public class AssetFinder {
 			return null;
 		}
 		final Application application = new Application();
-		application.setName(StringUtils.trimToNull(applicationFields.get(Application.Field.Name)));
-		application.setPath(StringUtils.trimToNull(applicationFields.get(Application.Field.Path)));
-		application.setVersion(StringUtils.trimToNull(applicationFields.get(Application.Field.Version)));
-		return applicationMap.get(generateSystemWideApplicationKey(resource, application));
+		final String name = StringUtils.trimToNull(applicationFields.get(Application.Field.Name));
+		final String path = StringUtils.trimToNull(applicationFields.get(Application.Field.Path));
+		final String version = StringUtils.trimToNull(applicationFields.get(Application.Field.Version));
+		if (name == null || version == null) {
+			return null;
+		}
+		if (path != null) {
+			application.setPath(path);
+		}
+		application.setName(name);
+		application.setVersion(version);
+		return applicationMap.get(SystemWideKeyUtils.generate(resource, application));
 	}
 
 	/**
@@ -150,8 +156,12 @@ public class AssetFinder {
 			return null;
 		}
 		final Queue queue = new Queue();
-		queue.setName(StringUtils.trimToNull(queueFields.get(Queue.Field.Name)));
-		return queueMap.get(generateSystemWideQueueKey(resource, queue));
+		final String name = StringUtils.trimToNull(queueFields.get(Queue.Field.Name));
+		if (name == null) {
+			return null;
+		}
+		queue.setName(name);
+		return queueMap.get(SystemWideKeyUtils.generate(resource, queue));
 	}
 
 	/**

@@ -75,7 +75,7 @@ public class MockWorkflowManagerFactory implements WorkflowManagerFactory {
 		}
 
 		@Override
-		public Collection<Workflow> getStagedWorkflows() {
+		public Collection<Workflow> getImportedWorkflows() {
 			return workflows.values();
 		}
 
@@ -85,12 +85,12 @@ public class MockWorkflowManagerFactory implements WorkflowManagerFactory {
 		}
 
 		@Override
-		public void init() {
+		public void commitChanges() {
 			// nop
 		}
 
 		@Override
-		public void commitChanges() {
+		public void init() {
 			// nop
 		}
 	}

@@ -12,6 +12,12 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import com.workflowconversion.portlet.core.workflow.Workflow;
 
+/**
+ * XML Adapter for the workflows collection.
+ * 
+ * @author delagarza
+ *
+ */
 public class WorkflowsXmlAdapter extends XmlAdapter<WorkflowsXmlAdapter.Workflows, Map<String, Workflow>> {
 
 	@Override

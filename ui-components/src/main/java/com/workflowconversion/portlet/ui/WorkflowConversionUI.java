@@ -91,14 +91,16 @@ public abstract class WorkflowConversionUI extends UI {
 				initApplicationProviders();
 				content = prepareContent();
 			} else {
-				content = new SimpleWarningContent.Builder().setIconLocation("../runo/icons/64/lock.png")
-						.setLongDescription(
+				content = new SimpleContent.Builder().withIconLocation("../runo/icons/64/lock.png")
+						.withStyle(UIConstants.ERROR_THEME)
+						.withMessage(
 								"This portlet has not been properly initialized.<br/>If the problem persists after restarting gUSE, please check the logs and report the problem.<br/>This might be caused by a bug or a configuration error.")
-						.newWarningWindow();
+						.newContent();
 			}
 		} else {
-			content = new SimpleWarningContent.Builder().setIconLocation("../runo/icons/64/attention.png")
-					.setLongDescription("You need to be logged-in to access this portlet.").newWarningWindow();
+			content = new SimpleContent.Builder().withIconLocation("../runo/icons/64/attention.png")
+					.withStyle(UIConstants.WARNING_THEME)
+					.withMessage("You need to be logged-in to access this portlet.").newContent();
 		}
 		setContent(content);
 	}
