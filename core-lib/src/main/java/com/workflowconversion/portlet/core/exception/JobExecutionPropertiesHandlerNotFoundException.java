@@ -17,7 +17,7 @@ public class JobExecutionPropertiesHandlerNotFoundException extends ApplicationE
 	 *            the job that cannot be handled.
 	 */
 	public JobExecutionPropertiesHandlerNotFoundException(final Job job) {
-		super("Jobs " + (job.getResourceType() == null ? "without type" : "of type '" + job.getResourceType() + '\'')
+		super("Jobs " + (job.getResource() == null ? "without type" : "of type '" + job.getResource().getType() + '\'')
 				+ " cannot be handled.");
 	}
 

@@ -1,4 +1,4 @@
-package com.workflowconversion.portlet.core.resource.impl.jaxb;
+package com.workflowconversion.portlet.core.resource.jaxb;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import com.workflowconversion.portlet.core.resource.Resource;
+import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 /**
  * JAXB adapter for computing resources.
@@ -18,19 +19,20 @@ import com.workflowconversion.portlet.core.resource.Resource;
  * @author delagarza
  *
  */
-public class ResourcesXmlAdapter extends XmlAdapter<ResourcesXmlAdapter.Resources, Map<String, Resource>> {
+// FIXME: delete?
+public class ResourceMapXmlAdapter extends XmlAdapter<ResourceMapXmlAdapter.Resources, Map<String, Resource>> {
 
 	@Override
-	public Map<String, Resource> unmarshal(final ResourcesXmlAdapter.Resources resources) throws Exception {
+	public Map<String, Resource> unmarshal(final ResourceMapXmlAdapter.Resources resources) throws Exception {
 		final Map<String, Resource> map = new TreeMap<String, Resource>();
 		for (final Resource resource : resources.resources) {
-			map.put(resource.generateKey(), resource);
+			map.put(KeyUtils.generate(resource), resource);
 		}
 		return map;
 	}
 
 	@Override
-	public ResourcesXmlAdapter.Resources marshal(final Map<String, Resource> map) throws Exception {
+	public ResourceMapXmlAdapter.Resources marshal(final Map<String, Resource> map) throws Exception {
 		final Resources computingResources = new Resources();
 		computingResources.resources.addAll(map.values());
 		return computingResources;

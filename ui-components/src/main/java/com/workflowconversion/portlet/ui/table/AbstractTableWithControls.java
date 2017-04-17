@@ -31,7 +31,6 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.exception.TableIsReadOnlyException;
-import com.workflowconversion.portlet.core.resource.HasKey;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.UIConstants;
 
@@ -43,8 +42,7 @@ import com.workflowconversion.portlet.ui.UIConstants;
  *
  * @param <T>
  */
-public abstract class AbstractTableWithControls<T extends HasKey> extends VerticalLayout
-		implements TableWithControls<T> {
+public abstract class AbstractTableWithControls<T> extends VerticalLayout implements TableWithControls<T> {
 
 	private static final long serialVersionUID = -8313705037279187002L;
 
@@ -56,8 +54,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	private final Button deleteButton;
 	private final Button detailsButton;
 	private final boolean withDetails;
-	private final boolean allowDuplicates;
-	private final boolean allowMultipleSelection;
 	private final Table table;
 	private final Collection<ContainerProperty> containerProperties;
 
@@ -72,21 +68,14 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	 *            whether edit controls will be displayed and this table allows edition.
 	 * @param withDetails
 	 *            whether a "display details" button will be displayed.
-	 * @param allowDuplicates
-	 *            whether duplicates in the table (based on the keys produced by the elements) are allowed.
-	 * @param allowMultipleSelection
-	 *            whether users can select multiple items.
 	 */
-	protected AbstractTableWithControls(final String title, final boolean allowEdition, final boolean withDetails,
-			final boolean allowDuplicates, final boolean allowMultipleSelection) {
+	protected AbstractTableWithControls(final String title, final boolean allowEdition, final boolean withDetails) {
 		Validate.isTrue(StringUtils.isNotBlank(title),
 				"title cannot be null, empty or contain only whitespace characters.");
 		this.dirty = false;
 		this.title = title;
 		this.allowEdition = allowEdition;
-		this.allowMultipleSelection = allowMultipleSelection;
 		this.withDetails = withDetails;
-		this.allowDuplicates = allowDuplicates;
 		this.addButton = createButton("Add new item", FontAwesome.PLUS_CIRCLE);
 		this.deleteButton = createButton("Delete selected item", FontAwesome.MINUS_CIRCLE);
 		this.detailsButton = createButton("Show details for selected item", FontAwesome.EYE);
@@ -301,7 +290,7 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 
 		table.addStyleName("tableWithControls");
 		table.setSelectable(true);
-		table.setMultiSelect(allowMultipleSelection);
+		table.setMultiSelect(true);
 		table.setBuffered(false);
 		table.setEditable(false);
 		table.setSortEnabled(false);
@@ -353,7 +342,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 		try {
 			// do some basic validation
 			Validate.notNull(element, "cannot add a null element");
-			validate(element);
 			insertItem_internal(element);
 			dirty = true;
 		} catch (final Exception e) {
@@ -366,15 +354,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 			throw new TableIsReadOnlyException("This table does not allow editions.");
 		}
 	}
-
-	/**
-	 * Allow implementations to validate items so only proper elements are to be inserted/saved. If the element is not
-	 * valid, implementations should throw an exception.
-	 * 
-	 * @param element
-	 *            the item that will be inserted.
-	 */
-	protected abstract void validate(final T element);
 
 	private void setInitialItems(final Collection<T> initialItems) {
 		Validate.notNull(initialItems, "initialItems cannot be null.");
@@ -459,7 +438,6 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 			clearError(item);
 			try {
 				final T element = convertFromItem(item);
-				validate(element);
 				save(element);
 			} catch (final Exception e) {
 				markWithError(item, e);
@@ -481,20 +459,19 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 		boolean hasDuplicates = false;
 		boolean refresh = false;
 
-		if (!allowDuplicates) {
-			final Set<String> currentKeys = new TreeSet<String>();
-			for (final Object itemId : table.getItemIds()) {
-				final Item item = table.getItem(itemId);
-				final T element = convertFromItem(item);
-				if (!currentKeys.add(element.generateKey())) {
-					markWithError(item, "This element is duplicated.");
-					hasDuplicates = true;
+		// don't allow duplicates
+		final Set<String> currentKeys = new TreeSet<String>();
+		for (final Object itemId : table.getItemIds()) {
+			final Item item = table.getItem(itemId);
+			final String key = getKeyForItem(item);
+			if (!currentKeys.add(key)) {
+				markWithError(item, "This element is duplicated.");
+				hasDuplicates = true;
+				refresh = true;
+			} else {
+				if (hasError(item)) {
+					clearError(item);
 					refresh = true;
-				} else {
-					if (hasError(item)) {
-						clearError(item);
-						refresh = true;
-					}
 				}
 			}
 		}
@@ -518,7 +495,10 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	/**
 	 * Allows implementations to perform an action before saving starts.
 	 */
-	protected abstract void beforeSaveAllChanges();
+	protected void beforeSaveAllChanges() {
+		throw new ApplicationException(
+				"This table does not allow changes to be made. This is probably a coding problem and should be reported.");
+	}
 
 	/**
 	 * Saves a single item.
@@ -526,7 +506,10 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	 * @param item
 	 *            the item to save.
 	 */
-	protected abstract void save(final T item);
+	protected void save(final T item) {
+		throw new ApplicationException(
+				"This table does not allow changes to be made. This is probably a coding problem and should be reported.");
+	}
 
 	/**
 	 * Converts an editable row item to an item of type {@code T}.
@@ -536,6 +519,15 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	 * @return an item of type {@code T}.
 	 */
 	protected abstract T convertFromItem(final Item item);
+
+	/**
+	 * Generates a key for the given element.
+	 * 
+	 * @param element
+	 *            the element.
+	 * @return a key that represents the given element.
+	 */
+	protected abstract String getKeyForItem(final Item item);
 
 	@SuppressWarnings("unchecked")
 	private void clearError(final Item item) {
@@ -590,7 +582,10 @@ public abstract class AbstractTableWithControls<T extends HasKey> extends Vertic
 	 * 
 	 * @return the dialog to add elements.
 	 */
-	protected abstract AbstractAddGenericElementDialog<T> createAddElementDialog();
+	protected AbstractAddGenericElementDialog<T> createAddElementDialog() {
+		throw new ApplicationException(
+				"This table does not support adding new elements. This is probably a coding problem and should be reported.");
+	}
 
 	/**
 	 * Implementations provide a dialog to edit elements.

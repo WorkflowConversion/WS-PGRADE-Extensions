@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.workflowconversion.portlet.core.resource.Application;
-import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
+import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 /**
  * Abstract class that contains the common methods for processing bulk uploads.
@@ -75,14 +75,17 @@ public abstract class AbstractFileProcessor {
 	/**
 	 * Attempts to add a parsed resource.
 	 * 
-	 * @param resource
-	 *            the resource to add after validation
+	 * @param resourceBuilder
+	 *            the resource builder to use to build the parsed resource.
 	 * @param lineNumber
-	 *            the line number
+	 *            the line number.
+	 * @param the
+	 *            added resource, or {@code null} if nothing was added.
 	 */
-	final protected void addParsedResource(final Resource resource, final long lineNumber) {
-		if (isResourceValid(resource, lineNumber)) {
-			final String key = resource.generateKey();
+	final Resource addParsedResource(final Resource.Builder resourceBuilder, final long lineNumber) {
+		final Resource resource = buildResource(resourceBuilder, lineNumber);
+		if (resource != null) {
+			final String key = KeyUtils.generate(resource);
 			if (!parsedResources.containsKey(key)) {
 				parsedResources.put(key, resource);
 			} else {
@@ -90,53 +93,25 @@ public abstract class AbstractFileProcessor {
 						+ resource + ')', lineNumber);
 			}
 		}
+		return resource;
 	}
 
-	private boolean isResourceValid(final Resource resource, final long lineNumber) {
+	private Resource buildResource(final Resource.Builder resourceBuilder, final long lineNumber) {
 		final StringBuilder error = new StringBuilder();
-		if (StringUtils.isBlank(resource.getName())) {
+		if (StringUtils.isBlank(resourceBuilder.getName())) {
 			error.append("empty name, ");
 		}
-		if (!validMiddlewareTypes.contains(resource.getType())) {
-			error.append("invalid resource type [" + resource.getType() + "], ");
+		if (!validMiddlewareTypes.contains(resourceBuilder.getType())) {
+			error.append("invalid resource type [" + resourceBuilder.getType() + "], ");
 		}
 
 		if (error.length() > 0) {
 			listener.parsingError(error.toString(), lineNumber);
+			return null;
 		}
 
-		return error.length() == 0;
-	}
-
-	/**
-	 * Attempts to add a parsed queue to the passed resource.
-	 * 
-	 * @param resource
-	 *            the resource to which the queue will belong to
-	 * @param queue
-	 *            the parsed queue
-	 * @param lineNumber
-	 *            the line number
-	 */
-	final protected void addParsedQueue(final Resource resource, final Queue queue, final long lineNumber) {
-		if (isQueueValid(queue, lineNumber)) {
-			if (!resource.containsQueue(queue)) {
-				queue.setResource(resource);
-				resource.addQueue(queue);
-			} else {
-				listener.parsingWarning("The resource [" + resource
-						+ "] declared in the upload file already contains a queue with the same name (duplicate: "
-						+ queue + ')', lineNumber);
-			}
-		}
-	}
-
-	private boolean isQueueValid(final Queue queue, final long lineNumber) {
-		if (StringUtils.isBlank(queue.getName())) {
-			listener.parsingError("empty queue name", lineNumber);
-			return false;
-		}
-		return true;
+		resourceBuilder.canModifyApplications(true);
+		return resourceBuilder.newInstance();
 	}
 
 	/**
@@ -144,44 +119,49 @@ public abstract class AbstractFileProcessor {
 	 * 
 	 * @param resource
 	 *            the resource to which the application belongs.
-	 * @param application
-	 *            the application to add after validation.
+	 * @param applicationBuilder
+	 *            the application builder to use to add the parsed application.
 	 * 
 	 * @param lineNumber
 	 *            the current line number.
 	 */
-	final protected void addParsedApplication(final Resource resource, final Application application,
+	final protected void addParsedApplication(final Resource resource, final Application.Builder applicationBuilder,
 			final long lineNumber) {
-		if (isApplicationValid(application, lineNumber)) {
-			if (!resource.containsApplication(application)) {
-				application.setResource(resource);
-				resource.addApplication(application);
+		final Application parsedApplication = buildApplication(applicationBuilder, lineNumber);
+		if (parsedApplication != null) {
+			if (resource != null) {
+				if (resource.getApplication(parsedApplication.getName(), parsedApplication.getVersion(),
+						parsedApplication.getPath()) == null) {
+					resource.addApplication(parsedApplication);
+				} else {
+					listener.parsingWarning("The resource [" + resource
+							+ "] declared in the upload file already contains an application with the same name, version, path (duplicate: "
+							+ parsedApplication + ')', lineNumber);
+				}
 			} else {
-				listener.parsingWarning("The resource [" + resource
-						+ "] declared in the upload file already contains an application with the same name, version, path (duplicate: "
-						+ application + ')', lineNumber);
+				listener.parsingWarning("Cannot add application [" + parsedApplication + "] to invalid resource.",
+						lineNumber);
 			}
 		}
 	}
 
-	// checks if an application is valid, if not, an error will be added
-	private boolean isApplicationValid(final Application application, final long lineNumber) {
+	private Application buildApplication(final Application.Builder applicationBuilder, final long lineNumber) {
 		final StringBuilder error = new StringBuilder();
-		if (StringUtils.isBlank(application.getName())) {
+		if (StringUtils.isBlank(applicationBuilder.getName())) {
 			error.append("empty name, ");
 		}
-		if (StringUtils.isBlank(application.getPath())) {
+		if (StringUtils.isBlank(applicationBuilder.getPath())) {
 			error.append("empty path, ");
 		}
-		if (StringUtils.isBlank(application.getVersion())) {
+		if (StringUtils.isBlank(applicationBuilder.getVersion())) {
 			error.append("empty version, ");
 		}
 
 		if (error.length() > 0) {
 			listener.parsingError(error.toString(), lineNumber);
+			return null;
 		}
 
-		return error.length() == 0;
+		return applicationBuilder.newInstance();
 	}
-
 }

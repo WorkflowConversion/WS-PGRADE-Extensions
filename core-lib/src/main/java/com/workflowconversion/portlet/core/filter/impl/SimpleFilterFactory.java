@@ -19,11 +19,10 @@ import dci.data.Middleware;
  * @author delagarza
  *
  */
-public class FilterFactory {
+public class SimpleFilterFactory {
 
-	// start with null
-	private String type = null;
 	private String name = null;
+	private String type = null;
 	private Boolean enabled = null;
 
 	/**
@@ -31,11 +30,11 @@ public class FilterFactory {
 	 * 
 	 * @param type
 	 *            the type.
-	 * @return an instance to {@code this} {@link FilterFactory}
+	 * @return an instance to {@code this} {@link SimpleFilterFactory}
 	 */
-	public FilterFactory setType(final String type) {
+	public SimpleFilterFactory withType(final String type) {
 		Validate.isTrue(StringUtils.isNotBlank(type),
-				"type cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
+				"type cannot be null, empty or contain only whitespaces; this seems to be a coding problem and shoud be reported.");
 		this.type = type;
 		return this;
 	}
@@ -45,11 +44,11 @@ public class FilterFactory {
 	 * 
 	 * @param name
 	 *            the name.
-	 * @return an instance to {@code this} {@link FilterFactory}
+	 * @return an instance to {@code this} {@link SimpleFilterFactory}
 	 */
-	public FilterFactory setName(final String name) {
+	public SimpleFilterFactory withName(final String name) {
 		Validate.isTrue(StringUtils.isNotBlank(name),
-				"name cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
+				"name cannot be null, empty or contain only whitespaces; this seems to be a coding problem and shoud be reported.");
 		this.name = name;
 		return this;
 	}
@@ -59,9 +58,9 @@ public class FilterFactory {
 	 * 
 	 * @param enabled
 	 *            the availability.
-	 * @return an instance to {@code this} {@link FilterFactory}
+	 * @return an instance to {@code this} {@link SimpleFilterFactory}
 	 */
-	public FilterFactory setEnabled(final Boolean enabled) {
+	public SimpleFilterFactory setEnabled(final Boolean enabled) {
 		Validate.notNull(enabled, "enabled cannot be null, this is probably a bug and should reported.");
 		this.enabled = enabled;
 		return this;
@@ -72,7 +71,7 @@ public class FilterFactory {
 	 * 
 	 * @return a new instance of a {@link ItemFilter}.
 	 */
-	public Filter<Item> newInstance() {
+	public Filter<Item> newItemFilter() {
 		final Collection<Criterion<Item>> criteria = new LinkedList<Criterion<Item>>();
 		// for items, we need name and availability
 		if (name != null) {
@@ -91,7 +90,7 @@ public class FilterFactory {
 	 */
 	public Filter<Middleware> newMiddlewareFilter() {
 		final Collection<Criterion<Middleware>> criteria = new LinkedList<Criterion<Middleware>>();
-		// for items, we need name and availability
+		// for middleware, we need type and availability
 		if (type != null) {
 			criteria.add(new MiddlewareTypeCriterion(type));
 		}

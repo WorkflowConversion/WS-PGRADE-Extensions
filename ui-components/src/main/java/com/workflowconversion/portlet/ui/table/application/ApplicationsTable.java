@@ -1,7 +1,5 @@
 package com.workflowconversion.portlet.ui.table.application;
 
-import java.util.Arrays;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
@@ -11,6 +9,7 @@ import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
+import com.workflowconversion.portlet.core.utils.KeyUtils;
 import com.workflowconversion.portlet.ui.table.AbstractAddGenericElementDialog;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControls;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControlsFactory;
@@ -26,19 +25,15 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  */
 public class ApplicationsTable extends AbstractTableWithControls<Application> {
 
-	private static final long serialVersionUID = -5169354278787921392L;
+	private final static long serialVersionUID = -5169354278787921392L;
+	private final static String PROPERTY_APPLICATION = "ApplicationsTable_property_application";
 
 	private final Resource owningResource;
-	private final Application.Field[] visibleColumns;
 
-	private ApplicationsTable(final Resource owningResource, final Application.Field[] visibleColumns,
-			final String title, final boolean allowEdition, final boolean withDetails, final boolean allowDuplicates,
-			final boolean allowMultipleSelection) {
-		super(title, allowEdition, withDetails, allowDuplicates, allowMultipleSelection);
+	private ApplicationsTable(final Resource owningResource, final String title, final boolean allowEdition) {
+		super(title, allowEdition, false);
 		Validate.notNull(owningResource, "owningResource cannot be null");
-		Validate.notEmpty(visibleColumns, "visibleColumns cannot be null or empty");
 		this.owningResource = owningResource;
-		this.visibleColumns = Arrays.copyOf(visibleColumns, visibleColumns.length);
 	}
 
 	@Override
@@ -52,8 +47,17 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 	}
 
 	@Override
+	protected String getKeyForItem(final Item item) {
+		final String name = ((TextField) (item.getItemProperty(Application.Field.Name).getValue())).getValue();
+		final String version = ((TextField) (item.getItemProperty(Application.Field.Version).getValue())).getValue();
+		final String path = ((TextField) (item.getItemProperty(Application.Field.Path).getValue())).getValue();
+		return KeyUtils.generateApplicationKey(name, version, path);
+	}
+
+	@Override
 	protected Object[] getVisibleColumns() {
-		return visibleColumns;
+		return new Object[] { Application.Field.Name, Application.Field.Version, Application.Field.Path,
+				Application.Field.Description };
 	}
 
 	@Override
@@ -67,17 +71,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 		addContainerProperty(Application.Field.Version, TextField.class);
 		addContainerProperty(Application.Field.Path, TextField.class);
 		addContainerProperty(Application.Field.Description, TextArea.class);
-	}
-
-	@Override
-	protected void validate(final Application application) {
-		Validate.notNull(application, "application cannot be null, this is quite likely a bug and should be reported");
-		Validate.isTrue(StringUtils.isNotBlank(application.getName()),
-				"application name cannot be empty, null or contain only whitespace elements");
-		Validate.isTrue(StringUtils.isNotBlank(application.getVersion()),
-				"version cannot be empty, null or contain only whitespace elements");
-		Validate.isTrue(StringUtils.isNotBlank(application.getPath()),
-				"application path cannot be empty, null or contain only whitespace elements");
+		addContainerProperty(PROPERTY_APPLICATION);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -91,6 +85,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 				.setValue(newTextAreaWithValue(StringUtils.trimToEmpty(application.getDescription())));
 		item.getItemProperty(Application.Field.Path)
 				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getPath())));
+		item.getItemProperty(PROPERTY_APPLICATION).setValue(application);
 	}
 
 	@Override
@@ -105,13 +100,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 
 	@Override
 	protected Application convertFromItem(final Item item) {
-		final Application application = new Application();
-		application.setName(((TextField) item.getItemProperty(Application.Field.Name).getValue()).getValue());
-		application.setVersion(((TextField) item.getItemProperty(Application.Field.Version).getValue()).getValue());
-		application
-				.setDescription(((TextArea) item.getItemProperty(Application.Field.Description).getValue()).getValue());
-		application.setPath(((TextField) item.getItemProperty(Application.Field.Path).getValue()).getValue());
-		return application;
+		return (Application) item.getItemProperty(PROPERTY_APPLICATION).getValue();
 	}
 
 	/**
@@ -121,13 +110,17 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 	 *
 	 */
 	public static class ApplicationsTableFactory extends AbstractTableWithControlsFactory<Application> {
+		private boolean allowEdition;
 		private Resource owningResource;
-		private Application.Field[] visibleColumns;
 
-		@Override
-		public TableWithControls<Application> newInstance() {
-			return new ApplicationsTable(owningResource, visibleColumns, super.title, super.allowEdition,
-					super.withDetails, super.allowDuplicates, super.allowMultipleSelection);
+		/**
+		 * @param allowEdition
+		 *            whether adding/editing applications is allowed.
+		 * @return {@code this} factory.
+		 */
+		public ApplicationsTableFactory allowEdition(final boolean allowEdition) {
+			this.allowEdition = allowEdition;
+			return this;
 		}
 
 		/**
@@ -142,16 +135,9 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 			return this;
 		}
 
-		/**
-		 * Sets the visible columns.
-		 * 
-		 * @param visibleColumns
-		 *            the visible columns.
-		 * @return {@code this} factory.
-		 */
-		public ApplicationsTableFactory withVisibleColumns(final Application.Field[] visibleColumns) {
-			this.visibleColumns = visibleColumns;
-			return this;
+		@Override
+		public TableWithControls<Application> newInstance() {
+			return new ApplicationsTable(owningResource, super.title, allowEdition);
 		}
 	}
 }

@@ -41,15 +41,14 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor {
 	private class SAXHandler extends DefaultHandler {
 		Locator locator;
 		Resource currentResource;
-		Application currentApplication;
-		Queue currentQueue;
+		Resource.Builder currentResourceBuilder;
+		Application.Builder currentApplicationBuilder;
 		FormField currentField;
 		// the name of the queue comes as a text node and not as an attribute value
 		final StringBuilder currentFieldValue = new StringBuilder();
 		String currentTopElement;
 		private final static String RESOURCE_NODE_NAME = "resource";
 		private final static String APPLICATION_NODE_NAME = "application";
-		private final static String QUEUE_NODE_NAME = "queue";
 
 		@Override
 		public void setDocumentLocator(final Locator locator) {
@@ -64,14 +63,11 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor {
 
 			// check for top-level nodes first (resource, application, queue)
 			if (qName.equalsIgnoreCase(RESOURCE_NODE_NAME)) {
-				currentResource = new Resource();
+				currentResourceBuilder = new Resource.Builder();
 				currentTopElement = RESOURCE_NODE_NAME;
 			} else if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
-				currentApplication = new Application();
+				currentApplicationBuilder = new Application.Builder();
 				currentTopElement = APPLICATION_NODE_NAME;
-			} else if (qName.equalsIgnoreCase(QUEUE_NODE_NAME)) {
-				currentQueue = new Queue();
-				currentTopElement = QUEUE_NODE_NAME;
 			} else {
 				// check for field names
 				if (currentTopElement == RESOURCE_NODE_NAME) {
@@ -90,10 +86,6 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor {
 					} else if (qName.equalsIgnoreCase(Application.Field.Version.name())) {
 						currentField = Application.Field.Version;
 					}
-				} else if (currentTopElement == QUEUE_NODE_NAME) {
-					if (qName.equalsIgnoreCase(Queue.Field.Name.name())) {
-						currentField = Queue.Field.Name;
-					}
 				}
 			}
 		}
@@ -102,35 +94,28 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor {
 		public void endElement(final String uri, final String localName, final String qName) throws SAXException {
 			// check for top-level nodes first (resource, application, queue)
 			if (qName.equalsIgnoreCase(RESOURCE_NODE_NAME)) {
-				XMLBulkResourcesFileProcessor.this.addParsedResource(currentResource, locator.getLineNumber());
-			} else if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
-				XMLBulkResourcesFileProcessor.this.addParsedApplication(currentResource, currentApplication,
+				currentResource = XMLBulkResourcesFileProcessor.this.addParsedResource(currentResourceBuilder,
 						locator.getLineNumber());
-			} else if (qName.equalsIgnoreCase(QUEUE_NODE_NAME)) {
-				// add a queue to the current resource
-				XMLBulkResourcesFileProcessor.this.addParsedQueue(currentResource, currentQueue,
+			} else if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
+				XMLBulkResourcesFileProcessor.this.addParsedApplication(currentResource, currentApplicationBuilder,
 						locator.getLineNumber());
 			} else {
 				// check for field names
 				if (currentTopElement == RESOURCE_NODE_NAME) {
 					if (qName.equalsIgnoreCase(Resource.Field.Name.name())) {
-						currentResource.setName(getCleanCurrentFieldValue());
+						currentResourceBuilder.withName(getCleanCurrentFieldValue());
 					} else if (qName.equalsIgnoreCase(Resource.Field.Type.name())) {
-						currentResource.setType(getCleanCurrentFieldValue());
+						currentResourceBuilder.withType(getCleanCurrentFieldValue());
 					}
 				} else if (currentTopElement == APPLICATION_NODE_NAME) {
 					if (qName.equalsIgnoreCase(Application.Field.Name.name())) {
-						currentApplication.setName(getCleanCurrentFieldValue());
+						currentApplicationBuilder.withName(getCleanCurrentFieldValue());
 					} else if (qName.equalsIgnoreCase(Application.Field.Description.name())) {
-						currentApplication.setDescription(getCleanCurrentFieldValue());
+						currentApplicationBuilder.withDescription(getCleanCurrentFieldValue());
 					} else if (qName.equalsIgnoreCase(Application.Field.Path.name())) {
-						currentApplication.setPath(getCleanCurrentFieldValue());
+						currentApplicationBuilder.withPath(getCleanCurrentFieldValue());
 					} else if (qName.equalsIgnoreCase(Application.Field.Version.name())) {
-						currentApplication.setVersion(getCleanCurrentFieldValue());
-					}
-				} else if (currentTopElement == QUEUE_NODE_NAME) {
-					if (qName.equalsIgnoreCase(Queue.Field.Name.name())) {
-						currentQueue.setName(getCleanCurrentFieldValue());
+						currentApplicationBuilder.withVersion(getCleanCurrentFieldValue());
 					}
 				}
 			}

@@ -20,7 +20,7 @@ public interface MiddlewareProvider extends Serializable {
 	 * 
 	 * @return All of the middlewares whose {@code enabled} attribute is set to {@code true}.
 	 */
-	public Collection<Middleware> getAvailableMiddlewares();
+	public Collection<Middleware> getEnabledMiddlewares();
 
 	/**
 	 * Returns a collection with all the enabled middlewares of the given type.
@@ -30,7 +30,7 @@ public interface MiddlewareProvider extends Serializable {
 	 * @return The middlewares whose {@code enabled} attribute is set to {@code true} and their {@code type} matches the
 	 *         passed {@code middlewareType}.
 	 */
-	public Collection<Middleware> getAvailableMiddlewares(final String middlewareType);
+	public Collection<Middleware> getEnabledMiddlewares(final String middlewareType);
 
 	/**
 	 * Returns a collection with all the available items of the given middleware type.
@@ -40,7 +40,7 @@ public interface MiddlewareProvider extends Serializable {
 	 * @return The items whose {@code enabled} attribute is set to {@code true} and their middleware type matches the
 	 *         passed {@code middlewareType}.
 	 */
-	public Collection<Item> getAvailableItems(final String middlewareType);
+	public Collection<Item> getEnabledItems(final String middlewareType);
 
 	/**
 	 * Obtains a collection with all the middlewares.

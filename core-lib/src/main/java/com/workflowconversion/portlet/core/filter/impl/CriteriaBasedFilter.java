@@ -1,7 +1,6 @@
 package com.workflowconversion.portlet.core.filter.impl;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
 import org.apache.commons.lang.Validate;
 
@@ -9,7 +8,8 @@ import com.workflowconversion.portlet.core.filter.Criterion;
 import com.workflowconversion.portlet.core.filter.Filter;
 
 /**
- * Filter for gUSE middlewares/items.
+ * Filter for gUSE middlewares/items. For an element (middleware/item) to pass through the filter, all of the criteria
+ * must be satisfied.
  * 
  * @author delagarza
  */
@@ -23,21 +23,13 @@ class CriteriaBasedFilter<T> implements Filter<T> {
 	}
 
 	@Override
-	public Collection<T> apply(final Collection<T> input) {
-		final Collection<T> filteredInput = new LinkedList<T>();
-		for (final T element : input) {
-			boolean applies = true;
-			for (final Criterion<T> criterion : criteria) {
-				// if only one of the criteria is not satisfied, then we filter out this element
-				if (!criterion.applies(element)) {
-					applies = false;
-					break;
-				}
-			}
-			if (applies) {
-				filteredInput.add(element);
+	public boolean passes(final T element) {
+		for (final Criterion<T> criterion : criteria) {
+			// if only one of the criteria is not satisfied, then we filter out this element
+			if (!criterion.applies(element)) {
+				return false;
 			}
 		}
-		return filteredInput;
+		return true;
 	}
 }

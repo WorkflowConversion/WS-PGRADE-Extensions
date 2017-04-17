@@ -7,10 +7,6 @@
 		<!-- name, type of a resource -->
 		<name>sample.resource.com</name>
 		<type>lsf</type>
-		<!-- queues -->
-		<queue>
-			<name>default</name>
-		</queue>
 		<!-- applications -->
 		<application>
 			<!-- name, version, path, description -->
@@ -29,12 +25,6 @@
 	<resource>
 		<name>sample.resource.edu</name>
 		<type>moab</type>
-		<queue>
-			<name>longterm</name>
-		</queue>
-		<queue>
-			<name>fast</name>
-		</queue>
 		<application>
 			<name>EmailSender</name>
 			<version>9.5</version>

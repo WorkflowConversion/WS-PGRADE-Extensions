@@ -10,6 +10,7 @@ import com.workflowconversion.portlet.core.workflow.WorkflowExporter;
  * @author delagarza
  *
  */
+// TODO: Find out a way to actually export workflows to a local WS-PGRADE repository
 public class LocalRepositoryWorkflowExporter implements WorkflowExporter {
 
 	private final PortletUser portletUser;

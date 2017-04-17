@@ -19,8 +19,8 @@ import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.WSPGRADEMiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
+import com.workflowconversion.portlet.core.resource.impl.ClusterResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.InMemoryMockResourceProvider;
-import com.workflowconversion.portlet.core.resource.impl.JAXBResourceDatabase;
 import com.workflowconversion.portlet.core.resource.impl.UnicoreResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
@@ -112,18 +112,18 @@ public class WorkflowConversionContextListener implements ServletContextListener
 	private Collection<ResourceProvider> extractResourceProviders(final ServletContextEvent servletContextEvent,
 			final MiddlewareProvider middlewareProvider) {
 		// find out if we are using mocks
-		final Collection<ResourceProvider> applicationProviders = new LinkedList<ResourceProvider>();
+		final Collection<ResourceProvider> resourceProviders = new LinkedList<ResourceProvider>();
 		if (useMocks(servletContextEvent)) {
-			applicationProviders
+			resourceProviders
 					.add(new InMemoryMockResourceProvider("Editable mock app provider", middlewareProvider, true));
-			applicationProviders
+			resourceProviders
 					.add(new InMemoryMockResourceProvider("Read-only mock app provider", middlewareProvider, false));
 		} else {
-			applicationProviders
-					.add(new JAXBResourceDatabase(extractInitParam("resource.xmlFile.location", servletContextEvent)));
-			applicationProviders.add(new UnicoreResourceProvider(middlewareProvider));
+			resourceProviders.add(new ClusterResourceProvider(middlewareProvider,
+					extractInitParam("resource.xmlFile.location", servletContextEvent)));
+			resourceProviders.add(new UnicoreResourceProvider(middlewareProvider));
 		}
-		return Collections.unmodifiableCollection(applicationProviders);
+		return Collections.unmodifiableCollection(resourceProviders);
 	}
 
 	private PortletSanityCheck extractPortletSanityCheck(final ServletContextEvent servletContextEvent) {

@@ -2,53 +2,47 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+
+import com.workflowconversion.portlet.core.resource.jaxb.ApplicationXmlAdapter;
 
 /**
  * Simple object that contains all of the information an application requires to be executed on gUSE.
  * 
  * @author delagarza
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class Application implements Serializable, HasKey {
+@XmlJavaTypeAdapter(ApplicationXmlAdapter.class)
+public class Application implements Serializable {
 
 	private static final long serialVersionUID = -8200132807492156967L;
 
-	@XmlAttribute
-	private String name = "";
-	@XmlAttribute
-	private String version = "";
-	@XmlAttribute
-	private String path = "";
-	@XmlAttribute
-	private String description = "";
+	private final String name;
+	private final String version;
+	private final String path;
+	private final String description;
 
-	// add a reference to the resource on which this application resides,
-	// but signal that we don't want it to be serialized/deserialized
-	@XmlTransient
-	private Resource resource;
+	private Application(final String name, final String version, final String path, final String description) {
+		Validate.isTrue(StringUtils.isNotBlank(name),
+				"name cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
+		Validate.isTrue(StringUtils.isNotBlank(version),
+				"version cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
+		Validate.isTrue(StringUtils.isNotBlank(path),
+				"path cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
+		this.name = name;
+		this.version = version;
+		this.path = path;
+		// no need to validate descriptio
+		this.description = StringUtils.trimToEmpty(description);
+	}
 
 	/**
 	 * @return the name
 	 */
 	public String getName() {
 		return name;
-	}
-
-	/**
-	 * @param name
-	 *            the name to set
-	 */
-	public void setName(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
-				"name cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		this.name = name;
 	}
 
 	/**
@@ -59,16 +53,6 @@ public class Application implements Serializable, HasKey {
 	}
 
 	/**
-	 * @param version
-	 *            the version to set
-	 */
-	public void setVersion(final String version) {
-		Validate.isTrue(StringUtils.isNotBlank(version),
-				"version cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		this.version = version;
-	}
-
-	/**
 	 * @return the description
 	 */
 	public String getDescription() {
@@ -76,49 +60,10 @@ public class Application implements Serializable, HasKey {
 	}
 
 	/**
-	 * @param description
-	 *            the description to set
-	 */
-	public void setDescription(final String description) {
-		this.description = StringUtils.trimToEmpty(description);
-	}
-
-	/**
 	 * @return the path
 	 */
 	public String getPath() {
 		return path;
-	}
-
-	/**
-	 * @param path
-	 *            the path to set
-	 */
-	public void setPath(final String path) {
-		Validate.isTrue(StringUtils.isNotBlank(path),
-				"path cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		this.path = path;
-	}
-
-	/**
-	 * @return the resource
-	 */
-	public Resource getResource() {
-		return resource;
-	}
-
-	/**
-	 * @param resource
-	 *            the resource to set, can be null
-	 */
-	public void setResource(final Resource resource) {
-		Validate.notNull(resource, "resource cannot be null, this is a coding problem and should be reported.");
-		this.resource = resource;
-	}
-
-	@Override
-	public String generateKey() {
-		return "_name=" + name + "_version=" + version + "_path=" + path;
 	}
 
 	/*
@@ -240,6 +185,87 @@ public class Application implements Serializable, HasKey {
 		@Override
 		public String getDisplayName() {
 			return displayName;
+		}
+	}
+
+	/**
+	 * Application builder.
+	 * 
+	 * @author delagarza
+	 *
+	 */
+	public static class Builder {
+		private String name = "";
+		private String version = "";
+		private String path = "";
+		private String description = "";
+
+		/**
+		 * @param name
+		 *            the application name.
+		 * @return a reference to {@code this} builder.
+		 */
+		public Builder withName(final String name) {
+			this.name = name;
+			return this;
+		}
+
+		/**
+		 * @return the name.
+		 */
+		public String getName() {
+			return this.name;
+		}
+
+		/**
+		 * @param version
+		 *            the version.
+		 * @return a reference to {@code this} builder.
+		 */
+		public Builder withVersion(final String version) {
+			this.version = version;
+			return this;
+		}
+
+		/**
+		 * @return the version.
+		 */
+		public String getVersion() {
+			return this.version;
+		}
+
+		/**
+		 * @param path
+		 *            the path.
+		 * @return a reference to {@code this} builder.
+		 */
+		public Builder withPath(final String path) {
+			this.path = path;
+			return this;
+		}
+
+		/**
+		 * @return the path.
+		 */
+		public String getPath() {
+			return this.path;
+		}
+
+		/**
+		 * @param description
+		 *            the description
+		 * @return a reference to {@code this} builder.
+		 */
+		public Builder withDescription(final String description) {
+			this.description = description;
+			return this;
+		}
+
+		/**
+		 * @return a new instance of an {@link Application}.
+		 */
+		public Application newInstance() {
+			return new Application(name, version, path, description);
 		}
 	}
 

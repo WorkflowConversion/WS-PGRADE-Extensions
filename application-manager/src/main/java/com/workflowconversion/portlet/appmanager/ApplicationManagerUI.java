@@ -12,14 +12,13 @@ import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
-import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.workflowconversion.portlet.core.exception.ProviderNotEditableException;
+import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
@@ -56,9 +55,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	protected Layout prepareContent() {
 		final Layout resourceTableLayout = new VerticalLayout();
 		final ComboBox resourceProviderComboBox = getResourceProviderComboBox();
-		final CheckBox enableEditionCheckBox = new CheckBox("Enable edition");
-		enableEditionCheckBox.setImmediate(true);
-		enableEditionCheckBox.setWidth(650, Unit.PIXELS);
 		final Button saveButton = new Button("Save changes");
 		saveButton.setImmediate(true);
 		saveButton.setEnabled(false);
@@ -76,11 +72,8 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 			final UIComponents uiComponents = buildUiComponentsForResourceProvider(resourceProvider);
 			uiComponentsMap.put(resourceProviderId, uiComponents);
 			final Item newItem = resourceProviderComboBox.addItem(resourceProviderId++);
-			newItem.getItemProperty(PROPERTY_NAME_CAPTION)
-					.setValue(resourceProvider.getName() + (resourceProvider.isEditable() ? "" : " (read-only)"));
-			newItem.getItemProperty(PROPERTY_NAME_ICON)
-					.setValue(resourceProvider.isEditable() ? new ThemeResource("../runo/icons/16/settings.png")
-							: new ThemeResource("../runo/icons/16/lock.png"));
+			newItem.getItemProperty(PROPERTY_NAME_CAPTION).setValue(resourceProvider.getName());
+			newItem.getItemProperty(PROPERTY_NAME_ICON).setValue(new ThemeResource("../runo/icons/16/settings.png"));
 		}
 
 		resourceProviderComboBox.addValueChangeListener(new Property.ValueChangeListener() {
@@ -93,38 +86,16 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 					final int selectedResourceProviderId = (Integer) event.getProperty().getValue();
 					final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
 
-					enableEditionCheckBox.setValue(uiComponents.isEditionEnabled);
-					enableEditionCheckBox.setEnabled(uiComponents.resourceProvider.isEditable());
-					saveButton
-							.setEnabled(uiComponents.resourceProvider.isEditable() && enableEditionCheckBox.getValue());
-					bulkUploadButton
-							.setEnabled(uiComponents.resourceProvider.isEditable() && enableEditionCheckBox.getValue());
+					saveButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
+					bulkUploadButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
 
 					resourceTableLayout.removeAllComponents();
 
 					resourceTableLayout.addComponent(uiComponents.resourceTable);
 
 					// make sure that the checkbox and the state of the tables is consistent
-					propagateReadOnlyStatus(uiComponents, uiComponents.isEditionEnabled);
 					resourceTableLayout.markAsDirtyRecursive();
 				}
-			}
-		});
-
-		enableEditionCheckBox.addValueChangeListener(new CheckBox.ValueChangeListener() {
-			private static final long serialVersionUID = 1834213227006809779L;
-
-			@Override
-			public void valueChange(final ValueChangeEvent event) {
-				final int selectedResourceProviderId = ((Integer) resourceProviderComboBox.getValue());
-				final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
-				final boolean editable = Boolean.parseBoolean(event.getProperty().getValue().toString());
-
-				saveButton.setEnabled(editable);
-				bulkUploadButton.setEnabled(editable);
-				propagateReadOnlyStatus(uiComponents, editable);
-
-				uiComponents.isEditionEnabled = editable;
 			}
 		});
 
@@ -138,7 +109,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 					final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
 					uiComponents.resourceTable.clearSelection();
 					uiComponents.resourceTable.saveAllChanges();
-					uiComponents.resourceProvider.commitChanges();
+					uiComponents.resourceProvider.saveApplications();
 				} finally {
 					saveButton.setEnabled(true);
 				}
@@ -167,9 +138,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		final HorizontalLayout editControlsLayout = new HorizontalLayout();
 		editControlsLayout.setMargin(false);
 		editControlsLayout.setSpacing(true);
-		editControlsLayout.addComponent(enableEditionCheckBox);
 		editControlsLayout.addComponent(buttonsLayout);
-		editControlsLayout.setComponentAlignment(enableEditionCheckBox, Alignment.BOTTOM_LEFT);
 		editControlsLayout.setComponentAlignment(buttonsLayout, Alignment.MIDDLE_RIGHT);
 
 		editControlsLayout.setWidth(ResourcesTable.WIDTH_PIXELS, Unit.PIXELS);
@@ -188,9 +157,9 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	}
 
 	private void bulkUploadButtonClicked(final UIComponents uiComponents) {
-		if (!uiComponents.resourceProvider.isEditable()) {
-			throw new ProviderNotEditableException(
-					"This resource provider is not editable. This seems to be a coding problem and should be reported.");
+		if (!uiComponents.resourceProvider.canAddApplications()) {
+			throw new ApplicationException(
+					"It is not posssible to add applications to this provider. This seems to be a coding problem and should be reported.");
 		}
 
 		final Window bulkUploadDialog = new BulkUploadResourcesDialog(uiComponents.resourceTable,
@@ -203,16 +172,10 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		UI.getCurrent().addWindow(bulkUploadDialog);
 	}
 
-	private void propagateReadOnlyStatus(final UIComponents uiComponents, final boolean enableEdition) {
-		uiComponents.resourceTable.setReadOnly(!enableEdition);
-	}
-
 	private UIComponents buildUiComponentsForResourceProvider(final ResourceProvider resourceProvider) {
 		final ResourceTableFactory factory = new ResourceTableFactory();
-		factory.withResourceProvider(resourceProvider)
-				.withMiddlewareTypes(Settings.getInstance().getMiddlewareProvider().getAllMiddlewareTypes())
-				.withDetails(true).withTitle("Resources").allowEdition(resourceProvider.isEditable())
-				.allowDuplicates(false).allowMultipleSelection(true);
+		// cannot edit resource tables, just the applications
+		factory.withTitle("Resources");
 		final TableWithControls<Resource> resourceTable = factory.newInstance();
 		resourceTable.init(resourceProvider.getResources());
 		final UIComponents uiComponents = new UIComponents(resourceProvider, resourceTable);
@@ -242,14 +205,12 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	private static class UIComponents {
 		private final ResourceProvider resourceProvider;
 		private final TableWithControls<Resource> resourceTable;
-		private volatile boolean isEditionEnabled;
 
 		UIComponents(final ResourceProvider resourceProvider, final TableWithControls<Resource> resourceTable) {
 			Validate.notNull(resourceProvider, "resourceProvider cannot be null");
 			Validate.notNull(resourceTable, "resourceTable cannot be null");
 			this.resourceProvider = resourceProvider;
 			this.resourceTable = resourceTable;
-			this.isEditionEnabled = false;
 		}
 	}
 }

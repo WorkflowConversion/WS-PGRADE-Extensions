@@ -27,8 +27,8 @@ class AddApplicationDialog extends AbstractAddGenericElementDialog<Application> 
 	}
 
 	@Override
-	protected Application createDefaultElement() {
-		return new Application();
+	protected ApplicationWrapper createDefaultElementWrapper() {
+		return new ApplicationWrapper();
 	}
 
 	@Override

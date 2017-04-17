@@ -36,13 +36,12 @@ public class SimpleContent extends VerticalLayout {
 	}
 
 	private void setUpUI() {
+		// TODO: Fix scrolling... maybe use a textarea?
 		final Panel panel = new Panel();
 		final Label label = new Label(message, ContentMode.HTML);
-		label.setWidth(100, Unit.PERCENTAGE);
-		label.setHeight(100, Unit.PERCENTAGE);
 		panel.setContent(label);
-		panel.setWidth(100, Unit.PERCENTAGE);
-		panel.setHeight(100, Unit.PERCENTAGE);
+		panel.getContent().setSizeUndefined();
+		panel.setSizeFull();
 
 		final HorizontalLayout layout = new HorizontalLayout();
 		if (iconLocation != null) {

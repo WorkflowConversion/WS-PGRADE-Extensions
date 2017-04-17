@@ -1,10 +1,8 @@
 package com.workflowconversion.portlet.core.execution.impl;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
+import com.workflowconversion.portlet.core.SupportedClusters;
 import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.workflow.Job;
 
@@ -22,13 +20,9 @@ import com.workflowconversion.portlet.core.workflow.Job;
  */
 class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHandler {
 
-	private final static Set<String> SUPPORTED_CLUSTERS = new TreeSet<String>(
-			Arrays.asList("pbs", "lsf", "sge", "moab"));
-
 	@Override
 	public boolean canHandle(final Job job) {
-		final String resourceType = job.getResourceType();
-		return resourceType != null && SUPPORTED_CLUSTERS.contains(resourceType);
+		return SupportedClusters.isSupported(job.getResourceType());
 	}
 
 	@Override

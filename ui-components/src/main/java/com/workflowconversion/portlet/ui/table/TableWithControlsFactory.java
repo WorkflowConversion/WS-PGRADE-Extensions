@@ -1,7 +1,5 @@
 package com.workflowconversion.portlet.ui.table;
 
-import com.workflowconversion.portlet.core.resource.HasKey;
-
 /**
  * Implementations of {@link TableWithControls} have several options. Using a simple abstract factory pattern makes
  * building these tables a bit easier.
@@ -11,7 +9,7 @@ import com.workflowconversion.portlet.core.resource.HasKey;
  * @param <T>
  *            the type of elements to be displayed in the tables constructed by this factory.
  */
-public interface TableWithControlsFactory<T extends HasKey> {
+public interface TableWithControlsFactory<T> {
 
 	/**
 	 * Builds a {@link TableWithControls} with the set options.
@@ -19,43 +17,6 @@ public interface TableWithControlsFactory<T extends HasKey> {
 	 * @return a new instance of a {@link TableWithControls}.
 	 */
 	TableWithControls<T> newInstance();
-
-	/**
-	 * Sets whether the instance to build will have a button to display details.
-	 * 
-	 * @param withElementDetailsButton
-	 *            whether the instance will have a button to display details.
-	 * @return a reference to {@code this} factory.
-	 */
-	TableWithControlsFactory<T> withDetails(final boolean withElementDetailsButton);
-
-	/**
-	 * Sets whether the instance to build will have edit controls (an "add element" button and a "remove element"
-	 * button).
-	 * 
-	 * @param allowEdition
-	 *            whether the instance will have edit controls.
-	 * @return a reference to {@code this} factory.
-	 */
-	TableWithControlsFactory<T> allowEdition(final boolean allowEdition);
-
-	/**
-	 * Sets whether the instance to build will allow duplicates.
-	 * 
-	 * @param allowDuplicates
-	 *            whether the instance will allow duplicates.
-	 * @return a reference to {@code this} factory.
-	 */
-	TableWithControlsFactory<T> allowDuplicates(final boolean allowDuplicates);
-
-	/**
-	 * Sets whether the table will allow multiple selections.
-	 * 
-	 * @param allowMultipleSelection
-	 *            whether the table will allow multiple selections.
-	 * @return a reference to {@code this} factory.
-	 */
-	TableWithControlsFactory<T> allowMultipleSelection(final boolean allowMultipleSelection);
 
 	/**
 	 * Sets the title of the table to build.

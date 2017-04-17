@@ -1,8 +1,6 @@
 package com.workflowconversion.portlet.ui.workflow;
 
-import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
+import java.util.Collection;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -12,7 +10,7 @@ import com.vaadin.ui.HorizontalLayout;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
-import com.workflowconversion.portlet.core.utils.SystemWideKeyUtils;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.workflow.Job;
 
 /**
@@ -24,19 +22,22 @@ import com.workflowconversion.portlet.core.workflow.Job;
 public class JobView extends HorizontalLayout {
 	private static final long serialVersionUID = 8676895583929397206L;
 
-	private static final String PROPERTY_QUEUE_CAPTION = "WorkflowView_property_queue_name";
 	private static final String PROPERTY_APPLICATION_CAPTION = "WorkflowView_property_app_name";
+	private static final String PROPERTY_APPLICATION = "WorkflowView_property_app";
+	private static final String PROPERTY_RESOURCE = "WorkflowView_property_resource";
+	private static final String PROPERTY_QUEUE_CAPTION = "WorkflowView_property_queue_name";
+	private static final String PROPERTY_QUEUE = "WorkflowView_property_queue";
 
 	private final ComboBox applicationComboBox;
 	private final ComboBox queueComboBox;
-	private final Map<String, Application> applicationMap;
+	private final Collection<ResourceProvider> resourceProviders;
 	private final String jobName;
 
-	JobView(final Job job, final Map<String, Application> applicationMap) {
+	JobView(final Job job, final Collection<ResourceProvider> resourceProviders) {
 		this.applicationComboBox = getComboBox("Application", "Select an application");
 		this.queueComboBox = getComboBox("Queue", "Select a queue");
 		this.jobName = job.getName();
-		this.applicationMap = applicationMap;
+		this.resourceProviders = resourceProviders;
 		initUI(job);
 	}
 
@@ -44,18 +45,26 @@ public class JobView extends HorizontalLayout {
 	private void initUI(final Job job) {
 		applicationComboBox.setWidth(650, Unit.PIXELS);
 		applicationComboBox.addContainerProperty(PROPERTY_APPLICATION_CAPTION, String.class, null);
+		applicationComboBox.addContainerProperty(PROPERTY_APPLICATION, Application.class, null);
+		applicationComboBox.addContainerProperty(PROPERTY_RESOURCE, Resource.class, null);
 		applicationComboBox.setItemCaptionPropertyId(PROPERTY_APPLICATION_CAPTION);
 
 		queueComboBox.setWidth(200, Unit.PIXELS);
 		queueComboBox.addContainerProperty(PROPERTY_QUEUE_CAPTION, String.class, null);
+		queueComboBox.addContainerProperty(PROPERTY_QUEUE, Queue.class, null);
 		queueComboBox.setItemCaptionPropertyId(PROPERTY_QUEUE_CAPTION);
 
-		for (final Map.Entry<String, Application> entry : applicationMap.entrySet()) {
-			final Application application = entry.getValue();
-			final String key = entry.getKey();
-			final Item applicationItem = applicationComboBox.addItem(key);
-			applicationItem.getItemProperty(PROPERTY_APPLICATION_CAPTION)
-					.setValue(generateApplicationCaption(application));
+		for (final ResourceProvider resourceProvider : resourceProviders) {
+			for (final Resource resource : resourceProvider.getResources()) {
+				for (final Application application : resource.getApplications()) {
+					final Object itemKey = applicationComboBox.addItem();
+					final Item item = applicationComboBox.getItem(itemKey);
+					item.getItemProperty(PROPERTY_APPLICATION).setValue(application);
+					item.getItemProperty(PROPERTY_RESOURCE).setValue(resource);
+					item.getItemProperty(PROPERTY_APPLICATION_CAPTION)
+							.setValue(generateApplicationCaption(resource, application));
+				}
+			}
 		}
 
 		applicationComboBox.addValueChangeListener(new ValueChangeListener() {
@@ -63,9 +72,9 @@ public class JobView extends HorizontalLayout {
 
 			@Override
 			public void valueChange(final ValueChangeEvent event) {
-				final String applicationKey = (String) event.getProperty().getValue();
-				final Application application = applicationMap.get(applicationKey);
-				final Resource resource = application.getResource();
+				final Item selectedApplicationItem = applicationComboBox.getItem(event.getProperty().getValue());
+				final Resource resource = (Resource) selectedApplicationItem.getItemProperty(PROPERTY_RESOURCE)
+						.getValue();
 
 				queueComboBox.removeAllItems();
 				if (resource.getQueues().isEmpty()) {
@@ -73,7 +82,9 @@ public class JobView extends HorizontalLayout {
 				} else {
 					queueComboBox.setEnabled(true);
 					for (final Queue queue : resource.getQueues()) {
-						final Item queueItem = queueComboBox.addItem(queue.generateKey());
+						final Object queueItemKey = queueComboBox.addItem();
+						final Item queueItem = queueComboBox.getItem(queueItemKey);
+						queueItem.getItemProperty(PROPERTY_QUEUE).setValue(queue);
 						queueItem.getItemProperty(PROPERTY_QUEUE_CAPTION).setValue(queue.getName());
 					}
 				}
@@ -81,13 +92,30 @@ public class JobView extends HorizontalLayout {
 			}
 		});
 
+		final Resource jobResource = job.getResource();
 		final Application jobApplication = job.getApplication();
-		final Queue jobQueue = job.getQueue();
-		if (jobApplication != null) {
-			applicationComboBox.setValue(SystemWideKeyUtils.generate(jobApplication.getResource(), jobApplication));
+		if (jobResource != null && jobApplication != null) {
+			for (final Object applicationItemKey : applicationComboBox.getItemIds()) {
+				final Item applicationItem = applicationComboBox.getItem(applicationItemKey);
+				final Resource resource = (Resource) applicationItem.getItemProperty(PROPERTY_RESOURCE).getValue();
+				final Application application = (Application) applicationItem.getItemProperty(PROPERTY_APPLICATION)
+						.getValue();
+				if (application == jobApplication && jobResource == resource) {
+					applicationComboBox.setValue(applicationItemKey);
+					break;
+				}
+			}
 		}
+		final Queue jobQueue = job.getQueue();
 		if (jobQueue != null) {
-			queueComboBox.setValue(jobQueue.generateKey());
+			for (final Object queueItemKey : queueComboBox.getItemIds()) {
+				final Item queueItem = queueComboBox.getItem(queueItemKey);
+				final Queue queue = (Queue) queueItem.getItemProperty(PROPERTY_QUEUE).getValue();
+				if (queue == jobQueue) {
+					queueComboBox.setValue(queueItemKey);
+					break;
+				}
+			}
 		}
 
 		setMargin(false);
@@ -96,10 +124,9 @@ public class JobView extends HorizontalLayout {
 		addComponent(queueComboBox);
 	}
 
-	private Object generateApplicationCaption(final Application application) {
+	private Object generateApplicationCaption(final Resource resource, final Application application) {
 		final StringBuilder builder = new StringBuilder(application.getName());
-		builder.append(" (").append(application.getVersion()).append(") on ")
-				.append(application.getResource().getName());
+		builder.append(" (").append(application.getVersion()).append(") on ").append(resource.getName());
 		return builder.toString();
 	}
 
@@ -108,19 +135,20 @@ public class JobView extends HorizontalLayout {
 	 */
 	Job getJob() {
 		final Job job = new Job(jobName);
-		final String systemWideApplicationKey = (String) applicationComboBox.getValue();
-		if (StringUtils.isNotBlank(systemWideApplicationKey)) {
-			final Application application = applicationMap.get(systemWideApplicationKey);
-			job.setApplication(application);
-			final String queueKey = (String) queueComboBox.getValue();
-			if (StringUtils.isNotBlank(queueKey)) {
-				final Resource resource = application.getResource();
-				for (final Queue queue : resource.getQueues()) {
-					if (queueKey.equals(queue.generateKey())) {
-						job.setQueue(queue);
-						break;
-					}
-				}
+		final Object selectedApplicationItemKey = applicationComboBox.getValue();
+		if (selectedApplicationItemKey != null) {
+			final Item selectedApplicationItem = applicationComboBox.getItem(selectedApplicationItemKey);
+			final Application selectedApplication = (Application) selectedApplicationItem
+					.getItemProperty(PROPERTY_APPLICATION).getValue();
+			final Resource selectedResource = (Resource) selectedApplicationItem.getItemProperty(PROPERTY_RESOURCE)
+					.getValue();
+			job.setApplication(selectedApplication);
+			job.setResource(selectedResource);
+			final Object selectedQueueItemKey = queueComboBox.getValue();
+			if (selectedQueueItemKey != null) {
+				final Item selectedQueueItem = queueComboBox.getItem(selectedQueueItemKey);
+				final Queue selectedQueue = (Queue) selectedQueueItem.getItemProperty(PROPERTY_QUEUE).getValue();
+				job.setQueue(selectedQueue);
 			}
 		}
 		return job;

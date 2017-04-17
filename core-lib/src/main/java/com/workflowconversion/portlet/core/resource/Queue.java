@@ -2,11 +2,6 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlTransient;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
@@ -16,51 +11,22 @@ import org.apache.commons.lang.Validate;
  * @author delagarza
  *
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class Queue implements Comparable<Queue>, Serializable, HasKey {
+public class Queue implements Comparable<Queue>, Serializable {
 	private static final long serialVersionUID = -1202346412388738016L;
 
-	@XmlAttribute
-	private String name = "";
-	@XmlTransient
-	private Resource resource;
+	private final String name;
 
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * @param name
-	 *            the name to set
-	 */
-	public void setName(final String name) {
+	private Queue(final String name) {
 		Validate.isTrue(StringUtils.isNotBlank(name),
 				"name cannot be null, empty or contain only whitespaces; this is a coding problem and should be reported.");
 		this.name = name;
 	}
 
 	/**
-	 * @return the resource
+	 * @return the name
 	 */
-	public Resource getResource() {
-		return resource;
-	}
-
-	/**
-	 * @param resource
-	 *            the resource to set
-	 */
-	public void setResource(final Resource resource) {
-		Validate.notNull(resource, "resource cannot be null, this is a coding problem and should be reported.");
-		this.resource = resource;
-	}
-
-	@Override
-	public String generateKey() {
-		return "_name=" + name;
+	public String getName() {
+		return name;
 	}
 
 	/*
@@ -139,6 +105,37 @@ public class Queue implements Comparable<Queue>, Serializable, HasKey {
 		@Override
 		public String getDisplayName() {
 			return displayName;
+		}
+	}
+
+	/**
+	 * Queue builder.
+	 * 
+	 * @author delagarza
+	 *
+	 */
+	public static class Builder {
+		private String name;
+
+		/**
+		 * Sets the queue name.
+		 * 
+		 * @param name
+		 *            the name.
+		 * @return {@code this} builder.
+		 */
+		public Builder withName(final String name) {
+			this.name = name;
+			return this;
+		}
+
+		/**
+		 * Builds a new queue.
+		 * 
+		 * @return a new queue.
+		 */
+		public Queue newInstance() {
+			return new Queue(name);
 		}
 	}
 

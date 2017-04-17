@@ -2,17 +2,10 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.commons.lang.StringUtils;
@@ -20,9 +13,9 @@ import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.exception.ApplicationNotFoundException;
 import com.workflowconversion.portlet.core.exception.DuplicateApplicationException;
-import com.workflowconversion.portlet.core.exception.DuplicateQueueException;
-import com.workflowconversion.portlet.core.exception.QueueNotFoundException;
-import com.workflowconversion.portlet.core.resource.impl.jaxb.ApplicationsXmlAdapter;
+import com.workflowconversion.portlet.core.exception.ResourceNotEditableException;
+import com.workflowconversion.portlet.core.resource.jaxb.ResourceXmlAdapter;
+import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 /**
  * Class representing a computing resource, such as a computing cluster.
@@ -32,40 +25,59 @@ import com.workflowconversion.portlet.core.resource.impl.jaxb.ApplicationsXmlAda
  * @author delagarza
  *
  */
-@XmlAccessorType(XmlAccessType.FIELD)
-public class Resource implements Serializable, HasKey {
+@XmlJavaTypeAdapter(ResourceXmlAdapter.class)
+public class Resource implements Serializable {
 
 	private static final long serialVersionUID = -2174466858733103521L;
 
 	// i.e. unicore, moab, lsf, etc.
-	@XmlAttribute
-	private String type = "";
+	private final String type;
+	private final String name;
+	private final boolean canModifyApplications;
 
-	@XmlAttribute
-	private String name = "";
+	private final Map<String, Application> applications;
+	private final Map<String, Queue> queues;
 
-	@XmlJavaTypeAdapter(ApplicationsXmlAdapter.class)
-	private final Map<String, Application> applications = new TreeMap<String, Application>();
+	private Resource(final String type, final String name, final boolean canModifyApplications,
+			final Collection<Application> initialApplications, final Collection<Queue> queues) {
+		Validate.isTrue(StringUtils.isNotBlank(type),
+				"type cannot be null, empty or contain only whitespace characters.");
+		Validate.isTrue(StringUtils.isNotBlank(name),
+				"name cannot be null, empty or contain only whitespace characters.");
+		this.type = type;
+		this.name = name;
+		this.canModifyApplications = canModifyApplications;
 
-	@XmlElementWrapper(name = "queues")
-	@XmlElement(name = "queue")
-	private final Set<Queue> queues = new TreeSet<Queue>();
+		this.applications = new TreeMap<String, Application>();
+		this.queues = new TreeMap<String, Queue>();
+
+		fillInitialApplications(initialApplications);
+		fillQueues(queues);
+	}
+
+	private void fillQueues(final Collection<Queue> queues) {
+		if (queues != null) {
+			for (final Queue queue : queues) {
+				this.queues.put(KeyUtils.generate(queue), queue);
+			}
+		}
+	}
+
+	private void fillInitialApplications(final Collection<Application> initialApplications) {
+		if (initialApplications != null) {
+			for (final Application application : initialApplications) {
+				if (applications.put(KeyUtils.generate(application), application) != null) {
+					throw new DuplicateApplicationException(application);
+				}
+			}
+		}
+	}
 
 	/**
 	 * @return the type
 	 */
 	public String getType() {
 		return type;
-	}
-
-	/**
-	 * @param type
-	 *            the type to set
-	 */
-	public void setType(final String type) {
-		Validate.isTrue(StringUtils.isNotBlank(type),
-				"type cannot be null, empty or contain only whitespace characters.");
-		this.type = type;
 	}
 
 	/**
@@ -76,20 +88,23 @@ public class Resource implements Serializable, HasKey {
 	}
 
 	/**
-	 * @param name
-	 *            the name to set
+	 * @return whether this resource supports modifying its applications.
 	 */
-	public void setName(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
-				"name cannot be null, empty or contain only whitespace characters.");
-		this.name = name;
+	public boolean canModifyApplications() {
+		return canModifyApplications;
 	}
 
 	/**
 	 * @return the applications
 	 */
 	public Collection<Application> getApplications() {
-		return new LinkedList<Application>(applications.values());
+		return Collections.unmodifiableCollection(applications.values());
+	}
+
+	private void assertCanAddApplications() {
+		if (!canModifyApplications) {
+			throw new ResourceNotEditableException();
+		}
 	}
 
 	/**
@@ -99,10 +114,11 @@ public class Resource implements Serializable, HasKey {
 	 *             if an application with the same name, version, path already exists in this resource.
 	 */
 	public void addApplication(final Application application) throws DuplicateApplicationException {
+		assertCanAddApplications();
 		Validate.notNull(application, "application cannot be null");
-		final String key = application.generateKey();
+		final String key = KeyUtils.generate(application);
 		if (!applications.containsKey(key)) {
-			application.setResource(this);
+			// application.setResource(this);
 			applications.put(key, application);
 		} else {
 			throw new DuplicateApplicationException(application);
@@ -110,29 +126,10 @@ public class Resource implements Serializable, HasKey {
 	}
 
 	/**
-	 * @param application
-	 *            the application to remove.
-	 * @throws ApplicationNotFoundException
-	 *             if the application does not already exist.
-	 */
-	public void removeApplication(final Application application) {
-		Validate.notNull(application, "application cannot be null");
-		final String key = application.generateKey();
-		if (applications.remove(key) != null) {
-			application.setResource(null);
-		} else {
-			// did not exist!
-			throw new ApplicationNotFoundException(application);
-		}
-	}
-
-	/**
 	 * Clears this resource of its applications.
 	 */
 	public void removeAllApplications() {
-		for (final Application application : applications.values()) {
-			application.setResource(null);
-		}
+		assertCanAddApplications();
 		applications.clear();
 	}
 
@@ -145,10 +142,11 @@ public class Resource implements Serializable, HasKey {
 	 *             if the application does not already exist.
 	 */
 	public void saveApplication(final Application application) throws ApplicationNotFoundException {
+		assertCanAddApplications();
 		Validate.notNull(application, "application cannot be null");
-		final String key = application.generateKey();
+		final String key = KeyUtils.generate(application);
 		if (applications.containsKey(key)) {
-			application.setResource(this);
+			// application.setResource(this);
 			applications.put(key, application);
 		} else {
 			throw new ApplicationNotFoundException(application);
@@ -156,72 +154,37 @@ public class Resource implements Serializable, HasKey {
 	}
 
 	/**
-	 * Returns whether this resource contains the given application.
+	 * Returns the application that matches the given fields.
 	 * 
-	 * @param application
-	 *            the application.
-	 * @return {@code true} if this resource contains the passed application.
+	 * @param name
+	 *            the application name.
+	 * @param version
+	 *            the application version.
+	 * @param path
+	 *            the application path.
+	 * @return the application with the given fields, or {@code null} if the application is not contained in this
+	 *         resource.
 	 */
-	public boolean containsApplication(final Application application) {
-		Validate.notNull(application, "application cannot be null");
-		return applications.containsKey(application.generateKey());
+	public Application getApplication(final String name, final String version, final String path) {
+		return applications.get(KeyUtils.generateApplicationKey(name, version, path));
 	}
 
 	/**
 	 * @return the queues
 	 */
 	public Collection<Queue> getQueues() {
-		return new LinkedList<Queue>(queues);
+		return Collections.unmodifiableCollection(queues.values());
 	}
 
 	/**
-	 * Adds a queue.
+	 * Returns the queue that matches the given name.
 	 * 
-	 * @param queue
-	 *            the queue to add.
-	 * @throws DuplicateQueueException
-	 *             if the queue already exists in this resource.
+	 * @param name
+	 *            the name of the queue to search for.
+	 * @return the queue with the given name, or {@code null} if the queue is not contained in this resource.
 	 */
-	public void addQueue(final Queue queue) throws DuplicateQueueException {
-		Validate.notNull(queue, "queue cannot be null.");
-		final String name = StringUtils.trimToNull(queue.getName());
-		Validate.notNull(name, "queue name cannot be null, empty, or contain only whitespace characters.");
-		if (queues.contains(queue)) {
-			throw new DuplicateQueueException(queue);
-		}
-		queue.setResource(this);
-		queues.add(queue);
-	}
-
-	/**
-	 * @param queue
-	 *            the queue to search for.
-	 * @return whether this resource contains the given queue.
-	 */
-	public boolean containsQueue(final Queue queue) {
-		return queues.contains(queue);
-	}
-
-	/**
-	 * @param queue
-	 *            the queue to remove.
-	 */
-	public void removeQueue(final Queue queue) {
-		if (queues.remove(queue)) {
-			queue.setResource(null);
-		} else {
-			throw new QueueNotFoundException(queue);
-		}
-	}
-
-	/**
-	 * Removes all queues from this resource.
-	 */
-	public void removeAllQueues() {
-		for (final Queue queue : queues) {
-			queue.setResource(null);
-		}
-		queues.clear();
+	public Queue getQueue(final String name) {
+		return queues.get(KeyUtils.generateQueueKey(name));
 	}
 
 	/*
@@ -233,11 +196,6 @@ public class Resource implements Serializable, HasKey {
 	public String toString() {
 		return "Resource [type=" + type + ", name=" + name + ", applications=" + applications + ", queues=" + queues
 				+ "]";
-	}
-
-	@Override
-	public String generateKey() {
-		return "type=" + type + "_name=" + name;
 	}
 
 	/*
@@ -315,6 +273,91 @@ public class Resource implements Serializable, HasKey {
 		@Override
 		public String getDisplayName() {
 			return displayName;
+		}
+	}
+
+	/**
+	 * Resource builder.
+	 * 
+	 * @author delagarza
+	 *
+	 */
+	public static class Builder {
+		private String type;
+		private String name;
+		private boolean canModifyApplications;
+		private Collection<Application> applications;
+		private Collection<Queue> queues;
+
+		/**
+		 * @param type
+		 *            the resource type.
+		 * @return {@code this} builder.
+		 */
+		public Builder withType(final String type) {
+			this.type = type;
+			return this;
+		}
+
+		/**
+		 * @return the type.
+		 */
+		public String getType() {
+			return this.type;
+		}
+
+		/**
+		 * @param name
+		 *            the resource name
+		 * @return {@code this} builder.
+		 */
+		public Builder withName(final String name) {
+			this.name = name;
+			return this;
+		}
+
+		/**
+		 * @return the name.
+		 */
+		public String getName() {
+			return this.name;
+		}
+
+		/**
+		 * @param canModifyApplications
+		 *            whether it'll be possible to modify the resource applications.
+		 * @return {@code this} builder.
+		 */
+		public Builder canModifyApplications(final boolean canModifyApplications) {
+			this.canModifyApplications = canModifyApplications;
+			return this;
+		}
+
+		/**
+		 * @param applications
+		 *            the initial applications of the resource.
+		 * @return {@code this} builder.
+		 */
+		public Builder withApplications(final Collection<Application> applications) {
+			this.applications = applications;
+			return this;
+		}
+
+		/**
+		 * @param queues
+		 *            the resource queues.
+		 * @return {@code this} builder.
+		 */
+		public Builder withQueues(final Collection<Queue> queues) {
+			this.queues = queues;
+			return this;
+		}
+
+		/**
+		 * @return a new instance of {@link Resource}.
+		 */
+		public Resource newInstance() {
+			return new Resource(type, name, canModifyApplications, applications, queues);
 		}
 	}
 }

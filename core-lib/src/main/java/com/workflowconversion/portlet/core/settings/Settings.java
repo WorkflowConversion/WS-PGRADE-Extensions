@@ -24,7 +24,7 @@ public class Settings implements Serializable {
 
 	private static final long serialVersionUID = -1344935177312215690L;
 	private final PortletSanityCheck portletSanityCheck;
-	private final Collection<ResourceProvider> applicationProviders;
+	private final Collection<ResourceProvider> resourceProviders;
 	private final MiddlewareProvider middlewareProvider;
 	private final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass;
 	private final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
@@ -72,7 +72,7 @@ public class Settings implements Serializable {
 	 * @return The application providers.
 	 */
 	public Collection<ResourceProvider> getResourceProviders() {
-		return this.applicationProviders;
+		return this.resourceProviders;
 	}
 
 	/**
@@ -140,7 +140,7 @@ public class Settings implements Serializable {
 				"workflowManagerFactoryClass cannot be null, please use the Builder.withWorkflowProviderFactoryClass() method to set a non-null value");
 		Validate.notNull(workflowExporterFactoryClass,
 				"workflowExporterFactoryClass cannot be null, please use the Builder.withWorkflowExporterFactoryClass() method to set a non-null value");
-		this.applicationProviders = Collections.unmodifiableCollection(applicationProviders);
+		this.resourceProviders = Collections.unmodifiableCollection(applicationProviders);
 		this.portletSanityCheck = portletSanityCheck;
 		this.middlewareProvider = middlewareProvider;
 		this.workflowExporterFactoryClass = workflowExporterFactoryClass;

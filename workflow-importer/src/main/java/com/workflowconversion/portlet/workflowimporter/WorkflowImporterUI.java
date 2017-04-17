@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -31,11 +30,8 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
-import com.workflowconversion.portlet.core.resource.Application;
-import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.settings.Settings;
-import com.workflowconversion.portlet.core.utils.SystemWideKeyUtils;
 import com.workflowconversion.portlet.core.workflow.Job;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowManager;
@@ -80,14 +76,12 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		workflowManager = workflowManagerFactory.newInstance();
 		workflowManager.init();
 
-		final Map<String, Application> applicationMap = getApplications();
-
 		final ComboBox workflowComboBox = getWorkflowComboBox();
 		final Button importButton = createButton("Import...", "Import a workflow");
 
 		// fill the combobox with workflows
 		for (final Workflow workflow : workflowManager.getImportedWorkflows()) {
-			addWorkflowToComboBox(workflow, workflowComboBox, applicationMap);
+			addWorkflowToComboBox(workflow, workflowComboBox, Settings.getInstance().getResourceProviders());
 		}
 
 		final VerticalLayout workflowDetailsLayout = new VerticalLayout();
@@ -131,7 +125,7 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 			@Override
 			public void buttonClick(final ClickEvent event) {
 				try {
-					importButtonClicked(applicationMap, workflowComboBox);
+					importButtonClicked(Settings.getInstance().getResourceProviders(), workflowComboBox);
 				} finally {
 					importButton.setEnabled(true);
 				}
@@ -190,12 +184,13 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 		return mainLayout;
 	}
 
-	private void importButtonClicked(final Map<String, Application> applicationMap, final ComboBox workflowComboBox) {
+	private void importButtonClicked(final Collection<ResourceProvider> resourceProviders,
+			final ComboBox workflowComboBox) {
 		final Window importWorkflowDialog = new WorkflowUploadDialog(new WorkflowUploadListener() {
 			@Override
 			public void workflowUploaded(final File location) {
 				final Workflow uploadedWorkflow = workflowManager.importWorkflow(location);
-				addWorkflowToComboBox(uploadedWorkflow, workflowComboBox, applicationMap);
+				addWorkflowToComboBox(uploadedWorkflow, workflowComboBox, resourceProviders);
 				NotificationUtils.displayTrayMessage(
 						"The workflow was uploaded successfully. Don't forget to commit your changes by clicking on the [Save All] button.");
 
@@ -208,18 +203,6 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 			}
 		});
 		UI.getCurrent().addWindow(importWorkflowDialog);
-	}
-
-	private Map<String, Application> getApplications() {
-		final Map<String, Application> applicationMap = new TreeMap<String, Application>();
-		for (final ResourceProvider resourceProvider : resourceProviders) {
-			for (final Resource resource : resourceProvider.getResources()) {
-				for (final Application application : resource.getApplications()) {
-					applicationMap.put(SystemWideKeyUtils.generate(resource, application), application);
-				}
-			}
-		}
-		return Collections.unmodifiableMap(applicationMap);
 	}
 
 	private ComboBox getWorkflowComboBox() {
@@ -245,11 +228,11 @@ public class WorkflowImporterUI extends WorkflowConversionUI {
 
 	@SuppressWarnings("unchecked")
 	private void addWorkflowToComboBox(final Workflow workflow, final ComboBox workflowComboBox,
-			final Map<String, Application> applicationMap) {
+			final Collection<ResourceProvider> resourceProviders) {
 		final int id = workflowViewMap.size();
 		final Item item = workflowComboBox.addItem(id);
 		item.getItemProperty(PROPERTY_NAME_CAPTION).setValue(workflow.getName());
-		workflowViewMap.put(id, new WorkflowView(workflow, applicationMap));
+		workflowViewMap.put(id, new WorkflowView(workflow, resourceProviders));
 	}
 
 	private void saveButtonClicked() {

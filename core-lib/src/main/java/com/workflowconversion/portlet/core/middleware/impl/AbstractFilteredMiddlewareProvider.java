@@ -9,7 +9,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.filter.Filter;
-import com.workflowconversion.portlet.core.filter.impl.FilterFactory;
+import com.workflowconversion.portlet.core.filter.FilterApplicator;
+import com.workflowconversion.portlet.core.filter.impl.SimpleFilterFactory;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
 import dci.data.Item;
@@ -27,38 +28,36 @@ public abstract class AbstractFilteredMiddlewareProvider implements MiddlewarePr
 	private static final long serialVersionUID = -5954904339394289681L;
 
 	@Override
-	public final Collection<Middleware> getAvailableMiddlewares() {
+	public final Collection<Middleware> getEnabledMiddlewares() {
 		// filter only using availability
-		final FilterFactory middlewareFilter = new FilterFactory();
+		final SimpleFilterFactory middlewareFilter = new SimpleFilterFactory();
 		middlewareFilter.setEnabled(true);
-		return middlewareFilter.newMiddlewareFilter().apply(getAllMiddlewares());
+		return FilterApplicator.applyFilter(getAllMiddlewares(), middlewareFilter.newMiddlewareFilter());
 	}
 
 	@Override
-	public final Collection<Middleware> getAvailableMiddlewares(final String middlewareType) {
+	public final Collection<Middleware> getEnabledMiddlewares(final String middlewareType) {
 		Validate.isTrue(StringUtils.isNotBlank(middlewareType),
 				"middlewareType cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
 		// filter using availability and type
-		final FilterFactory middlewareFilter = new FilterFactory();
-		middlewareFilter.setEnabled(true).setType(middlewareType);
-		return middlewareFilter.newMiddlewareFilter().apply(getAllMiddlewares());
+		final SimpleFilterFactory middlewareFilter = new SimpleFilterFactory();
+		middlewareFilter.setEnabled(true).withType(middlewareType);
+		return FilterApplicator.applyFilter(getAllMiddlewares(), middlewareFilter.newMiddlewareFilter());
 	}
 
 	@Override
-	public final Collection<Item> getAvailableItems(final String middlewareType) {
+	public final Collection<Item> getEnabledItems(final String middlewareType) {
 		// get the middlewares first
 		Validate.isTrue(StringUtils.isNotBlank(middlewareType),
 				"middlewareType cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
 		// filter using availability and type
-		final Filter<Middleware> middlewareFilter = new FilterFactory().setEnabled(true).setType(middlewareType)
-				.newMiddlewareFilter();
-		final Collection<Middleware> availableMiddlewares = middlewareFilter.apply(getAllMiddlewares());
+		final Collection<Middleware> availableMiddlewares = getEnabledMiddlewares(middlewareType);
 
 		// filter the available items for each of the available middlewares
 		final Collection<Item> availableItems = new LinkedList<Item>();
-		final Filter<Item> itemFilter = new FilterFactory().setEnabled(true).newInstance();
+		final Filter<Item> itemFilter = new SimpleFilterFactory().setEnabled(true).newItemFilter();
 		for (final Middleware availableMiddleware : availableMiddlewares) {
-			availableItems.addAll(itemFilter.apply(availableMiddleware.getItem()));
+			availableItems.addAll(FilterApplicator.applyFilter(availableMiddleware.getItem(), itemFilter));
 		}
 
 		return availableItems;

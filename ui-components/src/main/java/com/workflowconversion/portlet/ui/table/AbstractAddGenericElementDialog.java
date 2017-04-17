@@ -41,7 +41,7 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 
 	protected final FieldGroup fieldGroup;
 	protected final GenericElementCommittedListener<T> listener;
-	protected T element;
+	protected Wrapper<T> elementWrapper;
 
 	protected AbstractAddGenericElementDialog(final String caption, final GenericElementCommittedListener<T> listener) {
 		Validate.isTrue(StringUtils.isNotBlank(caption),
@@ -60,7 +60,7 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 	 * Sets the default element and the layout.
 	 */
 	public void init() {
-		this.element = createDefaultElement();
+		this.elementWrapper = createDefaultElementWrapper();
 		setUpLayout();
 	}
 
@@ -69,13 +69,13 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 	 * 
 	 * @return the "default" element to display when the dialog opens.
 	 */
-	protected abstract T createDefaultElement();
+	protected abstract Wrapper<T> createDefaultElementWrapper();
 
 	protected void setUpLayout() {
 		final FormLayout formLayout = new FormLayout();
 
 		fieldGroup.setBuffered(true);
-		fieldGroup.setItemDataSource(new BeanItem<T>(element));
+		fieldGroup.setItemDataSource(new BeanItem<Wrapper<T>>(elementWrapper));
 
 		// add and bind components
 		addAndBindComponents(formLayout, fieldGroup);
@@ -89,7 +89,7 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 					fieldGroup.commit();
 					try {
 						// notify listeners that there's a committed application
-						listener.elementCommitted(element);
+						listener.elementCommitted(elementWrapper.get());
 					} finally {
 						// always close the dialog
 						removeFromParentWindow();

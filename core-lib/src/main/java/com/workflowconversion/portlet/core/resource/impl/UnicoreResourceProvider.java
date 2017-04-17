@@ -11,7 +11,6 @@ import org.unigrids.x2006.x04.services.tss.ApplicationResourceType;
 import org.w3.x2005.x08.addressing.EndpointReferenceType;
 
 import com.workflowconversion.portlet.core.exception.ApplicationException;
-import com.workflowconversion.portlet.core.exception.ProviderNotEditableException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Resource;
@@ -56,14 +55,14 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public boolean isEditable() {
+	public boolean canAddApplications() {
 		return false;
 	}
 
 	@Override
 	public Collection<Resource> getResources() {
 		// get the available unicore items
-		final Collection<Item> unicoreItems = middlewareProvider.getAvailableItems(UNICORE_RESOURCE_TYPE);
+		final Collection<Item> unicoreItems = middlewareProvider.getEnabledItems(UNICORE_RESOURCE_TYPE);
 
 		// extract the applications from each item
 		final Collection<Resource> resources = new LinkedList<Resource>();
@@ -86,22 +85,25 @@ public class UnicoreResourceProvider implements ResourceProvider {
 			for (final EndpointReferenceType epr : tsfEPRs) {
 				final String serverUrl = epr.getAddress().getStringValue().trim();
 				final TSFClient tsf = new TSFClient(serverUrl, epr, securityProperties);
-				final Resource resource = new Resource();
-				resource.setType(UNICORE_RESOURCE_TYPE);
-				resource.setName(resourceName);
+				final Resource.Builder resourceBuilder = new Resource.Builder();
+				resourceBuilder.withType(UNICORE_RESOURCE_TYPE).withName(resourceName);
+				// UNICORE does not allow to add applications
+				resourceBuilder.canModifyApplications(false);
 				if (tsf != null && tsf.getResourcePropertiesDocument() != null) {
+					final Collection<Application> extractedApplications = new LinkedList<Application>();
 					for (final ApplicationResourceType unicoreApp : tsf.getResourcePropertiesDocument()
 							.getTargetSystemFactoryProperties().getApplicationResourceArray()) {
-						final Application app = new Application();
-						app.setName(unicoreApp.getApplicationName());
-						app.setVersion(unicoreApp.getApplicationVersion());
-						app.setDescription(unicoreApp.getDescription());
+						final Application.Builder applicationBuilder = new Application.Builder();
+						applicationBuilder.withName(unicoreApp.getApplicationName());
+						applicationBuilder.withVersion(unicoreApp.getApplicationVersion());
+						applicationBuilder.withDescription(unicoreApp.getDescription());
 						// UNICORE hides application details such as its path
-						app.setPath("not available");
-						resource.addApplication(app);
+						applicationBuilder.withPath("not available");
+						extractedApplications.add(applicationBuilder.newInstance());
 					}
+					resourceBuilder.withApplications(extractedApplications);
 				}
-				resources.add(resource);
+				resources.add(resourceBuilder.newInstance());
 
 			}
 		} catch (final Exception e) {
@@ -137,31 +139,6 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void addResource(final Resource app) throws ProviderNotEditableException {
-		throw new ProviderNotEditableException(
-				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
-	}
-
-	@Override
-	public void saveResource(final Resource app) throws ProviderNotEditableException {
-		throw new ProviderNotEditableException(
-				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
-	}
-
-	@Override
-	public boolean containsResource(final Resource resource) {
-		Validate.notNull(resource, "resource cannot be null");
-		final Collection<Resource> resources = getResources();
-		final String key = resource.generateKey();
-		for (final Resource existentResource : resources) {
-			if (key.equals(existentResource.generateKey())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
 	public void init() {
 		// nop
 	}
@@ -172,21 +149,7 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void removeResource(final Resource resource) throws ProviderNotEditableException {
-		throw new ProviderNotEditableException(
-				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
+	public void saveApplications() {
+		// nop
 	}
-
-	@Override
-	public void removeAllResources() throws ProviderNotEditableException {
-		throw new ProviderNotEditableException(
-				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
-	}
-
-	@Override
-	public void commitChanges() throws ProviderNotEditableException {
-		throw new ProviderNotEditableException(
-				"The UNICORE ApplicationProvider is not editable! This is an invalid operation.");
-	}
-
 }

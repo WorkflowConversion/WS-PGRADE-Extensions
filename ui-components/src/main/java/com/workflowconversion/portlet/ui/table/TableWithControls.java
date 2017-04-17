@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import com.vaadin.data.Container;
 import com.vaadin.ui.Component;
-import com.workflowconversion.portlet.core.resource.HasKey;
 
 /**
  * Table to display generic elements. Contains methods to add items of a specific type, batch save changes and determine
@@ -13,7 +12,7 @@ import com.workflowconversion.portlet.core.resource.HasKey;
  * @author delagarza
  *
  */
-public interface TableWithControls<T extends HasKey>
+public interface TableWithControls<T>
 		extends Component, GenericElementCommittedListener<T>, GenericElementDetailsCommittedListener<T> {
 	/**
 	 * {@link Container} contains {@link #addItem(Object))}, but we need to enforce that implementations accept only

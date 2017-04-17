@@ -5,6 +5,7 @@ import org.apache.commons.lang.Validate;
 
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Queue;
+import com.workflowconversion.portlet.core.resource.Resource;
 
 /**
  * Simple class that represents jobs in imported workflows.
@@ -16,6 +17,7 @@ public class Job {
 
 	private final String name;
 	private String parameters;
+	private Resource resource;
 	private Application application;
 	private Queue queue;
 
@@ -85,29 +87,36 @@ public class Job {
 	}
 
 	/**
-	 * Shortcut method to obtain the resource type.
-	 * 
-	 * @return the resource type associated with this job's application or {@code null} if there's no application or
-	 *         resource associated to this job.
+	 * @return the resource
 	 */
-	public String getResourceType() {
-		if (application != null && application.getResource() != null) {
-			return application.getResource().getType();
-		}
-		return null;
+	public Resource getResource() {
+		return resource;
 	}
 
 	/**
-	 * Shortcut method to obtain the resource name.
+	 * @param resource
+	 *            the resource to set
+	 */
+	public void setResource(final Resource resource) {
+		this.resource = resource;
+	}
+
+	/**
+	 * Shortcut method to access the resource type of this job.
 	 * 
-	 * @return the resource name associated with this job's application or {@code null} if there's no application or
-	 *         resource associated to this job.
+	 * @return the resource type of this job, or {@code null} if no resource has been associated with this job.
+	 */
+	public String getResourceType() {
+		return (resource == null ? null : resource.getType());
+	}
+
+	/**
+	 * Shortcut method to access the resource name of this job.
+	 * 
+	 * @return the resource name of this job, or {@code null} i fno resource has been associated with this job.
 	 */
 	public String getResourceName() {
-		if (application != null && application.getResource() != null) {
-			return application.getResource().getName();
-		}
-		return null;
+		return (resource == null ? null : resource.getName());
 	}
 
 	/*

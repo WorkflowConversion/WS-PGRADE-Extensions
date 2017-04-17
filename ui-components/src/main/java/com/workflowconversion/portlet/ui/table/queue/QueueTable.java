@@ -1,13 +1,9 @@
 package com.workflowconversion.portlet.ui.table.queue;
 
-import org.apache.commons.lang.StringUtils;
-import org.jsoup.helper.Validate;
-
 import com.vaadin.data.Item;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.resource.Queue;
-import com.workflowconversion.portlet.core.resource.Resource;
-import com.workflowconversion.portlet.ui.table.AbstractAddGenericElementDialog;
+import com.workflowconversion.portlet.core.utils.KeyUtils;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControls;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControlsFactory;
 import com.workflowconversion.portlet.ui.table.Size;
@@ -21,19 +17,18 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  */
 public class QueueTable extends AbstractTableWithControls<Queue> {
 
-	private static final long serialVersionUID = -6243453484525350648L;
+	private final static long serialVersionUID = -6243453484525350648L;
+	private final static String PROPERTY_QUEUE = "QueueTable_property_queue";
 
-	private final Resource owningResource;
-
-	private QueueTable(final Resource resource, final String title, final boolean withEditControls,
-			final boolean withDetails, final boolean allowDuplicates, final boolean allowMultipleSelection) {
-		super(title, withEditControls, withDetails, allowDuplicates, allowMultipleSelection);
-		this.owningResource = resource;
+	private QueueTable(final String title) {
+		super(title, false, false);
 	}
 
 	@Override
 	protected void setUpContainerProperties() {
 		super.addContainerProperty(Queue.Field.Name, TextField.class);
+		// no need to add type, this is a hidden property
+		super.addContainerProperty(PROPERTY_QUEUE);
 	}
 
 	@Override
@@ -47,43 +42,26 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 	}
 
 	@Override
-	protected Object[] getVisibleColumns() {
-		return new Object[] { Queue.Field.Name };
+	protected String getKeyForItem(final Item item) {
+		final String name = ((TextField) (item.getItemProperty(Queue.Field.Name).getValue())).getValue();
+		return KeyUtils.generateQueueKey(name);
 	}
 
 	@Override
-	protected void validate(final Queue queue) {
-		Validate.notNull(queue, "queue cannot be null");
-		Validate.isTrue(StringUtils.isNotBlank(queue.getName()),
-				"queue name cannot be null, empty or contain only whitespace characters.");
+	protected Object[] getVisibleColumns() {
+		return new Object[] { Queue.Field.Name };
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void fillItemProperties(final Queue queue, final Item item) {
 		item.getItemProperty(Queue.Field.Name).setValue(super.newTextFieldWithValue(queue.getName()));
-	}
-
-	@Override
-	protected void beforeSaveAllChanges() {
-		owningResource.removeAllQueues();
+		item.getItemProperty(PROPERTY_QUEUE).setValue(queue);
 	}
 
 	@Override
 	protected Queue convertFromItem(final Item item) {
-		final Queue queue = new Queue();
-		queue.setName(((TextField) item.getItemProperty(Queue.Field.Name).getValue()).getValue());
-		return queue;
-	}
-
-	@Override
-	protected void save(final Queue queue) {
-		owningResource.addQueue(queue);
-	}
-
-	@Override
-	protected AbstractAddGenericElementDialog<Queue> createAddElementDialog() {
-		return new AddQueueDialog(this);
+		return (Queue) item.getItemProperty(PROPERTY_QUEUE).getValue();
 	}
 
 	/**
@@ -92,17 +70,10 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 	 * @author delagarza
 	 */
 	public static class QueueTableFactory extends AbstractTableWithControlsFactory<Queue> {
-		private Resource owningResource;
 
 		@Override
 		public TableWithControls<Queue> newInstance() {
-			return new QueueTable(owningResource, super.title, super.allowEdition, super.withDetails,
-					super.allowDuplicates, super.allowMultipleSelection);
-		}
-
-		public QueueTableFactory withOwningResource(final Resource owningResource) {
-			this.owningResource = owningResource;
-			return this;
+			return new QueueTable(super.title);
 		}
 
 	}
