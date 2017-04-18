@@ -90,7 +90,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	 * 
 	 * @author delagarza
 	 */
-	public static class ResourceTableFactory extends AbstractTableWithControlsFactory<Resource> {
+	public static class ResourcesTableFactory extends AbstractTableWithControlsFactory<Resource> {
 
 		@Override
 		public TableWithControls<Resource> newInstance() {

@@ -25,10 +25,10 @@ import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
-import com.workflowconversion.portlet.ui.resource.upload.BulkUploadResourcesDialog;
+import com.workflowconversion.portlet.ui.resource.upload.BulkUploadApplicationsDialog;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
 import com.workflowconversion.portlet.ui.table.resource.ResourcesTable;
-import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourceTableFactory;
+import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourcesTableFactory;
 
 /**
  * Entry point for this portlet.
@@ -55,7 +55,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	protected Layout prepareContent() {
 		final Layout resourceTableLayout = new VerticalLayout();
 		final ComboBox resourceProviderComboBox = getResourceProviderComboBox();
-		final Button saveButton = new Button("Save changes");
+		final Button saveButton = new Button("Save All");
 		saveButton.setImmediate(true);
 		saveButton.setEnabled(false);
 		saveButton.setDisableOnClick(true);
@@ -90,7 +90,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 					bulkUploadButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
 
 					resourceTableLayout.removeAllComponents();
-
 					resourceTableLayout.addComponent(uiComponents.resourceTable);
 
 					// make sure that the checkbox and the state of the tables is consistent
@@ -107,8 +106,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 				try {
 					final int selectedResourceProviderId = ((Integer) resourceProviderComboBox.getValue());
 					final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
-					uiComponents.resourceTable.clearSelection();
-					uiComponents.resourceTable.saveAllChanges();
 					uiComponents.resourceProvider.saveApplications();
 				} finally {
 					saveButton.setEnabled(true);
@@ -162,8 +159,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 					"It is not posssible to add applications to this provider. This seems to be a coding problem and should be reported.");
 		}
 
-		final Window bulkUploadDialog = new BulkUploadResourcesDialog(uiComponents.resourceTable,
-				Settings.getInstance().getMiddlewareProvider());
+		final Window bulkUploadDialog = new BulkUploadApplicationsDialog(uiComponents.resourceProvider);
 
 		if (bulkUploadDialog.getParent() != null) {
 			NotificationUtils.displayWarning(
@@ -173,7 +169,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	}
 
 	private UIComponents buildUiComponentsForResourceProvider(final ResourceProvider resourceProvider) {
-		final ResourceTableFactory factory = new ResourceTableFactory();
+		final ResourcesTableFactory factory = new ResourcesTableFactory();
 		// cannot edit resource tables, just the applications
 		factory.withTitle("Resources");
 		final TableWithControls<Resource> resourceTable = factory.newInstance();

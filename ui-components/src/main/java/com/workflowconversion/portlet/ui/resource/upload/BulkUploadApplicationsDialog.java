@@ -32,11 +32,9 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
-import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
-import com.workflowconversion.portlet.core.resource.Resource;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
-import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
 
 /**
  * Modal dialog through which a file containing resources can be uploaded.
@@ -44,35 +42,31 @@ import com.workflowconversion.portlet.ui.table.GenericElementCommittedListener;
  * @author delagarza
  *
  */
-public class BulkUploadResourcesDialog extends Window {
+public class BulkUploadApplicationsDialog extends Window {
 
 	private static final String SAMPLE_RESOURCE_FILE_NAME = "sample_resource_file.xml";
 
 	private static final long serialVersionUID = -2587575066352088585L;
 
-	private final static Logger LOG = LoggerFactory.getLogger(BulkUploadResourcesDialog.class);
+	private final static Logger LOG = LoggerFactory.getLogger(BulkUploadApplicationsDialog.class);
 
 	private File serverSideFile;
 	// polling file upload progress happens in another thread
 	private final AtomicLong contentLength;
 	private final Collection<String> errors;
-	private final GenericElementCommittedListener<Resource> elementCommittedListener;
-	private final MiddlewareProvider middlewareProvider;
+	private final ResourceProvider resourceProvider;
 	private final Upload upload;
 
 	/**
-	 * @param batchCommittedListener
-	 *            a listener that will be informed of parsed, valid, uploaded resources.
-	 * @param middlewareProvider
-	 *            the middleware provider.
+	 * @param resourceProvider
+	 *            the resource provider with which the applications will be associated.
 	 */
-	public BulkUploadResourcesDialog(final GenericElementCommittedListener<Resource> batchCommittedListener,
-			final MiddlewareProvider middlewareProvider) {
-		Validate.notNull(batchCommittedListener, "batchCommittedListener cannot be null");
-		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
+	public BulkUploadApplicationsDialog(final ResourceProvider resourceProvider) {
+		Validate.notNull(resourceProvider, "resourceProvider cannot be null.");
+		Validate.isTrue(resourceProvider.canAddApplications(),
+				"the passed resource provider does not support adding applicatons.");
 
-		this.elementCommittedListener = batchCommittedListener;
-		this.middlewareProvider = middlewareProvider;
+		this.resourceProvider = resourceProvider;
 
 		this.contentLength = new AtomicLong();
 		this.errors = new LinkedList<String>();
@@ -103,7 +97,7 @@ public class BulkUploadResourcesDialog extends Window {
 
 			@Override
 			public void buttonClick(final ClickEvent event) {
-				BulkUploadResourcesDialog.this.close();
+				BulkUploadApplicationsDialog.this.close();
 			}
 		});
 
@@ -185,7 +179,7 @@ public class BulkUploadResourcesDialog extends Window {
 			public InputStream getStream() {
 				try {
 					return new BufferedInputStream(
-							BulkUploadResourcesDialog.class.getResourceAsStream('/' + SAMPLE_RESOURCE_FILE_NAME));
+							BulkUploadApplicationsDialog.class.getResourceAsStream('/' + SAMPLE_RESOURCE_FILE_NAME));
 				} catch (final Exception e) {
 					LOG.error("Could not create stream for sample file", e);
 					return null;
@@ -195,12 +189,11 @@ public class BulkUploadResourcesDialog extends Window {
 	}
 
 	void processFile(final File file, final FileType fileType) {
-		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener(elementCommittedListener);
+		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener();
 		final AbstractFileProcessor fileProcessor;
 		switch (fileType) {
 		case XML:
-			fileProcessor = new XMLBulkResourcesFileProcessor(file, bulkUploadListener,
-					middlewareProvider.getAllMiddlewareTypes());
+			fileProcessor = new XMLBulkResourcesFileProcessor(file, bulkUploadListener, resourceProvider);
 			break;
 		default:
 			LOG.error("Upload file format not handled: " + fileType);
@@ -213,12 +206,10 @@ public class BulkUploadResourcesDialog extends Window {
 
 	private class DefaultBulkUploadListener implements BulkUploadListener {
 
-		private final GenericElementCommittedListener<Resource> elementCommittedListener;
 		private final Collection<String> errors;
 		private final Collection<String> warnings;
 
-		private DefaultBulkUploadListener(final GenericElementCommittedListener<Resource> elementCommittedListener) {
-			this.elementCommittedListener = elementCommittedListener;
+		private DefaultBulkUploadListener() {
 			this.errors = new LinkedList<String>();
 			this.warnings = new LinkedList<String>();
 		}
@@ -249,47 +240,37 @@ public class BulkUploadResourcesDialog extends Window {
 		}
 
 		@Override
-		public void parsingCompleted(final Collection<Resource> parsedResources) {
-			int nAddedResources = 0;
+		public void parsingCompleted(final int numberOfParsedElements) {
 			try {
-				NotificationUtils.displayTrayMessage("Parsed " + parsedResources.size() + " resource(s).");
-				for (final Resource parsedResource : parsedResources) {
-					try {
-						elementCommittedListener.elementCommitted(parsedResource);
-						nAddedResources++;
-					} catch (final Exception e) {
-						LOG.error("Could not add resource " + nAddedResources, e);
-						errors.add("Could not add resource " + nAddedResources + ", reason: " + e.getMessage());
+				if (errors.isEmpty()) {
+					final String message = "Parsed and added " + numberOfParsedElements
+							+ " resource(s) without errors.";
+					NotificationUtils.displayTrayMessage(message);
+				} else {
+					final StringBuilder formattedError = new StringBuilder("<h3>Parsed and added ");
+					formattedError.append(numberOfParsedElements)
+							.append(" applications(s) and found the following errors:</h3><ul>");
+					for (final String error : errors) {
+						formattedError.append("<li>").append(error);
 					}
+					formattedError.append("</ul>");
+					NotificationUtils.displayError(formattedError.toString());
 				}
+				if (!warnings.isEmpty()) {
+					final StringBuilder formattedWarnings = new StringBuilder(
+							"<h3>The following warnings were generated while parsing the applications file:");
+					for (final String warning : warnings) {
+						formattedWarnings.append("<li>").append(warning);
+					}
+					formattedWarnings.append("</ul>");
+					NotificationUtils.displayWarning(formattedWarnings.toString());
+				}
+				NotificationUtils
+						.displayTrayMessage("Don't forget to save your changes by pressing the 'Save All' button.");
 			} finally {
-				try {
-					if (errors.isEmpty()) {
-						final String message = "Parsed and added " + nAddedResources + " resource(s) without errors.";
-						NotificationUtils.displayTrayMessage(message);
-					} else {
-						final StringBuilder formattedError = new StringBuilder("<h3>Parsed and added ");
-						formattedError.append(nAddedResources)
-								.append(" resource(s) and found the following errors:</h3><ul>");
-						for (final String error : errors) {
-							formattedError.append("<li>").append(error);
-						}
-						formattedError.append("</ul>");
-						NotificationUtils.displayError(formattedError.toString());
-					}
-					if (!warnings.isEmpty()) {
-						final StringBuilder formattedWarnings = new StringBuilder(
-								"<h3>The following warnings were generated while parsing the resources file:");
-						for (final String warning : warnings) {
-							formattedWarnings.append("<li>").append(warning);
-						}
-						formattedWarnings.append("</ul>");
-						NotificationUtils.displayWarning(formattedWarnings.toString());
-					}
-				} finally {
-					upload.setEnabled(true);
-				}
+				upload.setEnabled(true);
 			}
+
 		}
 
 	}

@@ -99,6 +99,17 @@ public class ClusterResourceProvider implements ResourceProvider {
 	}
 
 	@Override
+	public Resource getResource(final String name, final String type) {
+		final Lock readLock = readWriteLock.readLock();
+		readLock.lock();
+		try {
+			return resources.get(KeyUtils.generateResourceKey(name, type));
+		} finally {
+			readLock.unlock();
+		}
+	}
+
+	@Override
 	public void saveApplications() {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();

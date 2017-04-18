@@ -23,4 +23,9 @@ public interface FormField {
 	 * @return the name to display on tables/dialogs.
 	 */
 	public String getDisplayName();
+
+	/**
+	 * @return the name of this field.
+	 */
+	public String name();
 }

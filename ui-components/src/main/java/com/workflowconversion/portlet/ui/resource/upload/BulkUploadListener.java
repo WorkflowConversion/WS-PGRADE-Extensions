@@ -1,9 +1,5 @@
 package com.workflowconversion.portlet.ui.resource.upload;
 
-import java.util.Collection;
-
-import com.workflowconversion.portlet.core.resource.Resource;
-
 /**
  * Interface for listeners interested in bulk upload events.
  * 
@@ -56,8 +52,8 @@ public interface BulkUploadListener {
 	/**
 	 * Parsing completed.
 	 * 
-	 * @param parsedResources
-	 *            the collection of resources that were parsed from the input file.
+	 * @param numberOfParsedElements
+	 *            the number of parsed elements.
 	 */
-	void parsingCompleted(final Collection<Resource> parsedResources);
+	void parsingCompleted(int numberOfParsedElements);
 }

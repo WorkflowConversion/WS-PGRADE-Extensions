@@ -102,6 +102,11 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 		return resources.values();
 	}
 
+	@Override
+	public Resource getResource(final String name, final String type) {
+		return resources.get(KeyUtils.generateResourceKey(name, type));
+	}
+
 	private void addResource_internal(final Resource resource) {
 		Validate.notNull(resource);
 		resources.put(KeyUtils.generate(resource), resource);

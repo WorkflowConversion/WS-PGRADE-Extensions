@@ -1,8 +1,12 @@
 package com.workflowconversion.portlet.core.resource.impl;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
@@ -10,11 +14,14 @@ import org.slf4j.LoggerFactory;
 import org.unigrids.x2006.x04.services.tss.ApplicationResourceType;
 import org.w3.x2005.x08.addressing.EndpointReferenceType;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
+import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 import dci.data.Item;
 import dci.data.Item.Unicore;
@@ -33,9 +40,11 @@ import de.fzj.unicore.wsrflite.xmlbeans.client.RegistryClient;
  */
 public class UnicoreResourceProvider implements ResourceProvider {
 
-	private static final long serialVersionUID = 6542266373514172909L;
+	private final static long serialVersionUID = 6542266373514172909L;
 
 	private final static Logger LOG = LoggerFactory.getLogger(UnicoreResourceProvider.class);
+
+	private final Supplier<Map<String, Resource>> cachedResources;
 
 	/**
 	 * Since it is not possible to add UNICORE applications, some classes might find this constant useful.
@@ -52,6 +61,27 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	public UnicoreResourceProvider(final MiddlewareProvider middlewareProvider) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		this.middlewareProvider = middlewareProvider;
+		this.cachedResources = Suppliers.memoizeWithExpiration(new Supplier<Map<String, Resource>>() {
+
+			@Override
+			public Map<String, Resource> get() {
+				return getResources_internal();
+			}
+
+		}, 30, TimeUnit.MINUTES);
+	}
+
+	private Map<String, Resource> getResources_internal() {
+		// get the available unicore items
+		final Collection<Item> unicoreItems = middlewareProvider.getEnabledItems(UNICORE_RESOURCE_TYPE);
+
+		// extract the applications from each item
+		final Map<String, Resource> resources = new TreeMap<String, Resource>();
+		for (final Item item : unicoreItems) {
+			extractResourcesFromUnicoreInstance(item, resources);
+		}
+
+		return resources;
 	}
 
 	@Override
@@ -61,19 +91,15 @@ public class UnicoreResourceProvider implements ResourceProvider {
 
 	@Override
 	public Collection<Resource> getResources() {
-		// get the available unicore items
-		final Collection<Item> unicoreItems = middlewareProvider.getEnabledItems(UNICORE_RESOURCE_TYPE);
-
-		// extract the applications from each item
-		final Collection<Resource> resources = new LinkedList<Resource>();
-		for (final Item item : unicoreItems) {
-			extractResourcesFromUnicoreInstance(item, resources);
-		}
-
-		return resources;
+		return Collections.unmodifiableCollection(cachedResources.get().values());
 	}
 
-	private void extractResourcesFromUnicoreInstance(final Item item, final Collection<Resource> resources) {
+	@Override
+	public Resource getResource(final String name, final String type) {
+		return cachedResources.get().get(KeyUtils.generateResourceKey(name, type));
+	}
+
+	private void extractResourcesFromUnicoreInstance(final Item item, final Map<String, Resource> resources) {
 		try {
 			final Unicore unicoreConfigItem = item.getUnicore();
 			final ClientProperties securityProperties = createClientProperties(unicoreConfigItem);
@@ -103,7 +129,8 @@ public class UnicoreResourceProvider implements ResourceProvider {
 					}
 					resourceBuilder.withApplications(extractedApplications);
 				}
-				resources.add(resourceBuilder.newInstance());
+				final Resource loadedResource = resourceBuilder.newInstance();
+				resources.put(KeyUtils.generate(loadedResource), loadedResource);
 
 			}
 		} catch (final Exception e) {
@@ -140,7 +167,8 @@ public class UnicoreResourceProvider implements ResourceProvider {
 
 	@Override
 	public void init() {
-		// nop
+		// force a cache load
+		cachedResources.get();
 	}
 
 	@Override
@@ -150,6 +178,7 @@ public class UnicoreResourceProvider implements ResourceProvider {
 
 	@Override
 	public void saveApplications() {
-		// nop
+		throw new ApplicationException(
+				"This provider does not support adding/editing applications. This is probably a coding problem and should be reported.");
 	}
 }

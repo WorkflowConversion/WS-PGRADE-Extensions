@@ -39,6 +39,15 @@ public interface ResourceProvider extends Serializable {
 	public Collection<Resource> getResources();
 
 	/**
+	 * @param name
+	 *            the resource name.
+	 * @param type
+	 *            the resource type.
+	 * @return the matching resource, or {@code null} if this provider doesn't contain such a resource.
+	 */
+	public Resource getResource(final String name, final String type);
+
+	/**
 	 * Signals implementations that changes done to the resources should be saved.
 	 */
 	public void saveApplications();
