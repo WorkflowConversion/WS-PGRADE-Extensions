@@ -5,10 +5,11 @@ import com.workflowconversion.portlet.ui.table.Wrapper;
 
 public class ApplicationWrapper implements Wrapper<Application> {
 
-	private String name;
-	private String version;
-	private String path;
-	private String description;
+	// default all properties to ""
+	private String name = "";
+	private String version = "";
+	private String path = "";
+	private String description = "";
 
 	@Override
 	public Application get() {

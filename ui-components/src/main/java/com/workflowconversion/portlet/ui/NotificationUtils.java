@@ -21,7 +21,7 @@ public class NotificationUtils {
 	 *            the message to display.
 	 */
 	public static void displayWarning(final String text) {
-		displayDialog(text, Type.WARNING_MESSAGE);
+		displayHtmlNotification(NOTIFICATION_TITLE, text, Type.WARNING_MESSAGE);
 	}
 
 	/**
@@ -31,7 +31,7 @@ public class NotificationUtils {
 	 *            the message to display.
 	 */
 	public static void displayError(final String text) {
-		displayDialog(text, Type.ERROR_MESSAGE);
+		displayHtmlNotification(NOTIFICATION_TITLE, text, Type.ERROR_MESSAGE);
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class NotificationUtils {
 	 *            the thrown exception.
 	 */
 	public static void displayError(final String text, final Exception e) {
-		displayDialog(text + " -- Reason: " + e.getMessage(), Type.ERROR_MESSAGE);
+		displayHtmlNotification(NOTIFICATION_TITLE, text + " -- Reason: " + e.getMessage(), Type.ERROR_MESSAGE);
 	}
 
 	/**
@@ -69,10 +69,5 @@ public class NotificationUtils {
 	private static void displayHtmlNotification(final String caption, final String text, final Type type) {
 		final Notification notification = new Notification(caption, text, type, true);
 		notification.show(Page.getCurrent());
-	}
-
-	private static void displayDialog(final String text, final Type type) {
-		final ModalMessageDialog dialog = new ModalMessageDialog(NOTIFICATION_TITLE, text, type);
-		dialog.display();
 	}
 }

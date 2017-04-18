@@ -50,18 +50,19 @@ public class ClusterResourceProvider implements ResourceProvider {
 
 	private final MiddlewareProvider middlewareProvider;
 	private final ReadWriteLock readWriteLock;
-	private final File jaxbResourceXmlFile;
+	private final File jaxbApplicationsXmlFile;
 
 	/**
-	 * 
 	 * @param middlewareProvider
-	 * @param jaxbResourceXmlFileLocation
+	 *            the middleware provider.
+	 * @param jaxbApplicationsXmlFileLocation
+	 *            the location on which the applications will be stored.
 	 */
 	public ClusterResourceProvider(final MiddlewareProvider middlewareProvider,
-			final String jaxbResourceXmlFileLocation) {
+			final String jaxbApplicationsXmlFileLocation) {
 		this.resources = new TreeMap<String, Resource>();
 		this.middlewareProvider = middlewareProvider;
-		this.jaxbResourceXmlFile = new File(jaxbResourceXmlFileLocation);
+		this.jaxbApplicationsXmlFile = new File(jaxbApplicationsXmlFileLocation);
 		this.readWriteLock = new ReentrantReadWriteLock(false);
 	}
 
@@ -123,6 +124,9 @@ public class ClusterResourceProvider implements ResourceProvider {
 	// ###### LOAD/SAVE METHODS ######
 	// poor naming convention, but it has to be clear that the load/save methods are to be externally made thread safe
 	private void saveToFile_notThreadSafe() {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("saving applications to " + jaxbApplicationsXmlFile.getAbsolutePath());
+		}
 		try {
 			ensureParentFolderExists_notThreadSafe();
 			final JAXBContext jaxbContext = JAXBContext.newInstance(JAXBResourceDatabase.class);
@@ -131,18 +135,18 @@ public class ClusterResourceProvider implements ResourceProvider {
 
 			final JAXBResourceDatabase resourceDatabase = new JAXBResourceDatabase();
 			resourceDatabase.addResources(this.resources.values());
-			jaxbMarshaller.marshal(resourceDatabase, jaxbResourceXmlFile);
+			jaxbMarshaller.marshal(resourceDatabase, jaxbApplicationsXmlFile);
 		} catch (final JAXBException | IOException e) {
 			throw new ApplicationException("Could not save resources", e);
 		}
 	}
 
 	private void ensureParentFolderExists_notThreadSafe() throws IOException {
-		if (!jaxbResourceXmlFile.exists()) {
-			final File parentDirectory = jaxbResourceXmlFile.getParentFile();
+		if (!jaxbApplicationsXmlFile.exists()) {
+			final File parentDirectory = jaxbApplicationsXmlFile.getParentFile();
 			if (parentDirectory == null) {
 				throw new IOException("Invalid location of applications database file! File location: "
-						+ jaxbResourceXmlFile.getCanonicalPath());
+						+ jaxbApplicationsXmlFile.getCanonicalPath());
 			}
 			FileUtils.forceMkdir(parentDirectory);
 		}
@@ -150,16 +154,19 @@ public class ClusterResourceProvider implements ResourceProvider {
 
 	// @SuppressWarnings("unchecked")
 	private void loadResourcesFromFile_notThreadSafe() {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("loading applications from " + jaxbApplicationsXmlFile.getAbsolutePath());
+		}
 		try {
 			resources.clear();
 
 			// if the file does not exist, don't load anything and log this event
-			if (jaxbResourceXmlFile.exists()) {
+			if (jaxbApplicationsXmlFile.exists()) {
 				final JAXBContext jaxbContext = JAXBContext.newInstance(JAXBResourceDatabase.class);
 				final Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
 				final JAXBResourceDatabase storedResources = (JAXBResourceDatabase) jaxbUnmarshaller
-						.unmarshal(jaxbResourceXmlFile);
+						.unmarshal(jaxbApplicationsXmlFile);
 
 				// check that the stored resources match the available resources
 				final Map<String, Item> enabledClusterItemMap = getEnabledClusterItemMap_notThreadSafe();
@@ -185,7 +192,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 			} else {
 				LOG.info(
 						"The xml file in which the applications are stored does not exist yet. It will be created once a save operation is performed. File location: "
-								+ jaxbResourceXmlFile.getAbsolutePath());
+								+ jaxbApplicationsXmlFile.getAbsolutePath());
 			}
 		} catch (final JAXBException e) {
 			throw new ApplicationException("Could not load resources", e);

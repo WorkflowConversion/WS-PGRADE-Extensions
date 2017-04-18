@@ -1,10 +1,14 @@
 package com.workflowconversion.portlet.ui.table.resource;
 
+import org.apache.commons.lang.Validate;
+
 import com.vaadin.data.Item;
-import com.vaadin.ui.TextField;
+import com.vaadin.ui.Label;
+import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.resource.Resource;
+import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.utils.KeyUtils;
-import com.workflowconversion.portlet.ui.table.AbstractGenericElementDetailDialog;
+import com.workflowconversion.portlet.ui.table.AbstractGenericElementDetailsDialog;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControls;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControlsFactory;
 import com.workflowconversion.portlet.ui.table.Size;
@@ -17,24 +21,29 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  *
  */
 public class ResourcesTable extends AbstractTableWithControls<Resource> {
-	private static final long serialVersionUID = 4634915248824534764L;
+	private final static long serialVersionUID = 4634915248824534764L;
 
 	private final static String PROPERTY_RESOURCE = "ResourcesTable_property_resource";
+
+	private final ResourceProvider resourceProvider;
 
 	/**
 	 * The size of a couple of components depends on the width of this table.
 	 */
 	public static final int WIDTH_PIXELS = 650;
 
-	private ResourcesTable(final String title) {
+	private ResourcesTable(final String title, final ResourceProvider resourceProvider) {
 		// cannot modify resources
 		super(title, false, true);
+		Validate.notNull(resourceProvider,
+				"resourceProvider cannot be null. This seems to be a coding problem and should be reported.");
+		this.resourceProvider = resourceProvider;
 	}
 
 	@Override
 	protected void setUpContainerProperties() {
-		addContainerProperty(Resource.Field.Name, TextField.class);
-		addContainerProperty(Resource.Field.Type, TextField.class);
+		addContainerProperty(Resource.Field.Name, Label.class);
+		addContainerProperty(Resource.Field.Type, Label.class);
 		// no need to provide a type, since these two properties are hidden
 		// and their type will be set to Object.class
 		addContainerProperty(Resource.Field.Queues);
@@ -60,8 +69,8 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void fillItemProperties(final Resource resource, final Item item) {
-		item.getItemProperty(Resource.Field.Name).setValue(newTextFieldWithValue(resource.getName()));
-		item.getItemProperty(Resource.Field.Type).setValue(newTextFieldWithValue(resource.getType()));
+		item.getItemProperty(Resource.Field.Name).setValue(newLabelWithValue(resource.getName()));
+		item.getItemProperty(Resource.Field.Type).setValue(newLabelWithValue(resource.getType()));
 		item.getItemProperty(Resource.Field.Queues).setValue(resource.getQueues());
 		item.getItemProperty(Resource.Field.Applications).setValue(resource.getApplications());
 		item.getItemProperty(PROPERTY_RESOURCE).setValue(resource);
@@ -69,8 +78,8 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 
 	@Override
 	protected String getKeyForItem(final Item item) {
-		final String name = ((TextField) (item.getItemProperty(Resource.Field.Name).getValue())).getValue();
-		final String type = ((TextField) (item.getItemProperty(Resource.Field.Type).getValue())).getValue();
+		final String name = ((Label) (item.getItemProperty(Resource.Field.Name).getValue())).getValue();
+		final String type = ((Label) (item.getItemProperty(Resource.Field.Type).getValue())).getValue();
 		return KeyUtils.generateResourceKey(name, type);
 	}
 
@@ -80,9 +89,21 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	}
 
 	@Override
-	protected AbstractGenericElementDetailDialog<Resource> createElementDetailDialog(final Object itemId,
+	protected AbstractGenericElementDetailsDialog<Resource> createElementDetailDialog(final Object itemId,
 			final Resource element) {
-		return new ResourceDetaislDialog(itemId, element, this, element.canModifyApplications());
+		return new ResourceDetailsDialog(itemId, element, this, element.canModifyApplications());
+	}
+
+	@Override
+	public void elementDetailsSaved(final Object itemId, final Resource element) {
+		if (resourceProvider.canAddApplications() && element.canModifyApplications()) {
+			super.elementDetailsSaved(itemId, element);
+			resourceProvider.saveApplications();
+		} else {
+			throw new ApplicationException(
+					"The resource and/or the provider don't support modifying/adding applications. This seems to be a coding problem and should be reported.");
+		}
+
 	}
 
 	/**
@@ -91,10 +112,21 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	 * @author delagarza
 	 */
 	public static class ResourcesTableFactory extends AbstractTableWithControlsFactory<Resource> {
+		private ResourceProvider resourceProvider;
+
+		/**
+		 * @param resourceProvider
+		 *            the resource provider.
+		 * @return {@code this} factory.
+		 */
+		public ResourcesTableFactory withResourceProvider(final ResourceProvider resourceProvider) {
+			this.resourceProvider = resourceProvider;
+			return this;
+		}
 
 		@Override
 		public TableWithControls<Resource> newInstance() {
-			return new ResourcesTable(super.title);
+			return new ResourcesTable(super.title, resourceProvider);
 		}
 	}
 }

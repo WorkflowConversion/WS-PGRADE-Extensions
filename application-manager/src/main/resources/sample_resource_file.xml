@@ -1,35 +1,15 @@
 <!-- 
-	processing of this file is NOT case sensitive, the only important thing to have in mind
-	is the tag names
+	Processing of this file is NOT case sensitive, the only important thing to have in mind
+	is the tag and attribute names.
+	
+	It is not possible to add applications to resources that don't exist or are not enabled on the WS-PGRADE instance.
 -->
 <resources>
-	<resource>
-		<!-- name, type of a resource -->
-		<name>sample.resource.com</name>
-		<type>lsf</type>
-		<!-- applications -->
-		<application>
-			<!-- name, version, path, description -->
-			<name>SampleApp</name>
-			<version>1.1</version>
-			<path>/usr/bin/sampleapp</path>
-			<description>This is a sample application</description>
-		</application>
-		<application>
-			<name>FileChecker</name>
-			<version>1.2b</version>
-			<path>/share/apps/filechecker</path>
-			<description>This is a sample application</description>
-		</application>
+	<resource name="pbs-cluster.university.eu" type="pbs">
+		<application name="SampleApp" version="1.1" path="/usr/bin/sampleapp" description="Sample app"/>
+		<application name="Sleepy" version="1.2" path="/usr/bin/sleep" description="Sample app, again"/>
 	</resource>
-	<resource>
-		<name>sample.resource.edu</name>
-		<type>moab</type>
-		<application>
-			<name>EmailSender</name>
-			<version>9.5</version>
-			<path>/local/usr/bin/email</path>
-			<description>This is a sample app</description>
-		</application>
+	<resource name="moab-cluster.university.eu" type="moab">
+		<application name="MagicSauce" version="2.1" path="/share/bin/magic" description="Nobel prize, here I come!"/>
 	</resource>
 </resources>

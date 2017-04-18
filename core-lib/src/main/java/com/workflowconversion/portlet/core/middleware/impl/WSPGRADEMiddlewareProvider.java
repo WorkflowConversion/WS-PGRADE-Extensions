@@ -1,11 +1,15 @@
 package com.workflowconversion.portlet.core.middleware.impl;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 
@@ -23,6 +27,7 @@ public class WSPGRADEMiddlewareProvider extends AbstractFilteredMiddlewareProvid
 
 	private static final long serialVersionUID = -8805943511022013993L;
 	private final static Logger LOG = LoggerFactory.getLogger(WSPGRADEMiddlewareProvider.class);
+	private final Supplier<Collection<Middleware>> cachedMiddlewares;
 
 	// this is that dci-bride.xml looks like
 	// there are multiple <middleware> items, but there should be only one with type "unicore"
@@ -68,8 +73,21 @@ public class WSPGRADEMiddlewareProvider extends AbstractFilteredMiddlewareProvid
 	 * </pre>
 	 */
 
-	@Override
-	public Collection<Middleware> getAllMiddlewares() {
+	/**
+	 * @param cacheDuration
+	 *            the duration of the cache, in seconds.
+	 */
+	public WSPGRADEMiddlewareProvider(final int cacheDuration) {
+		cachedMiddlewares = Suppliers.memoizeWithExpiration(new Supplier<Collection<Middleware>>() {
+			@Override
+			public Collection<Middleware> get() {
+				return getAllMiddlewares_internal();
+			}
+		}, cacheDuration, TimeUnit.SECONDS);
+	}
+
+	private Collection<Middleware> getAllMiddlewares_internal() {
+		LOG.info("Refreshing WSPGRADE Middlewares cache");
 		final ResourceConfigurationFace rc;
 		try {
 			rc = (ResourceConfigurationFace) InformationBase.getI().getServiceClient("resourceconfigure", "portal");
@@ -81,10 +99,15 @@ public class WSPGRADEMiddlewareProvider extends AbstractFilteredMiddlewareProvid
 		final List<Middleware> middlewares;
 		try {
 			middlewares = rc.get();
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			LOG.error("An error occured while reding the resource configuration", e);
 			throw new ApplicationException("An error occured while reding the resource configuration", e);
 		}
 		return middlewares;
+	}
+
+	@Override
+	public Collection<Middleware> getAllMiddlewares() {
+		return Collections.unmodifiableCollection(cachedMiddlewares.get());
 	}
 }

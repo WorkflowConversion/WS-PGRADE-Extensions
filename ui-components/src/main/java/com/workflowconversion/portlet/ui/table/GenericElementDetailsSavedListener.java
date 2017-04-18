@@ -6,7 +6,7 @@ package com.workflowconversion.portlet.ui.table;
  * @author delagarza
  *
  */
-public interface GenericElementDetailsCommittedListener<T> {
+public interface GenericElementDetailsSavedListener<T> {
 
 	/**
 	 * Called when the details of an element have been committed/saved.
@@ -16,5 +16,5 @@ public interface GenericElementDetailsCommittedListener<T> {
 	 * @param element
 	 *            the element.
 	 */
-	void elementDetailsCommitted(final Object itemId, final T element);
+	void elementDetailsSaved(final Object itemId, final T element);
 }

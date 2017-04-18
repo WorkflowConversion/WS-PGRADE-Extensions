@@ -4,6 +4,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 
 import com.vaadin.data.Item;
+import com.vaadin.data.Property;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.workflowconversion.portlet.core.resource.Application;
@@ -26,7 +28,6 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
 public class ApplicationsTable extends AbstractTableWithControls<Application> {
 
 	private final static long serialVersionUID = -5169354278787921392L;
-	private final static String PROPERTY_APPLICATION = "ApplicationsTable_property_application";
 
 	private final Resource owningResource;
 
@@ -48,9 +49,20 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 
 	@Override
 	protected String getKeyForItem(final Item item) {
-		final String name = ((TextField) (item.getItemProperty(Application.Field.Name).getValue())).getValue();
-		final String version = ((TextField) (item.getItemProperty(Application.Field.Version).getValue())).getValue();
-		final String path = ((TextField) (item.getItemProperty(Application.Field.Path).getValue())).getValue();
+		final String name;
+		final String version;
+		final String path;
+
+		if (allowEdition) {
+			name = ((TextField) (item.getItemProperty(Application.Field.Name).getValue())).getValue();
+			version = ((TextField) (item.getItemProperty(Application.Field.Version).getValue())).getValue();
+			path = ((TextField) (item.getItemProperty(Application.Field.Path).getValue())).getValue();
+		} else {
+			name = ((Label) (item.getItemProperty(Application.Field.Name).getValue())).getValue();
+			version = ((Label) (item.getItemProperty(Application.Field.Version).getValue())).getValue();
+			path = ((Label) (item.getItemProperty(Application.Field.Path).getValue())).getValue();
+		}
+
 		return KeyUtils.generateApplicationKey(name, version, path);
 	}
 
@@ -67,25 +79,41 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 
 	@Override
 	protected void setUpContainerProperties() {
-		addContainerProperty(Application.Field.Name, TextField.class);
-		addContainerProperty(Application.Field.Version, TextField.class);
-		addContainerProperty(Application.Field.Path, TextField.class);
-		addContainerProperty(Application.Field.Description, TextArea.class);
-		addContainerProperty(PROPERTY_APPLICATION);
+		if (allowEdition) {
+			addContainerProperty(Application.Field.Name, TextField.class);
+			addContainerProperty(Application.Field.Version, TextField.class);
+			addContainerProperty(Application.Field.Path, TextField.class);
+			addContainerProperty(Application.Field.Description, TextArea.class);
+		} else {
+			addContainerProperty(Application.Field.Name, Label.class);
+			addContainerProperty(Application.Field.Version, Label.class);
+			addContainerProperty(Application.Field.Path, Label.class);
+			addContainerProperty(Application.Field.Description, Label.class);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void fillItemProperties(final Application application, final Item item) {
-		item.getItemProperty(Application.Field.Name)
-				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getName())));
-		item.getItemProperty(Application.Field.Version)
-				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getVersion())));
-		item.getItemProperty(Application.Field.Description)
-				.setValue(newTextAreaWithValue(StringUtils.trimToEmpty(application.getDescription())));
-		item.getItemProperty(Application.Field.Path)
-				.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getPath())));
-		item.getItemProperty(PROPERTY_APPLICATION).setValue(application);
+		if (allowEdition) {
+			item.getItemProperty(Application.Field.Name)
+					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getName())));
+			item.getItemProperty(Application.Field.Version)
+					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getVersion())));
+			item.getItemProperty(Application.Field.Description)
+					.setValue(newTextAreaWithValue(StringUtils.trimToEmpty(application.getDescription())));
+			item.getItemProperty(Application.Field.Path)
+					.setValue(newTextFieldWithValue(StringUtils.trimToEmpty(application.getPath())));
+		} else {
+			item.getItemProperty(Application.Field.Name)
+					.setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getName())));
+			item.getItemProperty(Application.Field.Version)
+					.setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getVersion())));
+			item.getItemProperty(Application.Field.Description)
+					.setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getDescription())));
+			item.getItemProperty(Application.Field.Path)
+					.setValue(newLabelWithValue(StringUtils.trimToEmpty(application.getPath())));
+		}
 	}
 
 	@Override
@@ -95,12 +123,28 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 
 	@Override
 	protected void save(final Application application) {
-		owningResource.addApplication(application);
+		if (owningResource.getApplication(application.getName(), application.getVersion(),
+				application.getPath()) == null) {
+			// new application
+			owningResource.addApplication(application);
+		} else {
+			owningResource.saveApplication(application);
+		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected Application convertFromItem(final Item item) {
-		return (Application) item.getItemProperty(PROPERTY_APPLICATION).getValue();
+		final Application.Builder applicationBuilder = new Application.Builder();
+		applicationBuilder
+				.withName(((Property<String>) item.getItemProperty(Application.Field.Name).getValue()).getValue());
+		applicationBuilder.withVersion(
+				((Property<String>) item.getItemProperty(Application.Field.Version).getValue()).getValue());
+		applicationBuilder
+				.withPath(((Property<String>) item.getItemProperty(Application.Field.Path).getValue()).getValue());
+		applicationBuilder.withDescription(
+				((Property<String>) item.getItemProperty(Application.Field.Description).getValue()).getValue());
+		return applicationBuilder.newInstance();
 	}
 
 	/**

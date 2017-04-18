@@ -1,7 +1,7 @@
 package com.workflowconversion.portlet.ui.table.queue;
 
 import com.vaadin.data.Item;
-import com.vaadin.ui.TextField;
+import com.vaadin.ui.Label;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.utils.KeyUtils;
 import com.workflowconversion.portlet.ui.table.AbstractTableWithControls;
@@ -15,18 +15,18 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  * @author delagarza
  *
  */
-public class QueueTable extends AbstractTableWithControls<Queue> {
+public class QueuesTable extends AbstractTableWithControls<Queue> {
 
 	private final static long serialVersionUID = -6243453484525350648L;
 	private final static String PROPERTY_QUEUE = "QueueTable_property_queue";
 
-	private QueueTable(final String title) {
+	private QueuesTable(final String title) {
 		super(title, false, false);
 	}
 
 	@Override
 	protected void setUpContainerProperties() {
-		super.addContainerProperty(Queue.Field.Name, TextField.class);
+		super.addContainerProperty(Queue.Field.Name, Label.class);
 		// no need to add type, this is a hidden property
 		super.addContainerProperty(PROPERTY_QUEUE);
 	}
@@ -43,7 +43,7 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 
 	@Override
 	protected String getKeyForItem(final Item item) {
-		final String name = ((TextField) (item.getItemProperty(Queue.Field.Name).getValue())).getValue();
+		final String name = ((Label) (item.getItemProperty(Queue.Field.Name).getValue())).getValue();
 		return KeyUtils.generateQueueKey(name);
 	}
 
@@ -55,7 +55,7 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void fillItemProperties(final Queue queue, final Item item) {
-		item.getItemProperty(Queue.Field.Name).setValue(super.newTextFieldWithValue(queue.getName()));
+		item.getItemProperty(Queue.Field.Name).setValue(super.newLabelWithValue(queue.getName()));
 		item.getItemProperty(PROPERTY_QUEUE).setValue(queue);
 	}
 
@@ -73,7 +73,7 @@ public class QueueTable extends AbstractTableWithControls<Queue> {
 
 		@Override
 		public TableWithControls<Queue> newInstance() {
-			return new QueueTable(super.title);
+			return new QueuesTable(super.title);
 		}
 
 	}

@@ -90,17 +90,12 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 		setUpLayout();
 		setUpProperties();
 		setUpTable();
-		// make sure to start the control in readOnly mode
-		setReadOnly(true);
 		setInitialItems(initialElements);
+		setReadOnly(!allowEdition);
 	}
 
 	private void setUpEditComponents() {
 		if (allowEdition) {
-			addButton.setImmediate(true);
-			addButton.setDisableOnClick(true);
-			deleteButton.setImmediate(true);
-			deleteButton.setDisableOnClick(true);
 
 			addButton.addClickListener(new Button.ClickListener() {
 				private static final long serialVersionUID = 2596096312063338614L;
@@ -130,9 +125,6 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 		}
 
 		if (withDetails) {
-			detailsButton.setEnabled(true);
-			detailsButton.setImmediate(true);
-			detailsButton.setDisableOnClick(true);
 			detailsButton.addClickListener(new Button.ClickListener() {
 				private static final long serialVersionUID = -2169451476142160932L;
 
@@ -184,7 +176,7 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 		if (selectedRowIds.size() == 1) {
 			final Object itemId = selectedRowIds.iterator().next();
 			final Item selectedItem = table.getItem(itemId);
-			final AbstractGenericElementDetailDialog<T> dialog = createElementDetailDialog(itemId,
+			final AbstractGenericElementDetailsDialog<T> dialog = createElementDetailDialog(itemId,
 					convertFromItem(selectedItem));
 			if (dialog == null) {
 				throw new ApplicationException(
@@ -248,7 +240,7 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 				"there are no properties set, use the addContainerProperty method in AbstractTableWithControls");
 		table.addContainerProperty(PROPERTY_ERROR, String.class, null);
 		for (final ContainerProperty containerProperty : containerProperties) {
-			final Class<? extends Field<?>> fieldType = containerProperty.fieldType;
+			final Class<? extends AbstractComponent> fieldType = containerProperty.fieldType;
 			table.addContainerProperty(containerProperty.id, fieldType == null ? Object.class : fieldType, null);
 		}
 	}
@@ -261,7 +253,7 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 	 * @param fieldType
 	 *            the type of the field that could edit this property.
 	 */
-	protected final void addContainerProperty(final Object id, final Class<? extends Field<?>> fieldType) {
+	protected final void addContainerProperty(final Object id, final Class<? extends AbstractComponent> fieldType) {
 		Validate.notNull(id, "id cannot be null");
 		Validate.notNull(fieldType, "type cannot be null");
 		this.containerProperties.add(new ContainerProperty(id, fieldType));
@@ -567,7 +559,7 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 	}
 
 	@Override
-	public void elementDetailsCommitted(final Object itemId, final T element) {
+	public void elementDetailsSaved(final Object itemId, final T element) {
 		if (!withDetails) {
 			throw new ApplicationException(
 					"This table does not support displaying/edition of details. This seems to be a coding error and should be reported.");
@@ -594,7 +586,7 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 	 *            the element.
 	 * @return the dialog to edit elements.
 	 */
-	protected AbstractGenericElementDetailDialog<T> createElementDetailDialog(final Object itemId, final T element) {
+	protected AbstractGenericElementDetailsDialog<T> createElementDetailDialog(final Object itemId, final T element) {
 		if (!withDetails) {
 			throw new ApplicationException(
 					"This table does not support displaying/edition of details. This seems to be a coding error and should be reported.");
@@ -650,10 +642,17 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 		final Button button = new Button();
 		button.setIcon(icon);
 		button.setDescription(description);
-		button.setEnabled(false);
+		button.setEnabled(true);
 		button.setDisableOnClick(true);
 		button.setImmediate(true);
 		return button;
+	}
+
+	protected final Label newLabelWithValue(final String value) {
+		final Label label = new Label();
+		label.setValue(value);
+		label.setWidth(300, Unit.PIXELS);
+		return label;
 	}
 
 	protected final TextField newTextFieldWithValue(final String value) {
@@ -661,14 +660,14 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 		textField.setValue(value);
 		textField.setImmediate(true);
 		textField.setBuffered(false);
-		textField.setWidth(250, Unit.PIXELS);
+		textField.setWidth(300, Unit.PIXELS);
 		return textField;
 	}
 
 	protected final TextArea newTextAreaWithValue(final String value) {
 		final TextArea textArea = new TextArea();
 		textArea.setValue(value);
-		textArea.setWidth(250, Unit.PIXELS);
+		textArea.setWidth(300, Unit.PIXELS);
 		textArea.setImmediate(true);
 		textArea.setBuffered(false);
 		return textArea;
@@ -689,9 +688,9 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 
 	private static class ContainerProperty {
 		final Object id;
-		final Class<? extends Field<?>> fieldType;
+		final Class<? extends AbstractComponent> fieldType;
 
-		ContainerProperty(final Object id, final Class<? extends Field<?>> fieldType) {
+		ContainerProperty(final Object id, final Class<? extends AbstractComponent> fieldType) {
 			this.id = id;
 			this.fieldType = fieldType;
 		}

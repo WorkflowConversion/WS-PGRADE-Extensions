@@ -13,7 +13,7 @@ import com.vaadin.ui.Component;
  *
  */
 public interface TableWithControls<T>
-		extends Component, GenericElementCommittedListener<T>, GenericElementDetailsCommittedListener<T> {
+		extends Component, GenericElementCommittedListener<T>, GenericElementDetailsSavedListener<T> {
 	/**
 	 * {@link Container} contains {@link #addItem(Object))}, but we need to enforce that implementations accept only
 	 * certain type of elements (i.e., of type {@code T}).

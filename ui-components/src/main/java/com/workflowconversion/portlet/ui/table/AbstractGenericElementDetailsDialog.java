@@ -8,14 +8,14 @@ import com.vaadin.ui.Window;
  * @author delagarza
  *
  */
-public class AbstractGenericElementDetailDialog<T> extends Window {
+public class AbstractGenericElementDetailsDialog<T> extends Window {
 
 	private static final long serialVersionUID = 3605623408453706094L;
 
 	protected final Object itemId;
 	protected final T element;
 	protected final boolean allowEdition;
-	protected final GenericElementDetailsCommittedListener<T> listener;
+	protected final GenericElementDetailsSavedListener<T> listener;
 
 	/**
 	 * Constructor.
@@ -25,8 +25,8 @@ public class AbstractGenericElementDetailDialog<T> extends Window {
 	 * @param allowEdition
 	 *            whether edition is allowed.
 	 */
-	public AbstractGenericElementDetailDialog(final Object itemId, final T element,
-			final GenericElementDetailsCommittedListener<T> listener, final boolean allowEdition) {
+	public AbstractGenericElementDetailsDialog(final Object itemId, final T element,
+			final GenericElementDetailsSavedListener<T> listener, final boolean allowEdition) {
 		this.itemId = itemId;
 		this.element = element;
 		this.listener = listener;

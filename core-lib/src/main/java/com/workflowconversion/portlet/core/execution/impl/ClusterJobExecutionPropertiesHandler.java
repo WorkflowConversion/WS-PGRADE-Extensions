@@ -2,6 +2,8 @@ package com.workflowconversion.portlet.core.execution.impl;
 
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.workflowconversion.portlet.core.SupportedClusters;
 import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.workflow.Job;
@@ -28,8 +30,11 @@ class ClusterJobExecutionPropertiesHandler implements JobExecutionPropertiesHand
 	@Override
 	public void handle(final Job job, final Map<String, String> jobExecutionProperties) {
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_GRID_TYPE, job.getResourceType());
-		jobExecutionProperties.put(JOB_EXECUTION_COMMAND_LINE,
-				job.getApplication().getPath() + ' ' + job.getParameters());
+		final StringBuilder commandLineBuilder = new StringBuilder(job.getApplication().getPath());
+		if (StringUtils.isNotEmpty(job.getParameters())) {
+			commandLineBuilder.append(' ').append(job.getParameters());
+		}
+		jobExecutionProperties.put(JOB_EXECUTION_COMMAND_LINE, commandLineBuilder.toString());
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_MANAGER, "-");
 		jobExecutionProperties.put(JOB_EXECUTION_PROPERTY_JOB_TYPE, "binary");
 		if (job.getQueue() != null) {

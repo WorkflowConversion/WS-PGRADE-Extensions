@@ -55,10 +55,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	protected Layout prepareContent() {
 		final Layout resourceTableLayout = new VerticalLayout();
 		final ComboBox resourceProviderComboBox = getResourceProviderComboBox();
-		final Button saveButton = new Button("Save All");
-		saveButton.setImmediate(true);
-		saveButton.setEnabled(false);
-		saveButton.setDisableOnClick(true);
+
 		final Button bulkUploadButton = new Button("Bulk upload...");
 		bulkUploadButton.setEnabled(false);
 		bulkUploadButton.setImmediate(true);
@@ -86,7 +83,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 					final int selectedResourceProviderId = (Integer) event.getProperty().getValue();
 					final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
 
-					saveButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
 					bulkUploadButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
 
 					resourceTableLayout.removeAllComponents();
@@ -94,21 +90,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 
 					// make sure that the checkbox and the state of the tables is consistent
 					resourceTableLayout.markAsDirtyRecursive();
-				}
-			}
-		});
-
-		saveButton.addClickListener(new Button.ClickListener() {
-			private static final long serialVersionUID = -4706192615658615512L;
-
-			@Override
-			public void buttonClick(final ClickEvent event) {
-				try {
-					final int selectedResourceProviderId = ((Integer) resourceProviderComboBox.getValue());
-					final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
-					uiComponents.resourceProvider.saveApplications();
-				} finally {
-					saveButton.setEnabled(true);
 				}
 			}
 		});
@@ -129,7 +110,6 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		final HorizontalLayout buttonsLayout = new HorizontalLayout();
 		buttonsLayout.setMargin(false);
 		buttonsLayout.setSpacing(true);
-		buttonsLayout.addComponent(saveButton);
 		buttonsLayout.addComponent(bulkUploadButton);
 
 		final HorizontalLayout editControlsLayout = new HorizontalLayout();
@@ -171,7 +151,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	private UIComponents buildUiComponentsForResourceProvider(final ResourceProvider resourceProvider) {
 		final ResourcesTableFactory factory = new ResourcesTableFactory();
 		// cannot edit resource tables, just the applications
-		factory.withTitle("Resources");
+		factory.withResourceProvider(resourceProvider).withTitle("Resources");
 		final TableWithControls<Resource> resourceTable = factory.newInstance();
 		resourceTable.init(resourceProvider.getResources());
 		final UIComponents uiComponents = new UIComponents(resourceProvider, resourceTable);

@@ -39,6 +39,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -235,7 +236,7 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		for (int i = 0; i < children.getLength(); i++) {
 			final Node child = children.item(i);
 			if (child.getNodeType() == Node.ELEMENT_NODE && childrenNodeName.equals(child.getNodeName())) {
-				// it is a description element, now, extract all attributes whose name starts with our prefix
+				// it is an element with the desired tagname, extract all attributes whose name starts with the prefix
 				final Node keyNode = child.getAttributes().getNamedItem(ATTRIBUTE_KEY);
 				if (keyNode != null) {
 					final String key = keyNode.getNodeValue();
@@ -356,6 +357,8 @@ public class DefaultWorkflowManager implements WorkflowManager {
 			TransformerConfigurationException, TransformerException, IOException {
 		final TransformerFactory tFactory = TransformerFactory.newInstance();
 		final Transformer transformer = tFactory.newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
 		final DOMSource source = new DOMSource(modifiedWorkflowDocument);
 		final ByteArrayOutputStream modifiedWorkflowXmlOutputStream = new ByteArrayOutputStream();
 		final StreamResult result = new StreamResult(modifiedWorkflowXmlOutputStream);

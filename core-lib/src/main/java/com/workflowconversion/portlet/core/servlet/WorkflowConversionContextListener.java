@@ -61,9 +61,11 @@ public class WorkflowConversionContextListener implements ServletContextListener
 			LOG.warn("#############################################################");
 		}
 
-		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent);
+		final int cacheDuration = extractCacheDuration(servletContextEvent);
+
+		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent, cacheDuration);
 		final Collection<ResourceProvider> applicationProviders = extractResourceProviders(servletContextEvent,
-				middlewareProvider);
+				middlewareProvider, cacheDuration);
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
 		final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass = extractWorkflowManagerFactoryClass(
 				servletContextEvent);
@@ -89,6 +91,25 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		Settings.setInstance(settingsBuilder.newSettings());
 	}
 
+	private int extractCacheDuration(final ServletContextEvent servletContextEvent) {
+		final String cacheDurationString = extractInitParam("cache.seconds.duration", servletContextEvent);
+		final int defaultCacheDuration = 120;
+		int cacheDuration;
+		try {
+			cacheDuration = Integer.parseInt(cacheDurationString);
+		} catch (final NumberFormatException e) {
+			LOG.error("Could not parse parameter 'cache.seconds.duration' Defaulting to " + defaultCacheDuration
+					+ " seconds. Passed value: " + cacheDurationString);
+			cacheDuration = defaultCacheDuration;
+		}
+		if (cacheDuration <= 0) {
+			LOG.error("Invalid value provided for 'cache.seconds.duration' Defaulting to " + cacheDuration
+					+ " seconds. Passed value: " + cacheDurationString);
+			cacheDuration = defaultCacheDuration;
+		}
+		return cacheDuration;
+	}
+
 	private Class<? extends WorkflowExporterFactory> extractWorkflowExporterFactoryClass(
 			final ServletContextEvent servletContextEvent) {
 		if (useMocks(servletContextEvent)) {
@@ -110,7 +131,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 	}
 
 	private Collection<ResourceProvider> extractResourceProviders(final ServletContextEvent servletContextEvent,
-			final MiddlewareProvider middlewareProvider) {
+			final MiddlewareProvider middlewareProvider, final int cacheDuration) {
 		// find out if we are using mocks
 		final Collection<ResourceProvider> resourceProviders = new LinkedList<ResourceProvider>();
 		if (useMocks(servletContextEvent)) {
@@ -121,7 +142,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		} else {
 			resourceProviders.add(new ClusterResourceProvider(middlewareProvider,
 					extractInitParam("resource.xmlFile.location", servletContextEvent)));
-			resourceProviders.add(new UnicoreResourceProvider(middlewareProvider));
+			resourceProviders.add(new UnicoreResourceProvider(middlewareProvider, cacheDuration));
 		}
 		return Collections.unmodifiableCollection(resourceProviders);
 	}
@@ -140,11 +161,12 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		return Boolean.parseBoolean(extractInitParam("ui.development.mode", servletContextEvent));
 	}
 
-	private MiddlewareProvider extractMiddlewareProvider(final ServletContextEvent servletContextEvent) {
+	private MiddlewareProvider extractMiddlewareProvider(final ServletContextEvent servletContextEvent,
+			final int cacheDuration) {
 		if (useMocks(servletContextEvent)) {
 			return new InMemoryMockMiddlewareProvider();
 		} else {
-			return new WSPGRADEMiddlewareProvider();
+			return new WSPGRADEMiddlewareProvider(cacheDuration);
 		}
 	}
 

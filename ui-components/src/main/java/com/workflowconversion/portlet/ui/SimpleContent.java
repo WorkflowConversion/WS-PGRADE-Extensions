@@ -6,7 +6,6 @@ import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 
 /**
@@ -36,12 +35,8 @@ public class SimpleContent extends VerticalLayout {
 	}
 
 	private void setUpUI() {
-		// TODO: Fix scrolling... maybe use a textarea?
-		final Panel panel = new Panel();
 		final Label label = new Label(message, ContentMode.HTML);
-		panel.setContent(label);
-		panel.getContent().setSizeUndefined();
-		panel.setSizeFull();
+		label.setSizeFull();
 
 		final HorizontalLayout layout = new HorizontalLayout();
 		if (iconLocation != null) {
@@ -50,10 +45,10 @@ public class SimpleContent extends VerticalLayout {
 			icon.setHeight(Integer.toString(iconHeight) + "px");
 			layout.addComponent(icon);
 		}
-		layout.addComponent(panel);
+		layout.addComponent(label);
 
 		if (style != null) {
-			panel.addStyleName(style);
+			label.addStyleName(style);
 			layout.addStyleName(style);
 			addStyleName(style);
 		}

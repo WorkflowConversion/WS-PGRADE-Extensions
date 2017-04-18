@@ -100,7 +100,7 @@ public abstract class AbstractFileProcessor {
 		}
 		final Resource resource = resourceProvider.getResource(name, type);
 		if (resource == null) {
-			error.append("resource [name=" + name + ", type=" + type + ']');
+			error.append("resource [name=" + name + ", type=" + type + "] not found");
 			listener.parsingError(error.toString(), lineNumber);
 		}
 		return resource;
@@ -125,14 +125,18 @@ public abstract class AbstractFileProcessor {
 		if (parsedApplication != null) {
 			if (resource != null) {
 				if (resource.canModifyApplications()) {
+					nParsedApplications++;
 					if (resource.getApplication(parsedApplication.getName(), parsedApplication.getVersion(),
 							parsedApplication.getPath()) == null) {
 						resource.addApplication(parsedApplication);
-						nParsedApplications++;
+						if (LOG.isInfoEnabled()) {
+							LOG.info("Added application :" + parsedApplication);
+						}
 					} else {
-						listener.parsingWarning("The resource [" + resource
-								+ "] declared in the upload file already contains an application with the same name, version, path (duplicate: "
-								+ parsedApplication + ')', lineNumber);
+						resource.saveApplication(parsedApplication);
+						if (LOG.isInfoEnabled()) {
+							LOG.info("Replacing application with: " + parsedApplication);
+						}
 					}
 				} else {
 					listener.parsingWarning("Cannot add application [" + parsedApplication + "] to read-only resource.",

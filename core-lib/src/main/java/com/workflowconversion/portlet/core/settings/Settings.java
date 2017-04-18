@@ -30,6 +30,7 @@ public class Settings implements Serializable {
 	private final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
 	private final String workflowStagingAreaPath;
 	private final JobExecutionPropertiesHandler jobExecutionPropertiesHandler;
+
 	private static Settings INSTANCE;
 
 	/**

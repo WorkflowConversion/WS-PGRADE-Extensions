@@ -39,17 +39,15 @@ import de.fzj.unicore.wsrflite.xmlbeans.client.RegistryClient;
  *
  */
 public class UnicoreResourceProvider implements ResourceProvider {
-
-	private final static long serialVersionUID = 6542266373514172909L;
-
-	private final static Logger LOG = LoggerFactory.getLogger(UnicoreResourceProvider.class);
-
-	private final Supplier<Map<String, Resource>> cachedResources;
-
 	/**
 	 * Since it is not possible to add UNICORE applications, some classes might find this constant useful.
 	 */
 	public final static String UNICORE_RESOURCE_TYPE = "unicore";
+
+	private final static long serialVersionUID = 6542266373514172909L;
+	private final static Logger LOG = LoggerFactory.getLogger(UnicoreResourceProvider.class);
+
+	private final Supplier<Map<String, Resource>> cachedResources;
 	private final MiddlewareProvider middlewareProvider;
 
 	/**
@@ -57,9 +55,12 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	 * 
 	 * @param middlewareProvider
 	 *            A middleware provider.
+	 * @param cacheDuration
+	 *            the duration of the cache, in seconds.
 	 */
-	public UnicoreResourceProvider(final MiddlewareProvider middlewareProvider) {
+	public UnicoreResourceProvider(final MiddlewareProvider middlewareProvider, final int cacheDuration) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
+		Validate.isTrue(cacheDuration > 0, "invalid cacheDuration " + cacheDuration);
 		this.middlewareProvider = middlewareProvider;
 		this.cachedResources = Suppliers.memoizeWithExpiration(new Supplier<Map<String, Resource>>() {
 
@@ -68,10 +69,11 @@ public class UnicoreResourceProvider implements ResourceProvider {
 				return getResources_internal();
 			}
 
-		}, 30, TimeUnit.MINUTES);
+		}, cacheDuration, TimeUnit.SECONDS);
 	}
 
 	private Map<String, Resource> getResources_internal() {
+		LOG.info("Refreshing UNICORE resources cache.");
 		// get the available unicore items
 		final Collection<Item> unicoreItems = middlewareProvider.getEnabledItems(UNICORE_RESOURCE_TYPE);
 
@@ -173,7 +175,7 @@ public class UnicoreResourceProvider implements ResourceProvider {
 
 	@Override
 	public String getName() {
-		return "UNICORE application database";
+		return "UNICORE Application Database";
 	}
 
 	@Override

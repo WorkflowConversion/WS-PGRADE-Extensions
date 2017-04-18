@@ -27,6 +27,11 @@
     	<param-name>resource.xmlFile.location</param-name>
     	<param-value>/home/guseuser/guse/workflow_conversion/resources.xml</param-value>
     </context-param>
+    <context-param>
+    	<description>Duration of the caches, in seconds</description>
+    	<param-name>cache.seconds.duration</param-name>
+    	<param-value>120</param-value>
+    </context-param>
     
 	<!-- portlet.name property is defined in build.propeties --> 
     <!-- Vaadin specific entries -->
