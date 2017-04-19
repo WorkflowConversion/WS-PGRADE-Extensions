@@ -211,16 +211,15 @@ public class DefaultWorkflowManager implements WorkflowManager {
 		return assetFinder.findResource();
 	}
 
-	private Application extractApplication(final Node node, final Map<String, String> jobProperties) {
-		final Resource resource = extractResource(node, jobProperties);
+	private Application extractApplication(final Resource resource, final Node node,
+			final Map<String, String> jobProperties) {
 		assetFinder.addSearchCriterion(Application.Field.Version, getProperty(PROPERTY_APP_VERSION, jobProperties));
 		assetFinder.addSearchCriterion(Application.Field.Name, getProperty(PROPERTY_APP_NAME, jobProperties));
 		assetFinder.addSearchCriterion(Application.Field.Path, getProperty(PROPERTY_APP_PATH, jobProperties));
 		return assetFinder.findApplication(resource);
 	}
 
-	private Queue extractQueue(final Node node, final Map<String, String> jobProperties) {
-		final Resource resource = extractResource(node, jobProperties);
+	private Queue extractQueue(final Resource resource, final Node node, final Map<String, String> jobProperties) {
 		assetFinder.addSearchCriterion(Queue.Field.Name, getProperty(PROPERTY_QUEUE_NAME, jobProperties));
 		return assetFinder.findQueue(resource);
 	}
@@ -549,11 +548,15 @@ public class DefaultWorkflowManager implements WorkflowManager {
 							PROPERTY_PREFIX);
 					parsedJob.setParameters(extractJobParameters(node, jobProperties));
 					assetFinder.clearAllFields();
-					final Application application = extractApplication(node, jobProperties);
+					final Resource resource = extractResource(node, jobProperties);
+					final Application application = extractApplication(resource, node, jobProperties);
+					final Queue queue = extractQueue(resource, node, jobProperties);
+					if (resource != null) {
+						parsedJob.setResource(resource);
+					}
 					if (application != null) {
 						parsedJob.setApplication(application);
 					}
-					final Queue queue = extractQueue(node, jobProperties);
 					if (queue != null) {
 						parsedJob.setQueue(queue);
 					}

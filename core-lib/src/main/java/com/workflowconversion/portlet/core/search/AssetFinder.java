@@ -7,15 +7,15 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.workflowconversion.portlet.core.exception.DuplicateResourceException;
 import com.workflowconversion.portlet.core.exception.InvalidFieldException;
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.FormField;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
-import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 /**
  * Utility class to find applications, queues.
@@ -25,23 +25,23 @@ import com.workflowconversion.portlet.core.utils.KeyUtils;
  */
 public class AssetFinder {
 
-	private final Map<String, Resource> resourceMap;
+	private final static Logger LOG = LoggerFactory.getLogger(AssetFinder.class);
 
 	private final Map<FormField, String> resourceFields;
 	private final Map<FormField, String> applicationFields;
 	private final Map<FormField, String> queueFields;
 
 	private final Collection<FormFieldHandler> handlers;
+	private final Collection<ResourceProvider> resourceProviders;
 
 	/**
 	 * Constructor.
 	 */
 	public AssetFinder() {
-		resourceMap = new TreeMap<String, Resource>();
-
 		resourceFields = new TreeMap<FormField, String>();
 		applicationFields = new TreeMap<FormField, String>();
 		queueFields = new TreeMap<FormField, String>();
+		resourceProviders = new LinkedList<ResourceProvider>();
 
 		handlers = new LinkedList<FormFieldHandler>();
 		handlers.add(new ApplicationFieldHandler());
@@ -55,26 +55,15 @@ public class AssetFinder {
 	 */
 	public void init(final Collection<ResourceProvider> resourceProviders) {
 		Validate.notEmpty(resourceProviders, "resourceProviders cannot be null or empty.");
-		fillResourcesMap(resourceProviders);
+		this.resourceProviders.addAll(resourceProviders);
 		clearAllFields();
-	}
-
-	private void fillResourcesMap(final Collection<ResourceProvider> resourceProviders) {
-		resourceMap.clear();
-
-		for (final ResourceProvider resourceProvider : resourceProviders) {
-			for (final Resource resource : resourceProvider.getResources()) {
-				if (resourceMap.put(KeyUtils.generate(resource), resource) != null) {
-					throw new DuplicateResourceException(resource);
-				}
-			}
-		}
 	}
 
 	/**
 	 * Clears all fields.
 	 */
 	public void clearAllFields() {
+		LOG.debug("Clearing fields");
 		resourceFields.clear();
 		applicationFields.clear();
 		queueFields.clear();
@@ -83,10 +72,26 @@ public class AssetFinder {
 	public Resource findResource() {
 		final String name = StringUtils.trimToNull(resourceFields.get(Resource.Field.Name));
 		final String type = StringUtils.trimToNull(resourceFields.get(Resource.Field.Type));
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching resource with name=" + name + " and type=" + type);
+		}
 		if (name == null || type == null) {
 			return null;
 		}
-		return resourceMap.get(KeyUtils.generateResourceKey(name, type));
+		for (final ResourceProvider resourceProvider : resourceProviders) {
+			final Resource resource = resourceProvider.getResource(name, type);
+			if (resource != null) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Found resource with name=" + name + ", type=" + type + " on provider "
+							+ resourceProvider.getName());
+				}
+				return resource;
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Could not find a resource with name=" + name + ", type=" + type);
+		}
+		return null;
 	}
 
 	/**
@@ -98,16 +103,21 @@ public class AssetFinder {
 	 * @return an application that matches or {@code null} if no application was found.
 	 */
 	public Application findApplication(final Resource resource) {
-		if (resource == null) {
-			return null;
-		}
 		final String name = StringUtils.trimToNull(applicationFields.get(Application.Field.Name));
-		final String path = StringUtils.trimToNull(applicationFields.get(Application.Field.Path));
 		final String version = StringUtils.trimToNull(applicationFields.get(Application.Field.Version));
-		if (name == null || version == null || path == null) {
+		final String path = StringUtils.trimToNull(applicationFields.get(Application.Field.Path));
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching application with name=" + name + ", version=" + version + ", path=" + path
+					+ " in resource " + (resource == null ? "null" : resource.getName()));
+		}
+		if (resource == null || name == null || version == null || path == null) {
 			return null;
 		}
-		return resource.getApplication(name, version, path);
+		final Application application = resource.getApplication(name, version, path);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Found application " + application);
+		}
+		return application;
 	}
 
 	/**
@@ -119,14 +129,18 @@ public class AssetFinder {
 	 * @return a queue that matches or {@code null} if no queue was found.
 	 */
 	public Queue findQueue(final Resource resource) {
-		if (resource == null) {
-			return null;
-		}
 		final String name = StringUtils.trimToNull(queueFields.get(Queue.Field.Name));
-		if (name == null) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Searching queue with name=" + name + " in resource " + resource);
+		}
+		if (resource == null || name == null) {
 			return null;
 		}
-		return resource.getQueue(name);
+		final Queue queue = resource.getQueue(name);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Found queue " + queue);
+		}
+		return queue;
 	}
 
 	/**
@@ -141,6 +155,9 @@ public class AssetFinder {
 		boolean handled = false;
 		for (final FormFieldHandler handler : handlers) {
 			if (handler.canHandle(field)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Adding search criterion. field=" + field + ", value=" + value);
+				}
 				handler.handle(field, value);
 				handled = true;
 			}

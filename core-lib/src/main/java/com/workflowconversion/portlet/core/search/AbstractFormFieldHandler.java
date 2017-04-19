@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.exception.InvalidFieldException;
 import com.workflowconversion.portlet.core.resource.Application;
@@ -13,6 +16,8 @@ import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 
 abstract class AbstractFormFieldHandler implements FormFieldHandler {
+
+	private final static Logger LOG = LoggerFactory.getLogger(AbstractFormFieldHandler.class);
 
 	private final Map<FormField, String> fields;
 	private final Class<? extends FormField> fieldType;
@@ -38,6 +43,10 @@ abstract class AbstractFormFieldHandler implements FormFieldHandler {
 			throw new ApplicationException("Field type " + fieldType
 					+ " cannot handled. This seems to be a coding problem and should be reported.");
 		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Loaded handled fields for fieldType=" + fieldType);
+			LOG.debug("handledFields=" + handledFields);
+		}
 	}
 
 	@Override
@@ -48,6 +57,9 @@ abstract class AbstractFormFieldHandler implements FormFieldHandler {
 	@Override
 	public void handle(final FormField field, final String value) {
 		if (handledFields.contains(field)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Handling field=" + field.getClass() + '.' + field + ", value=" + value);
+			}
 			fields.put(field, value);
 		} else {
 			throw new InvalidFieldException(field);

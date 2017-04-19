@@ -98,6 +98,7 @@ public class Job {
 	 *            the resource to set
 	 */
 	public void setResource(final Resource resource) {
+		Validate.notNull(resource, "resource cannot be null, this is a coding problem and should be reported.");
 		this.resource = resource;
 	}
 
@@ -127,7 +128,7 @@ public class Job {
 	@Override
 	public String toString() {
 		return "Job [name=" + name + ", parameters=" + parameters + ", application=" + application + ", queue=" + queue
-				+ "]";
+				+ ", resource=" + resource + ']';
 	}
 
 }

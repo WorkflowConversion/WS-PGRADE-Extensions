@@ -2,6 +2,9 @@ package com.workflowconversion.portlet.ui.workflow;
 
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.vaadin.data.Item;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
@@ -22,11 +25,13 @@ import com.workflowconversion.portlet.core.workflow.Job;
 public class JobView extends HorizontalLayout {
 	private static final long serialVersionUID = 8676895583929397206L;
 
-	private static final String PROPERTY_APPLICATION_CAPTION = "WorkflowView_property_app_name";
-	private static final String PROPERTY_APPLICATION = "WorkflowView_property_app";
-	private static final String PROPERTY_RESOURCE = "WorkflowView_property_resource";
-	private static final String PROPERTY_QUEUE_CAPTION = "WorkflowView_property_queue_name";
-	private static final String PROPERTY_QUEUE = "WorkflowView_property_queue";
+	private final static Logger LOG = LoggerFactory.getLogger(JobView.class);
+
+	private final static String PROPERTY_APPLICATION_CAPTION = "WorkflowView_property_app_name";
+	private final static String PROPERTY_APPLICATION = "WorkflowView_property_app";
+	private final static String PROPERTY_RESOURCE = "WorkflowView_property_resource";
+	private final static String PROPERTY_QUEUE_CAPTION = "WorkflowView_property_queue_name";
+	private final static String PROPERTY_QUEUE = "WorkflowView_property_queue";
 
 	private final ComboBox applicationComboBox;
 	private final ComboBox queueComboBox;
@@ -41,6 +46,7 @@ public class JobView extends HorizontalLayout {
 		initUI(job);
 	}
 
+	// FIXME: comboboxes selection of saved jobs is not working
 	@SuppressWarnings("unchecked")
 	private void initUI(final Job job) {
 		applicationComboBox.setWidth(650, Unit.PIXELS);
@@ -92,6 +98,10 @@ public class JobView extends HorizontalLayout {
 			}
 		});
 
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Finding resource, application, queue for job=" + job);
+		}
+
 		final Resource jobResource = job.getResource();
 		final Application jobApplication = job.getApplication();
 		if (jobResource != null && jobApplication != null) {
@@ -100,7 +110,12 @@ public class JobView extends HorizontalLayout {
 				final Resource resource = (Resource) applicationItem.getItemProperty(PROPERTY_RESOURCE).getValue();
 				final Application application = (Application) applicationItem.getItemProperty(PROPERTY_APPLICATION)
 						.getValue();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Checking resource=" + resource == null ? "null"
+							: resource.getName() + ", application=" + application);
+				}
 				if (application == jobApplication && jobResource == resource) {
+					LOG.debug("Found resource, application for job.");
 					applicationComboBox.setValue(applicationItemKey);
 					break;
 				}
@@ -111,7 +126,11 @@ public class JobView extends HorizontalLayout {
 			for (final Object queueItemKey : queueComboBox.getItemIds()) {
 				final Item queueItem = queueComboBox.getItem(queueItemKey);
 				final Queue queue = (Queue) queueItem.getItemProperty(PROPERTY_QUEUE).getValue();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Checking queue=" + queue);
+				}
 				if (queue == jobQueue) {
+					LOG.debug("Found queue, application for job.");
 					queueComboBox.setValue(queueItemKey);
 					break;
 				}

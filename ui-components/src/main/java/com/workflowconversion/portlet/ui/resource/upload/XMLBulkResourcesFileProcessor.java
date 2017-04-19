@@ -66,16 +66,16 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor {
 		public void startElement(final String uri, final String localName, final String qName,
 				final Attributes attributes) throws SAXException {
 			// check for top-level nodes first (resource, application)
-			if (LOG.isInfoEnabled()) {
-				LOG.info("Processing tag <" + qName + '>');
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Processing tag <" + qName + '>');
 			}
 			if (qName.equalsIgnoreCase(RESOURCE_NODE_NAME)) {
 				currentTopElement = RESOURCE_NODE_NAME;
 			} else if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
 				currentTopElement = APPLICATION_NODE_NAME;
 			} else {
-				if (LOG.isInfoEnabled()) {
-					LOG.info("Ignoring tag <" + qName + '>');
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Ignoring tag <" + qName + '>');
 				}
 			}
 			loadAttributesInMap(attributes);
@@ -94,16 +94,16 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor {
 			for (int i = 0; i < attributes.getLength(); i++) {
 				final String attributeName = attributes.getQName(i);
 				final String attributeValue = attributes.getValue(i);
-				if (LOG.isInfoEnabled()) {
-					LOG.info("Loading attribute [" + attributeName + '=' + attributeValue + ']');
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Loading attribute [" + attributeName + '=' + attributeValue + ']');
 				}
 				attributeMap.put(attributeName.toLowerCase(), StringUtils.trimToEmpty(attributeValue));
 			}
 		}
 
 		private String extract(final FormField field) {
-			if (LOG.isInfoEnabled()) {
-				LOG.info("Extracting " + field.toString());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Extracting " + field.toString());
 			}
 			return attributeMap.get(field.name().toLowerCase());
 		}
