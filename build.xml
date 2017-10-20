@@ -32,9 +32,6 @@
 			<param name="required.property" value="remote.server.deploy.path" />
 		</antcall>
 		<antcall target="fail-if-missing-property">
-			<param name="required.property" value="remote.server.tomcat.path" />
-		</antcall>
-		<antcall target="fail-if-missing-property">
 			<param name="required.property" value="keyfile.location" />
 		</antcall>
 	</target>
