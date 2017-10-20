@@ -52,6 +52,7 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	private void fillInitialResources() {
 		final Middleware[] middlewares = middlewareProvider.getAllMiddlewares().toArray(new Middleware[] {});
+
 		for (int i = 0; i < N_INITIAL_RESOURCES; i++) {
 			final Resource.Builder resourceBuilder = new Resource.Builder();
 			resourceBuilder.withType(getRandomResourceType(middlewares));
@@ -113,8 +114,14 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void saveApplications() {
+	public void save() {
 		LOG.info("COMMITTING CHANGES");
 		// does nothing, since we're actually not storing anything
+	}
+
+	@Override
+	public boolean hasInitErrors() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

@@ -23,10 +23,10 @@ public interface TableWithControls<T>
 	/**
 	 * Initializes the table with the given elements.
 	 * 
-	 * @param initialElements
-	 *            a collection of the initial elements to display.
+	 * @param initialItems
+	 *            a collection of the initial items to display.
 	 */
-	void init(final Collection<T> initialElements);
+	void setInitialItems(final Collection<T> initialItems);
 
 	/**
 	 * Allow users to check this table's dimensions.

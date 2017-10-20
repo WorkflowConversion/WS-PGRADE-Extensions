@@ -20,9 +20,9 @@ public interface ResourceProvider extends Serializable {
 	public boolean canAddApplications();
 
 	/**
-	 * Returns the name of this application provider.
+	 * Returns the name of this resource provider.
 	 * 
-	 * @return the name of this application provider.
+	 * @return the name of this resource provider.
 	 */
 	public String getName();
 
@@ -30,6 +30,15 @@ public interface ResourceProvider extends Serializable {
 	 * Initializes this provider. Convenience method to provide a lazy initialization.
 	 */
 	public void init();
+
+	/**
+	 * It is possible that some implementations will have problems during initialization due to, for instance, expired
+	 * certificates, unavailable resources, etc. This method will tell users of {@link ResourceProvider} that this
+	 * instance could not be properly initialized.
+	 * 
+	 * @return {@code true} if this provider had errors during initialization.
+	 */
+	public boolean hasInitErrors();
 
 	/**
 	 * Returns all computing resources for the user.
@@ -50,5 +59,5 @@ public interface ResourceProvider extends Serializable {
 	/**
 	 * Signals implementations that changes done to the resources should be saved.
 	 */
-	public void saveApplications();
+	public void save();
 }

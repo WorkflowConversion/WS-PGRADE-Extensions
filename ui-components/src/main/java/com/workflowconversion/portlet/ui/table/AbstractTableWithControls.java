@@ -81,17 +81,24 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 		this.detailsButton = createButton("Show details for selected item", FontAwesome.EYE);
 		this.containerProperties = new LinkedList<ContainerProperty>();
 		this.table = new Table();
+		init();
 	}
 
-	@Override
-	public void init(final Collection<T> initialElements) {
+	private void init() {
 		setUpContainerProperties();
 		setUpEditComponents();
 		setUpLayout();
 		setUpProperties();
 		setUpTable();
-		setInitialItems(initialElements);
 		setReadOnly(!allowEdition);
+	}
+
+	@Override
+	public final void setInitialItems(final Collection<T> initialItems) {
+		Validate.notNull(initialItems, "initialItems cannot be null.");
+		for (final T element : initialItems) {
+			insertItem_internal(element);
+		}
 	}
 
 	private void setUpEditComponents() {
@@ -344,13 +351,6 @@ public abstract class AbstractTableWithControls<T> extends VerticalLayout implem
 	private void validateEditionAllowed() {
 		if (!allowEdition) {
 			throw new TableIsReadOnlyException("This table does not allow editions.");
-		}
-	}
-
-	private void setInitialItems(final Collection<T> initialItems) {
-		Validate.notNull(initialItems, "initialItems cannot be null.");
-		for (final T element : initialItems) {
-			insertItem_internal(element);
 		}
 	}
 

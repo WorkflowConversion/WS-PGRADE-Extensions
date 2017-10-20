@@ -33,14 +33,14 @@ public class MockWorkflowManagerFactory implements WorkflowManagerFactory {
 
 	@Override
 	public WorkflowManager newInstance() {
-		return new MockWorkflowProvider();
+		return new MockWorkflowManager();
 	}
 
-	private static class MockWorkflowProvider implements WorkflowManager {
+	private static class MockWorkflowManager implements WorkflowManager {
 		final Map<String, Workflow> workflows;
 		private static int CURRENT_WF_ID = 0;
 
-		private MockWorkflowProvider() {
+		private MockWorkflowManager() {
 			workflows = new TreeMap<String, Workflow>();
 			// create some workflows
 			for (int i = 0; i < 5; i++) {

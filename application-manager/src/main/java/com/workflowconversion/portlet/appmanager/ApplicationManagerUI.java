@@ -27,8 +27,8 @@ import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
 import com.workflowconversion.portlet.ui.resource.upload.BulkUploadApplicationsDialog;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
-import com.workflowconversion.portlet.ui.table.resource.ResourcesTable;
-import com.workflowconversion.portlet.ui.table.resource.ResourcesTable.ResourcesTableFactory;
+import com.workflowconversion.portlet.ui.table.resource.ResourceTable;
+import com.workflowconversion.portlet.ui.table.resource.ResourceTable.ResourceTableFactory;
 
 /**
  * Entry point for this portlet.
@@ -83,13 +83,19 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 					final int selectedResourceProviderId = (Integer) event.getProperty().getValue();
 					final UIComponents uiComponents = uiComponentsMap.get(selectedResourceProviderId);
 
-					bulkUploadButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
-
 					resourceTableLayout.removeAllComponents();
-					resourceTableLayout.addComponent(uiComponents.resourceTable);
 
-					// make sure that the checkbox and the state of the tables is consistent
-					resourceTableLayout.markAsDirtyRecursive();
+					if (uiComponents.resourceProvider.hasInitErrors()) {
+						NotificationUtils.displayError("The resource provider named '"
+								+ uiComponents.resourceProvider.getName()
+								+ "' could not be initialized. Contact your admin or check the log for further details.");
+						bulkUploadButton.setEnabled(false);
+					} else {
+						bulkUploadButton.setEnabled(uiComponents.resourceProvider.canAddApplications());
+						resourceTableLayout.addComponent(uiComponents.resourceTable);
+						// make sure that the checkbox and the state of the tables is consistent
+						resourceTableLayout.markAsDirtyRecursive();
+					}
 				}
 			}
 		});
@@ -118,7 +124,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		editControlsLayout.addComponent(buttonsLayout);
 		editControlsLayout.setComponentAlignment(buttonsLayout, Alignment.MIDDLE_RIGHT);
 
-		editControlsLayout.setWidth(ResourcesTable.WIDTH_PIXELS, Unit.PIXELS);
+		editControlsLayout.setWidth(ResourceTable.WIDTH_PIXELS, Unit.PIXELS);
 
 		final VerticalLayout mainLayout = new VerticalLayout();
 		mainLayout.addComponent(resourceProviderComboBox);
@@ -149,11 +155,13 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 	}
 
 	private UIComponents buildUiComponentsForResourceProvider(final ResourceProvider resourceProvider) {
-		final ResourcesTableFactory factory = new ResourcesTableFactory();
-		// cannot edit resource tables, just the applications
+		final ResourceTableFactory factory = new ResourceTableFactory();
+		// cannot add/remove resources, because the list of resources comes from a web service
 		factory.withResourceProvider(resourceProvider).withTitle("Resources");
 		final TableWithControls<Resource> resourceTable = factory.newInstance();
-		resourceTable.init(resourceProvider.getResources());
+		if (!resourceProvider.hasInitErrors()) {
+			resourceTable.setInitialItems(resourceProvider.getResources());
+		}
 		final UIComponents uiComponents = new UIComponents(resourceProvider, resourceTable);
 
 		return uiComponents;
@@ -167,7 +175,7 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		resourceProviderComboBox.setImmediate(true);
 		resourceProviderComboBox.setDescription("Select a resource database to manage");
 		resourceProviderComboBox.setInputPrompt("Select a resource database to manage");
-		resourceProviderComboBox.setWidth(ResourcesTable.WIDTH_PIXELS, Unit.PIXELS);
+		resourceProviderComboBox.setWidth(ResourceTable.WIDTH_PIXELS, Unit.PIXELS);
 
 		resourceProviderComboBox.addContainerProperty(PROPERTY_NAME_CAPTION, String.class, null);
 		resourceProviderComboBox.addContainerProperty(PROPERTY_NAME_ICON, com.vaadin.server.Resource.class, null);
