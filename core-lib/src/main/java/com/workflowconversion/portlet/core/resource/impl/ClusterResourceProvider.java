@@ -51,6 +51,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	private final MiddlewareProvider middlewareProvider;
 	private final ReadWriteLock readWriteLock;
 	private final File jaxbApplicationsXmlFile;
+	private volatile boolean hasInitErrors;
 
 	/**
 	 * @param middlewareProvider
@@ -60,6 +61,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	 */
 	public ClusterResourceProvider(final MiddlewareProvider middlewareProvider,
 			final String jaxbApplicationsXmlFileLocation) {
+		this.hasInitErrors = false;
 		this.resources = new TreeMap<String, Resource>();
 		this.middlewareProvider = middlewareProvider;
 		this.jaxbApplicationsXmlFile = new File(jaxbApplicationsXmlFileLocation);
@@ -81,11 +83,20 @@ public class ClusterResourceProvider implements ResourceProvider {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();
 		try {
+			// FIXME: Also consider resources not present in the xml!
 			loadResourcesFromFile_notThreadSafe();
+		} catch (final Exception e) {
+			hasInitErrors = true;
+			LOG.error("The cluster resource provider could not be initialized.", e);
 		} finally {
 			writeLock.unlock();
 		}
 
+	}
+
+	@Override
+	public boolean hasInitErrors() {
+		return hasInitErrors;
 	}
 
 	@Override
@@ -111,7 +122,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void saveApplications() {
+	public void save() {
 		final Lock writeLock = readWriteLock.writeLock();
 		writeLock.lock();
 		try {
@@ -201,9 +212,9 @@ public class ClusterResourceProvider implements ResourceProvider {
 
 	private Map<String, Item> getEnabledClusterItemMap_notThreadSafe() {
 		// get the enabled cluster middlewares
-		final Filter<Middleware> enabledClusterMiddlewareFilter = new AvailableClusterMiddlewareFilter();
+		final Filter<Middleware> clusterMiddlewareFilter = new ClusterMiddlewareFilter();
 		final Collection<Middleware> enabledClusterMiddlewares = FilterApplicator
-				.applyFilter(middlewareProvider.getEnabledMiddlewares(), enabledClusterMiddlewareFilter);
+				.applyFilter(middlewareProvider.getEnabledMiddlewares(), clusterMiddlewareFilter);
 		// select the enabled items from the list of enabled middlewares
 		final Map<String, Item> enabledClusterItemMap = new TreeMap<String, Item>();
 		final Filter<Item> enabledItemFilter = new SimpleFilterFactory().setEnabled(true).newItemFilter();
@@ -248,16 +259,10 @@ public class ClusterResourceProvider implements ResourceProvider {
 		return extractedQueues;
 	}
 
-	private final static class AvailableClusterMiddlewareFilter implements Filter<Middleware> {
+	private final static class ClusterMiddlewareFilter implements Filter<Middleware> {
 		@Override
 		public boolean passes(final Middleware element) {
-			try {
-				SupportedClusters.valueOf(element.getType());
-				return true;
-			} catch (IllegalArgumentException | NullPointerException e) {
-
-			}
-			return false;
+			return SupportedClusters.isSupported(element.getType());
 		}
 	}
 }

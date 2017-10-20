@@ -16,8 +16,8 @@ import com.workflowconversion.portlet.ui.table.AbstractGenericElementDetailsDial
 import com.workflowconversion.portlet.ui.table.GenericElementDetailsSavedListener;
 import com.workflowconversion.portlet.ui.table.Size;
 import com.workflowconversion.portlet.ui.table.TableWithControls;
-import com.workflowconversion.portlet.ui.table.application.ApplicationsTable.ApplicationsTableFactory;
-import com.workflowconversion.portlet.ui.table.queue.QueuesTable.QueueTableFactory;
+import com.workflowconversion.portlet.ui.table.application.ApplicationTable.ApplicationTableFactory;
+import com.workflowconversion.portlet.ui.table.queue.QueueTable.QueueTableFactory;
 
 /**
  * Dialog to see/edit Applications and Queues of a resource.
@@ -63,16 +63,16 @@ public class ResourceDetailsDialog extends AbstractGenericElementDetailsDialog<R
 		saveButton.setEnabled(allowEdition);
 		saveButton.setDisableOnClick(true);
 
-		final ApplicationsTableFactory applicationsTableFactory = new ApplicationsTableFactory();
+		final ApplicationTableFactory applicationsTableFactory = new ApplicationTableFactory();
 		applicationsTableFactory.withOwningResource(super.element).allowEdition(super.element.canModifyApplications())
 				.withTitle("Applications");
 		final TableWithControls<Application> applicationsTable = applicationsTableFactory.newInstance();
-		applicationsTable.init(super.element.getApplications());
+		applicationsTable.setInitialItems(super.element.getApplications());
 
 		final QueueTableFactory queueTableFactory = new QueueTableFactory();
 		queueTableFactory.withTitle("Queues");
 		final TableWithControls<Queue> queueTable = queueTableFactory.newInstance();
-		queueTable.init(super.element.getQueues());
+		queueTable.setInitialItems(super.element.getQueues());
 
 		closeButton.addClickListener(new Button.ClickListener() {
 			private static final long serialVersionUID = 9168543231461290544L;

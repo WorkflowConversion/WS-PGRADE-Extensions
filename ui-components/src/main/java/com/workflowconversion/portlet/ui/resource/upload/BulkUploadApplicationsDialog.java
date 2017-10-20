@@ -265,7 +265,7 @@ public class BulkUploadApplicationsDialog extends Window {
 					formattedWarnings.append("</ul>");
 					NotificationUtils.displayWarning(formattedWarnings.toString());
 				}
-				resourceProvider.saveApplications();
+				resourceProvider.save();
 			} finally {
 				upload.setEnabled(true);
 			}

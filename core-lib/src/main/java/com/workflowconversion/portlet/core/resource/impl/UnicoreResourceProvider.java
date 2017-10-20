@@ -50,6 +50,8 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	private final Supplier<Map<String, Resource>> cachedResources;
 	private final MiddlewareProvider middlewareProvider;
 
+	private volatile boolean hasErrors;
+
 	/**
 	 * Constructor.
 	 * 
@@ -61,6 +63,7 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	public UnicoreResourceProvider(final MiddlewareProvider middlewareProvider, final int cacheDuration) {
 		Validate.notNull(middlewareProvider, "middlewareProvider cannot be null");
 		Validate.isTrue(cacheDuration > 0, "invalid cacheDuration " + cacheDuration);
+		this.hasErrors = false;
 		this.middlewareProvider = middlewareProvider;
 		this.cachedResources = Suppliers.memoizeWithExpiration(new Supplier<Map<String, Resource>>() {
 
@@ -169,8 +172,18 @@ public class UnicoreResourceProvider implements ResourceProvider {
 
 	@Override
 	public void init() {
-		// force a cache load
-		cachedResources.get();
+		try {
+			// if this is the first invocation, which it should be, it will force a cache load
+			cachedResources.get();
+		} catch (final Exception e) {
+			hasErrors = true;
+			LOG.error("The UNICORE Resource Provider could not be initialized.", e);
+		}
+	}
+
+	@Override
+	public boolean hasInitErrors() {
+		return hasErrors;
 	}
 
 	@Override
@@ -179,8 +192,9 @@ public class UnicoreResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void saveApplications() {
+	public void save() {
 		throw new ApplicationException(
 				"This provider does not support adding/editing applications. This is probably a coding problem and should be reported.");
 	}
+
 }
