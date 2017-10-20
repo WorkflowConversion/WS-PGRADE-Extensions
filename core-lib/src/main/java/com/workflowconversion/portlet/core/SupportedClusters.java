@@ -14,7 +14,7 @@ public enum SupportedClusters {
 	public static boolean isSupported(final String resourceType) {
 		if (StringUtils.isNotBlank(resourceType)) {
 			try {
-				valueOf(StringUtils.trimToEmpty(resourceType));
+				valueOf(StringUtils.trimToEmpty(resourceType.toLowerCase()));
 				return true;
 			} catch (final IllegalArgumentException e) {
 

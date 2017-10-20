@@ -82,7 +82,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
-		settingsBuilder.withApplicationProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
+		settingsBuilder.withResourceProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
 				.withWorkflowManagerFactoryClass(workflowManagerFactoryClass)
 				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)

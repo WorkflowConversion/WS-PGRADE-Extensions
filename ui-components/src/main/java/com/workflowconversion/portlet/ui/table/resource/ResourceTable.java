@@ -20,7 +20,7 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  * @author delagarza
  *
  */
-public class ResourcesTable extends AbstractTableWithControls<Resource> {
+public class ResourceTable extends AbstractTableWithControls<Resource> {
 	private final static long serialVersionUID = 4634915248824534764L;
 
 	private final static String PROPERTY_RESOURCE = "ResourcesTable_property_resource";
@@ -32,7 +32,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	 */
 	public static final int WIDTH_PIXELS = 650;
 
-	private ResourcesTable(final String title, final ResourceProvider resourceProvider) {
+	private ResourceTable(final String title, final ResourceProvider resourceProvider) {
 		// cannot modify resources
 		super(title, false, true);
 		Validate.notNull(resourceProvider,
@@ -98,7 +98,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	public void elementDetailsSaved(final Object itemId, final Resource element) {
 		if (resourceProvider.canAddApplications() && element.canModifyApplications()) {
 			super.elementDetailsSaved(itemId, element);
-			resourceProvider.saveApplications();
+			resourceProvider.save();
 		} else {
 			throw new ApplicationException(
 					"The resource and/or the provider don't support modifying/adding applications. This seems to be a coding problem and should be reported.");
@@ -111,7 +111,7 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 	 * 
 	 * @author delagarza
 	 */
-	public static class ResourcesTableFactory extends AbstractTableWithControlsFactory<Resource> {
+	public static class ResourceTableFactory extends AbstractTableWithControlsFactory<Resource> {
 		private ResourceProvider resourceProvider;
 
 		/**
@@ -119,14 +119,14 @@ public class ResourcesTable extends AbstractTableWithControls<Resource> {
 		 *            the resource provider.
 		 * @return {@code this} factory.
 		 */
-		public ResourcesTableFactory withResourceProvider(final ResourceProvider resourceProvider) {
+		public ResourceTableFactory withResourceProvider(final ResourceProvider resourceProvider) {
 			this.resourceProvider = resourceProvider;
 			return this;
 		}
 
 		@Override
 		public TableWithControls<Resource> newInstance() {
-			return new ResourcesTable(super.title, resourceProvider);
+			return new ResourceTable(super.title, resourceProvider);
 		}
 	}
 }

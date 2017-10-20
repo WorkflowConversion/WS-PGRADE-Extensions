@@ -118,7 +118,6 @@ public class Resource implements Serializable {
 		Validate.notNull(application, "application cannot be null");
 		final String key = KeyUtils.generate(application);
 		if (!applications.containsKey(key)) {
-			// application.setResource(this);
 			applications.put(key, application);
 		} else {
 			throw new DuplicateApplicationException(application);

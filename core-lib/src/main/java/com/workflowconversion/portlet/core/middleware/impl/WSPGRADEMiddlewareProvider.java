@@ -29,13 +29,13 @@ public class WSPGRADEMiddlewareProvider extends AbstractFilteredMiddlewareProvid
 	private final static Logger LOG = LoggerFactory.getLogger(WSPGRADEMiddlewareProvider.class);
 	private final Supplier<Collection<Middleware>> cachedMiddlewares;
 
-	// this is that dci-bride.xml looks like
 	// there are multiple <middleware> items, but there should be only one with type "unicore"
 	// inside of the middleware of type unicore there will be several <item> nodes, the name of these
 	// <item>s contains the server name and port on which UNICORE will be listening for requests
 	// the <unicore> child node of the <item> element contains the certificate information
 	// ...
 	// the gUSE webservices return this same structure replicated in JAXB-generated objects
+	// this is what dci-bridge.xml looks like:
 	/**
 	 * <pre>
 	 <middleware type="unicore" enabled="true">

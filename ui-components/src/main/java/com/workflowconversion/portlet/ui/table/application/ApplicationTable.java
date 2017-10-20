@@ -25,13 +25,13 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  * Clients are responsible of validating that instances of this class based on a read-only {@link ResourceProvider} are
  * not editable.
  */
-public class ApplicationsTable extends AbstractTableWithControls<Application> {
+public class ApplicationTable extends AbstractTableWithControls<Application> {
 
 	private final static long serialVersionUID = -5169354278787921392L;
 
 	private final Resource owningResource;
 
-	private ApplicationsTable(final Resource owningResource, final String title, final boolean allowEdition) {
+	private ApplicationTable(final Resource owningResource, final String title, final boolean allowEdition) {
 		super(title, allowEdition, false);
 		Validate.notNull(owningResource, "owningResource cannot be null");
 		this.owningResource = owningResource;
@@ -153,7 +153,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 	 * @author delagarza
 	 *
 	 */
-	public static class ApplicationsTableFactory extends AbstractTableWithControlsFactory<Application> {
+	public static class ApplicationTableFactory extends AbstractTableWithControlsFactory<Application> {
 		private boolean allowEdition;
 		private Resource owningResource;
 
@@ -162,7 +162,7 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 		 *            whether adding/editing applications is allowed.
 		 * @return {@code this} factory.
 		 */
-		public ApplicationsTableFactory allowEdition(final boolean allowEdition) {
+		public ApplicationTableFactory allowEdition(final boolean allowEdition) {
 			this.allowEdition = allowEdition;
 			return this;
 		}
@@ -174,14 +174,14 @@ public class ApplicationsTable extends AbstractTableWithControls<Application> {
 		 *            the owning resource.
 		 * @return {@code this} factory.
 		 */
-		public ApplicationsTableFactory withOwningResource(final Resource owningResource) {
+		public ApplicationTableFactory withOwningResource(final Resource owningResource) {
 			this.owningResource = owningResource;
 			return this;
 		}
 
 		@Override
 		public TableWithControls<Application> newInstance() {
-			return new ApplicationsTable(owningResource, super.title, allowEdition);
+			return new ApplicationTable(owningResource, super.title, allowEdition);
 		}
 	}
 }

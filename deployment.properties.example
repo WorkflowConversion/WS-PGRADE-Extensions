@@ -1,4 +1,4 @@
-##### The following settings are needed if the war is to be installed via maven (i.e., mvn install)
+##### The following settings are needed if the war is to be installed via ant (i.e., ant deploy-all)
 # remote server to which the war file will be copied
 remote.server=your.server.com
 
@@ -10,6 +10,3 @@ remote.server.username=username
 
 # remote server's liferay deploy folder
 remote.server.deploy.path=/path/to/your/liferay/deploy/folder
-
-# location of the 'base' apache tomcat folder on the remote server
-remote.server.tomcat.path=/home/guseuser/guse/apache-tomcat-7.0.55

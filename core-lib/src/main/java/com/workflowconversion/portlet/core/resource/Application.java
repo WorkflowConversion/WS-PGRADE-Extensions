@@ -34,7 +34,7 @@ public class Application implements Serializable {
 		this.name = name;
 		this.version = version;
 		this.path = path;
-		// no need to validate descriptio
+		// no need to validate description
 		this.description = StringUtils.trimToEmpty(description);
 	}
 

@@ -15,12 +15,12 @@ import com.workflowconversion.portlet.ui.table.TableWithControls;
  * @author delagarza
  *
  */
-public class QueuesTable extends AbstractTableWithControls<Queue> {
+public class QueueTable extends AbstractTableWithControls<Queue> {
 
 	private final static long serialVersionUID = -6243453484525350648L;
 	private final static String PROPERTY_QUEUE = "QueueTable_property_queue";
 
-	private QueuesTable(final String title) {
+	private QueueTable(final String title) {
 		super(title, false, false);
 	}
 
@@ -73,7 +73,7 @@ public class QueuesTable extends AbstractTableWithControls<Queue> {
 
 		@Override
 		public TableWithControls<Queue> newInstance() {
-			return new QueuesTable(super.title);
+			return new QueueTable(super.title);
 		}
 
 	}

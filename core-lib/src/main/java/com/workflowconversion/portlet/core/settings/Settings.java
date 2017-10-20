@@ -126,22 +126,22 @@ public class Settings implements Serializable {
 		return jobExecutionPropertiesHandler;
 	}
 
-	private Settings(final PortletSanityCheck portletSanityCheck,
-			final Collection<ResourceProvider> applicationProviders, final MiddlewareProvider middlewareProvider,
+	private Settings(final PortletSanityCheck portletSanityCheck, final Collection<ResourceProvider> resourceProviders,
+			final MiddlewareProvider middlewareProvider,
 			final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass,
 			final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass,
 			final String workflowStagingAreaPath, final JobExecutionPropertiesHandler jobExecutionPropertiesHandler) {
 		Validate.notNull(portletSanityCheck,
 				"portletSanityCheck cannot be null, please use the Builder.withPortletSanityCheck() method to set a non-null value");
-		Validate.notEmpty(applicationProviders,
-				"applicationProviders cannot be null or empty, please use the Builder.withApplicationProviders() method to set a proper value");
+		Validate.notEmpty(resourceProviders,
+				"resourceProviders cannot be null or empty, please use the Builder.withApplicationProviders() method to set a proper value");
 		Validate.notNull(middlewareProvider,
 				"middlewareProvider cannot be null, please use the Builder.withMiddlewareProvider() method to set a non-null value");
 		Validate.notNull(workflowManagerFactoryClass,
 				"workflowManagerFactoryClass cannot be null, please use the Builder.withWorkflowProviderFactoryClass() method to set a non-null value");
 		Validate.notNull(workflowExporterFactoryClass,
 				"workflowExporterFactoryClass cannot be null, please use the Builder.withWorkflowExporterFactoryClass() method to set a non-null value");
-		this.resourceProviders = Collections.unmodifiableCollection(applicationProviders);
+		this.resourceProviders = Collections.unmodifiableCollection(resourceProviders);
 		this.portletSanityCheck = portletSanityCheck;
 		this.middlewareProvider = middlewareProvider;
 		this.workflowExporterFactoryClass = workflowExporterFactoryClass;
@@ -159,7 +159,7 @@ public class Settings implements Serializable {
 	 *
 	 */
 	public static class Builder {
-		private Collection<ResourceProvider> applicationProviders;
+		private Collection<ResourceProvider> resourceProviders;
 		private PortletSanityCheck portletSanityCheck;
 		private MiddlewareProvider middlewareProvider;
 		private Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass;
@@ -170,12 +170,12 @@ public class Settings implements Serializable {
 		/**
 		 * Sets the application providers.
 		 * 
-		 * @param applicationProviders
-		 *            The collection of application providers.
+		 * @param resourceProviders
+		 *            The collection of resource providers.
 		 * @return the instance of {@code this} {@link Builder}.
 		 */
-		public Builder withApplicationProviders(final Collection<ResourceProvider> applicationProviders) {
-			this.applicationProviders = applicationProviders;
+		public Builder withResourceProviders(final Collection<ResourceProvider> resourceProviders) {
+			this.resourceProviders = resourceProviders;
 			return this;
 		}
 
@@ -260,9 +260,8 @@ public class Settings implements Serializable {
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newSettings() {
-			return new Settings(portletSanityCheck, applicationProviders, middlewareProvider,
-					workflowExporterFactoryClass, workflowManagerFactoryClass, workflowStagingAreaPath,
-					jobExecutionPropertiesHandler);
+			return new Settings(portletSanityCheck, resourceProviders, middlewareProvider, workflowExporterFactoryClass,
+					workflowManagerFactoryClass, workflowStagingAreaPath, jobExecutionPropertiesHandler);
 		}
 	}
 }
