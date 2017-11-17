@@ -8,9 +8,9 @@
 		<artifactId>WS-PGRADE-Portlets</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>workflow-importer-portlet</artifactId>
+	<artifactId>workflow-configurator-portlet</artifactId>
 	<packaging>war</packaging>
-	<name>Workflow Importer Portlet</name>
+	<name>Workflow Configurator Portlet</name>
 	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
 
 	<dependencies>
