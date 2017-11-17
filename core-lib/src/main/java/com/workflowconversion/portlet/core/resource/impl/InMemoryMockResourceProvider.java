@@ -5,8 +5,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.http.annotation.NotThreadSafe;
-import org.jsoup.helper.Validate;
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +24,6 @@ import dci.data.Middleware;
  * @author delagarza
  *
  */
-@NotThreadSafe
 public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	private static final long serialVersionUID = 9085026519196444948L;

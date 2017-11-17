@@ -11,8 +11,8 @@
 		<!-- portlet.name defined in build.properties -->
 		<file>${catalina.home}/logs/com_workflowconversion_${portlet.name}.log</file>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<!-- portlet.name defined in build.properties -->
-			<fileNamePattern>${catalina.home}/logs/com_workflowconversion_${portlet.name}_%d{yyyy-MM-dd}.log</fileNamePattern><!-- daily rollover -->
+			<!-- short.name defined in build.properties -->
+			<fileNamePattern>${catalina.home}/logs/com_workflowconversion_${short.name}_%d{yyyy-MM-dd}.log</fileNamePattern><!-- daily rollover -->
 			<maxHistory>30</maxHistory><!-- keep 30 days' worth of history -->
 		</rollingPolicy>
 		<encoder>

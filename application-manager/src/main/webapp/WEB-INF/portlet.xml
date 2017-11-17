@@ -5,8 +5,8 @@
 	version='2.0'>
 	<portlet>
 		<description>WS-PGRADE Application Manager (v. ${version})</description>
-		<!-- portlet.name property is defined in pom.xml -->
-		<portlet-name>${portlet.name}</portlet-name>
+		<!-- short.name property is defined in build.properties -->
+		<portlet-name>${short.name}</portlet-name>
 		<display-name>WS-PGRADE Application Manager</display-name>
 		<portlet-class>com.workflowconversion.portlet.CustomVaadinPortlet</portlet-class>
 		<init-param>

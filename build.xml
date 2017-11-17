@@ -38,18 +38,18 @@
 
 	<!-- copies a single portlet to the liferay instance -->
 	<target name="deploy-portlet" depends="fail-if-missing-properties">
-		<property file="${portlet.dir}/portlet.properties"/>
-		<echo>Deploying ${portlet.name}.war from ${portlet.dir}/target</echo>
+		<property file="${portlet.dir}/build.properties"/>
+		<echo>Deploying ${short.name}.war from ${portlet.dir}/target</echo>
 		<scp 
-			file="${portlet.dir}/target/${portlet.name}.war"
-			remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
+			file="${portlet.dir}/target/${short.name}.war"
+			remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${short.name}.war_tmp"
 			trust="true" verbose="false" keyfile="${keyfile.location}" />
 		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}"
-			command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
+			command="mv ${remote.server.deploy.path}/${short.name}.war_tmp ${remote.server.deploy.path}/${short.name}.war" />
 	</target>
 
 	<!-- deploys all portlets -->
-  	<target name="deploy-all" depends="deploy-application-manager, deploy-workflow-importer" />
+  	<target name="deploy-all" depends="deploy-application-manager, deploy-application-database" />
 	
 	<!-- deploys the application-manager portlet -->
   	<target name="deploy-application-manager" depends="fail-if-missing-properties">
@@ -58,10 +58,10 @@
   		</antcall>
 	</target>
 	
-	<!-- deploys the workflow-importer portlet -->
-	<target name="deploy-workflow-importer" depends="fail-if-missing-properties">
+	<!-- deploys the application database RESTful service -->
+	<target name="deploy-application-database" depends="fail-if-missing-properties">
 	  	<antcall target="deploy-portlet">
-	  		<param name="portlet.dir" value="workflow-importer" />
+	  		<param name="portlet.dir" value="application-database" />
 		</antcall>
 	</target>
 </project>

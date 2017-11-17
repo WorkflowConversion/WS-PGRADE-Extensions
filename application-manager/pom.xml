@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.workflowconversion</groupId>
-		<artifactId>WS-PGRADE-Portlets</artifactId>
+		<artifactId>WS-PGRADE-Extensions</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>application-manager-portlet</artifactId>
+	<artifactId>application-manager</artifactId>
 	<packaging>war</packaging>
 	<name>Application Manager Portlet</name>
-	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
+	<url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</url>
 
 	<dependencies>
 		<dependency>
@@ -24,10 +24,182 @@
 			<artifactId>ui-components</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-bom</artifactId>
+			<version>${vaadin.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+
+		<!-- located in our local repository, used for imports in PortletUser in 
+			core-lib -->
+		<dependency>
+			<groupId>com.liferay</groupId>
+			<artifactId>portal-service</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-push</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-themes</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.portlet</groupId>
+			<artifactId>portlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- <dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>asm_api</artifactId> 
+			<version>${asm.version}</version> </dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> 
+			<artifactId>information_cli</artifactId> <version>${guse.version}</version> 
+			</dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>guse_client</artifactId> 
+			<version>${guse.version}</version> </dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> 
+			<artifactId>logging_cli</artifactId> <version>${guse.version}</version> </dependency> 
+			<dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>wfi_cli</artifactId> 
+			<version>${guse.version}</version> </dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> 
+			<artifactId>wfs_cli</artifactId> <version>${guse.version}</version> </dependency> 
+			<dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>dcibridge_cli</artifactId> 
+			<version>${guse.version}</version> </dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> 
+			<artifactId>storage_cli</artifactId> <version>${guse.version}</version> </dependency> 
+			<dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>portal_cli</artifactId> 
+			<version>${guse.version}</version> </dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> 
+			<artifactId>repository_cli</artifactId> <version>${guse.version}</version> 
+			</dependency> <dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>frontendbase</artifactId> 
+			<version>${guse.version}</version> </dependency> <dependency> <groupId>commons-discovery</groupId> 
+			<artifactId>commons-discovery</artifactId> <version>0.5</version> </dependency> 
+			<dependency> <groupId>org.apache.ws.xmlrpc</groupId> <artifactId>xmlrpc</artifactId> 
+			<version>2.0.1</version> <exclusions> <exclusion> <groupId>javax.servlet</groupId> 
+			<artifactId>servlet-api</artifactId> </exclusion> </exclusions> </dependency> 
+			<dependency> <groupId>javax.servlet</groupId> <artifactId>javax.servlet-api</artifactId> 
+			<version>3.0.1</version> <scope>provided</scope> </dependency> <dependency> 
+			<groupId>org.mortbay.jetty</groupId> <artifactId>servlet-api</artifactId> 
+			<version>2.5-20081211</version> <scope>provided</scope> </dependency> <dependency> 
+			<groupId>org.apache.tomcat</groupId> <artifactId>servlet-api</artifactId> 
+			<version>6.0.35</version> <scope>provided</scope> </dependency> <dependency> 
+			<groupId>xerces</groupId> <artifactId>xercesImpl</artifactId> <version>2.9.1</version> 
+			</dependency> <dependency> <groupId>jstl</groupId> <artifactId>jstl</artifactId> 
+			<version>1.2</version> </dependency> <dependency> <groupId>com.sun.xml.ws</groupId> 
+			<artifactId>jaxws-rt</artifactId> <version>${jaxws-rt.version}</version> 
+			</dependency> <dependency> <groupId>org.apache.xmlbeans</groupId> <artifactId>xmlbeans</artifactId> 
+			<version>2.4.0</version> </dependency> <dependency> <groupId>org.dspace</groupId> 
+			<artifactId>mets</artifactId> <version>1.5.2</version> </dependency> <dependency> 
+			<groupId>commons-cli</groupId> <artifactId>commons-cli</artifactId> <version>1.2</version> 
+			</dependency> <dependency> <groupId>org.jdom</groupId> <artifactId>jdom</artifactId> 
+			<version>1.1.3</version> </dependency> <dependency> <groupId>commons-httpclient</groupId> 
+			<artifactId>commons-httpclient</artifactId> <version>3.1</version> </dependency> 
+			<dependency> <groupId>org.apache.httpcomponents</groupId> <artifactId>httpclient</artifactId> 
+			<version>4.1</version> </dependency> <dependency> <groupId>org.apache.httpcomponents</groupId> 
+			<artifactId>httpclient-cache</artifactId> <version>4.1</version> </dependency> 
+			<dependency> <groupId>org.apache.httpcomponents</groupId> <artifactId>httpmime</artifactId> 
+			<version>4.1</version> </dependency> <dependency> <groupId>javax.persistence</groupId> 
+			<artifactId>persistence-api</artifactId> <version>1.0.2</version> </dependency> 
+			<dependency> <groupId>org.globus</groupId> <artifactId>cog-jglobus</artifactId> 
+			<version>1.8</version> </dependency> <dependency> <groupId>net.sourceforge.saxon</groupId> 
+			<artifactId>saxon</artifactId> <version>9.1.0.8</version> </dependency> <dependency> 
+			<groupId>org.json</groupId> <artifactId>json</artifactId> <version>20090211</version> 
+			</dependency> <dependency> <groupId>com.thoughtworks.xstream</groupId> <artifactId>xstream</artifactId> 
+			<version>1.3.1</version> </dependency> -->
+		<!-- UNICORE dependencies -->
+		<dependency>
+			<groupId>eu.unicore</groupId>
+			<artifactId>uas-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.fzj.unicore.wsrflite</groupId>
+			<artifactId>wsrflite</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>eu.unicore.security</groupId>
+			<artifactId>securityLibrary</artifactId>
+		</dependency>
+		<!-- MySQL connector -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+		<!-- includes the PropertiesConfiguration, which allows us to automatically 
+			refresh properties based on properties files -->
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+		</dependency>
+		<!-- includes a database connection pool -->
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jdbc</artifactId>
+		</dependency>
+		<!-- for cache usage -->
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<!-- for string comparison (there doesn't seem to be a deployed version 
+			in any public maven repository, so this file is included in the lib/mvnrepo 
+			folder -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+		</dependency>
 	</dependencies>
-	
+
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>2.6.1</version>
+				<!-- Clean up also any pre-compiled themes -->
+				<configuration>
+					<filesets>
+						<fileset>
+							<directory>src/main/webapp/VAADIN/themes</directory>
+							<includes>
+								<include>**/styles.css</include>
+								<include>**/styles.scss.cache</include>
+							</includes>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.vaadin</groupId>
+				<artifactId>vaadin-maven-plugin</artifactId>
+				<version>${vaadin.plugin.version}</version>
+				<configuration>
+					<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
+					<webappDirectory>${basedir}/target/classes/VAADIN/widgetsets</webappDirectory>
+					<draftCompile>false</draftCompile>
+					<compileReport>false</compileReport>
+					<style>OBF</style>
+					<strict>true</strict>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>update-theme</goal>
+							<goal>update-widgetset</goal>
+							<goal>compile</goal>
+							<goal>compile-theme</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>properties-maven-plugin</artifactId>
@@ -47,6 +219,39 @@
 				</executions>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. See: https://dev.vaadin.com/ticket/8899 -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>com.vaadin</groupId>
+										<artifactId>vaadin-maven-plugin</artifactId>
+										<versionRange>[${vaadin.plugin.version},)</versionRange>
+										<goals>
+											<goal>update-theme</goal>
+											<goal>update-widgetset</goal>
+											<goal>compile</goal>
+											<goal>compile-theme</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>

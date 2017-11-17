@@ -4,7 +4,7 @@
 <liferay-portlet-app>
     <portlet>
     	<!-- portlet.name property is defined in pom.xml -->
-        <portlet-name>${portlet.name}</portlet-name>
+        <portlet-name>${short.name}</portlet-name>
         <!-- this property has to be set to false if using Liferay 6.2 and Vaadin 6.8, otherwise the portlet
         	 will not be displayed at all; WS-PGRADE version 3.7.4 includes these versions by default -->
         <requires-namespaced-parameters>false</requires-namespaced-parameters>

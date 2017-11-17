@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
-    <display-name>WS-PGRADE portlet (${portlet.name})</display-name>
+    <display-name>WS-PGRADE Portlet (${short.name})</display-name>
     
     <listener>
         <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>        
@@ -28,7 +28,7 @@
     	<param-value>120</param-value>
     </context-param>
     
-	<!-- portlet.name property is defined in build.propeties --> 
+	<!-- short.name property is defined in build.propeties --> 
     <!-- Vaadin specific entries -->
     <context-param>
 		<description>Vaadin production mode</description>
@@ -36,7 +36,7 @@
 		<param-value>true</param-value>
 	</context-param>
 	<servlet>
-		<servlet-name>${portlet.name}Servlet</servlet-name>
+		<servlet-name>${short.name}Servlet</servlet-name>
 		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
 			<description>Vaadin UI class to start</description>
@@ -46,15 +46,15 @@
 		<load-on-startup>10</load-on-startup>
 	</servlet>
 	<servlet-mapping> 
-		<servlet-name>${portlet.name}Servlet</servlet-name>
-		<url-pattern>/${portlet.name}Servlet/*</url-pattern>	
+		<servlet-name>${short.name}Servlet</servlet-name>
+		<url-pattern>/${short.name}Servlet/*</url-pattern>	
 	</servlet-mapping>
 	<servlet-mapping>
-		<servlet-name>${portlet.name}Servlet</servlet-name>
+		<servlet-name>${short.name}Servlet</servlet-name>
 		<url-pattern>/VAADIN/*</url-pattern>	
 	</servlet-mapping>
 	<servlet-mapping>
-		<servlet-name>${portlet.name}Servlet</servlet-name>
+		<servlet-name>${short.name}Servlet</servlet-name>
 		<url-pattern>/*</url-pattern>	
 	</servlet-mapping>
 	
@@ -64,28 +64,28 @@
         <servlet-class>hu.sztaki.lpds.information.local.InitAxisServices</servlet-class>
         <init-param>
             <param-name>baseurl</param-name>
-            <!-- portlet.name property is defined in build.properties -->
-            <param-value>http://localhost:8080/${portlet.name}/servlet/AxisServlet</param-value>
+            <!-- short.name property is defined in build.properties -->
+            <param-value>http://localhost:8080/${short.name}/servlet/AxisServlet</param-value>
         </init-param>
         <init-param>
             <param-name>install-4</param-name>
-            <!-- portlet.name property is defined in build.properties -->
-            <param-value>webapps/${portlet.name}/WEB-INF/lib/wfi.wsdd</param-value>
+            <!-- short.name property is defined in build.properties -->
+            <param-value>webapps/${short.name}/WEB-INF/lib/wfi.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>install-1</param-name>
-            <!-- portlet.name property is defined in build.properties -->
-            <param-value>webapps/${portlet.name}/WEB-INF/lib/storage.wsdd</param-value>
+            <!-- short.name property is defined in build.properties -->
+            <param-value>webapps/${short.name}/WEB-INF/lib/storage.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>install-2</param-name>
-            <!-- portlet.name property is defined in build.properties -->
-            <param-value>webapps/${portlet.name}/WEB-INF/lib/submitter.wsdd</param-value>
+            <!-- short.name property is defined in build.properties -->
+            <param-value>webapps/${short.name}/WEB-INF/lib/submitter.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>install-3</param-name>
-            <!-- portlet.name property is defined in build.properties -->
-            <param-value>webapps/${portlet.name}/WEB-INF/lib/remote.wsdd</param-value>
+            <!-- short.name property is defined in build.properties -->
+            <param-value>webapps/${short.name}/WEB-INF/lib/remote.wsdd</param-value>
         </init-param>
         <init-param>
             <param-name>run-0</param-name>
