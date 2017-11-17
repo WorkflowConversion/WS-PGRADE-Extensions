@@ -19,69 +19,69 @@
 			<artifactId>javax.servlet-api</artifactId>
 		</dependency>
 		<dependency>
-				<groupId>javax.portlet</groupId>
-				<artifactId>portlet-api</artifactId>
-			</dependency>
+			<groupId>javax.portlet</groupId>
+			<artifactId>portlet-api</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 		</dependency>
 		<dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-api</artifactId>
-</dependency>
-<dependency>
-				<groupId>mysql</groupId>
-				<artifactId>mysql-connector-java</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>hu.sztaki.lpds.guse</groupId>
-				<artifactId>dcibridge_cli</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>com.liferay</groupId>
-				<artifactId>portal-service</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>hu.sztaki.lpds.guse</groupId>
-				<artifactId>information_cli</artifactId>
-			</dependency>
-			<dependency>
-    <groupId>org.apache.directory.studio</groupId>
-    <artifactId>org.apache.commons.io</artifactId>
-</dependency>
-<dependency>
-				<groupId>eu.unicore</groupId>
-				<artifactId>uas-client</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>de.fzj.unicore.wsrflite</groupId>
-				<artifactId>wsrflite</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>eu.unicore.security</groupId>
-				<artifactId>securityLibrary</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-server</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-push</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-client</artifactId>
-			</dependency>
-			<dependency>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-themes</artifactId>
-			</dependency>
-			
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>hu.sztaki.lpds.guse</groupId>
+			<artifactId>dcibridge_cli</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.liferay</groupId>
+			<artifactId>portal-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>hu.sztaki.lpds.guse</groupId>
+			<artifactId>information_cli</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.directory.studio</groupId>
+			<artifactId>org.apache.commons.io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>eu.unicore</groupId>
+			<artifactId>uas-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.fzj.unicore.wsrflite</groupId>
+			<artifactId>wsrflite</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>eu.unicore.security</groupId>
+			<artifactId>securityLibrary</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-push</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-themes</artifactId>
+		</dependency>
+
 	</dependencies>
 </project>
