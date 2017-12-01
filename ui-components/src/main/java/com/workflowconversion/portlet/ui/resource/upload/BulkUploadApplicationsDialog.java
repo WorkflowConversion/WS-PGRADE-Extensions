@@ -32,6 +32,7 @@ import com.vaadin.ui.Upload.SucceededEvent;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
+import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
@@ -189,8 +190,8 @@ public class BulkUploadApplicationsDialog extends Window {
 	}
 
 	void processFile(final File file, final FileType fileType) {
-		final BulkUploadListener bulkUploadListener = new DefaultBulkUploadListener();
-		final AbstractFileProcessor fileProcessor;
+		final BulkUploadListener<Resource> bulkUploadListener = new DefaultBulkUploadListener();
+		final AbstractFileProcessor<Resource> fileProcessor;
 		switch (fileType) {
 		case XML:
 			fileProcessor = new XMLBulkResourcesFileProcessor(file, bulkUploadListener, resourceProvider);
@@ -204,7 +205,7 @@ public class BulkUploadApplicationsDialog extends Window {
 		fileProcessor.start();
 	}
 
-	private class DefaultBulkUploadListener implements BulkUploadListener {
+	private class DefaultBulkUploadListener implements BulkUploadListener<Resource> {
 
 		private final Collection<String> errors;
 		private final Collection<String> warnings;
@@ -240,15 +241,16 @@ public class BulkUploadApplicationsDialog extends Window {
 		}
 
 		@Override
-		public void parsingCompleted(final int numberOfParsedElements) {
+		public void parsingCompleted(final Collection<Resource> parsedResources) {
 			try {
+				final int numberOfParsedApplications = getApplicationCount(parsedResources);
 				if (errors.isEmpty()) {
-					final String message = "Parsed and added " + numberOfParsedElements
-							+ " resource(s) without errors.";
+					final String message = "Processed and added " + numberOfParsedApplications
+							+ " application(s) without errors.";
 					NotificationUtils.displayTrayMessage(message);
 				} else {
-					final StringBuilder formattedError = new StringBuilder("<h3>Parsed and added ");
-					formattedError.append(numberOfParsedElements)
+					final StringBuilder formattedError = new StringBuilder("<h3>Processed and added ");
+					formattedError.append(numberOfParsedApplications)
 							.append(" applications(s) and found the following errors:</h3><ul>");
 					for (final String error : errors) {
 						formattedError.append("<li>").append(error);
@@ -258,18 +260,27 @@ public class BulkUploadApplicationsDialog extends Window {
 				}
 				if (!warnings.isEmpty()) {
 					final StringBuilder formattedWarnings = new StringBuilder(
-							"<h3>The following warnings were generated while parsing the applications file:");
+							"<h3>The following warnings were generated while processing the file:");
 					for (final String warning : warnings) {
 						formattedWarnings.append("<li>").append(warning);
 					}
 					formattedWarnings.append("</ul>");
 					NotificationUtils.displayWarning(formattedWarnings.toString());
 				}
-				resourceProvider.save();
+				resourceProvider.merge(parsedResources);
 			} finally {
 				upload.setEnabled(true);
 			}
+		}
 
+		private int getApplicationCount(final Collection<Resource> parsedResources) {
+			int nApps = 0;
+
+			for (final Resource parsedResource : parsedResources) {
+				nApps += parsedResource.getApplications().size();
+			}
+
+			return nApps;
 		}
 
 	}

@@ -6,8 +6,17 @@ import java.util.Collection;
 /**
  * Interface for resource providers.
  * 
- * Resources come from the already installed grids/clusters on WS-PGRADE. Adding resources through implementations of
- * this interface is not allowed. However, each resource can have associated applications, so resources can be saved.
+ * Configured resources are defined in an xml file {@code dci-bridge.xml} and are read-only accessible via
+ * {@code dci_bridge_service}.
+ * 
+ * Adding resources through implementations of this interface is not allowed. However, each resource can have associated
+ * applications and, depending on the type of resource, it might be possible to store applications through a resource
+ * provider. Queues associated to resources are also read-only.
+ * 
+ * A common usage of a resource provider is to populate tables that display information about computing resources in a
+ * user-friendly way. Implementations should be thread safe and as stateless as possible. This is due to the fact that a
+ * certain resource provider might be visible by more than one thread simultaneously. If an implementation stores state
+ * in a certain form, problems with the consistency of the data could arise.
  * 
  * @author delagarza
  *
@@ -20,8 +29,6 @@ public interface ResourceProvider extends Serializable {
 	public boolean canAddApplications();
 
 	/**
-	 * Returns the name of this resource provider.
-	 * 
 	 * @return the name of this resource provider.
 	 */
 	public String getName();
@@ -41,7 +48,8 @@ public interface ResourceProvider extends Serializable {
 	public boolean hasInitErrors();
 
 	/**
-	 * Returns all computing resources for the user.
+	 * Returns all computing resources for the user directly from the persistence layer. Implementations should not
+	 * store references to the returned resources in order to avoid inconsistencies.
 	 * 
 	 * @return All computing resources.
 	 */
@@ -57,7 +65,38 @@ public interface ResourceProvider extends Serializable {
 	public Resource getResource(final String name, final String type);
 
 	/**
-	 * Signals implementations that changes done to the resources should be saved.
+	 * Saves the applications that have been associated to the passed resource. Any application present in persistence
+	 * storage (e.g., a database) but missing in the passed resource should be removed. In other words, this method
+	 * should synchronize the applications in the passed resource with the ones in the persistence layer.
+	 * 
+	 * Implementations should think of this method as the "save" button in a text editor. Using this analogy, the
+	 * persistence layer would be a file on a disk; the applications contained in the passed resource would be the
+	 * "dirty" contents of a text editor. When the "save" button in a text editor is pressed, the contents of the text
+	 * file will be replaced by the contents in the text editor. If there are two text editors issuing the "save"
+	 * command, the last one will overwrite any previous modifications on the text file.
+	 * 
+	 * @param resource
+	 *            the {@link Resource} that contains the applications to be saved.
 	 */
-	public void save();
+	public void save(final Resource resource);
+
+	/**
+	 * Instructs implementations to merge the contents of the passed resource with the contents on the persistence
+	 * layer. Users uploading the description of several applications at once might expect the contents to be merged and
+	 * not to be completely replaced.
+	 * 
+	 * Implementations should apply the following rules, in the given order:
+	 * <ul>
+	 * <li>Applications referring to resources that are not available in {@code dci_bridge_service} will <b>not</b> be
+	 * added.
+	 * <li>If an application exists on the passed collection but not on the persistence layer, it will be added.
+	 * <li>Applications existing on the passed collection and on the persistence layer will be modified.
+	 * </ul>
+	 * 
+	 * Notice how this method <b>does not</b> delete any information from the persistence layer.
+	 * 
+	 * @param resources
+	 *            the collection of resources to merge.
+	 */
+	public void merge(final Collection<Resource> resources);
 }

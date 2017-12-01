@@ -100,8 +100,8 @@ public class WSPGRADEMiddlewareProvider extends AbstractFilteredMiddlewareProvid
 		try {
 			middlewares = rc.get();
 		} catch (final Exception e) {
-			LOG.error("An error occured while reding the resource configuration", e);
-			throw new ApplicationException("An error occured while reding the resource configuration", e);
+			LOG.error("An error occured while reading the resource configuration", e);
+			throw new ApplicationException("An error occured while reading the resource configuration", e);
 		}
 		return middlewares;
 	}

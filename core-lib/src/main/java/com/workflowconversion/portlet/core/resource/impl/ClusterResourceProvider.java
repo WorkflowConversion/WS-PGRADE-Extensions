@@ -1,42 +1,31 @@
 package com.workflowconversion.portlet.core.resource.impl;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.Validate;
+import org.apache.tomcat.jdbc.pool.DataSource;
+import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.workflowconversion.portlet.core.SupportedClusters;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.filter.Filter;
-import com.workflowconversion.portlet.core.filter.FilterApplicator;
-import com.workflowconversion.portlet.core.filter.impl.SimpleFilterFactory;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
-import com.workflowconversion.portlet.core.resource.jaxb.JAXBResourceDatabase;
-import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 import dci.data.Item;
 import dci.data.Middleware;
+import hu.sztaki.lpds.information.local.PropertyLoader;
 
 /**
  * Resource provider for cluster-based providers.
+ * 
+ * The {@code dci_bridge} provides a way to
  * 
  * @author delagarza
  *
@@ -46,12 +35,9 @@ public class ClusterResourceProvider implements ResourceProvider {
 	private static final long serialVersionUID = -3799340787944829350L;
 	private final static Logger LOG = LoggerFactory.getLogger(ClusterResourceProvider.class);
 
-	private final Map<String, Resource> resources;
-
-	private final MiddlewareProvider middlewareProvider;
-	private final ReadWriteLock readWriteLock;
-	private final File jaxbApplicationsXmlFile;
 	private volatile boolean hasInitErrors;
+	// this is not final because it will be set when the init() method is invoked
+	private DataSource dataSource;
 
 	/**
 	 * @param middlewareProvider
@@ -59,13 +45,10 @@ public class ClusterResourceProvider implements ResourceProvider {
 	 * @param jaxbApplicationsXmlFileLocation
 	 *            the location on which the applications will be stored.
 	 */
-	public ClusterResourceProvider(final MiddlewareProvider middlewareProvider,
-			final String jaxbApplicationsXmlFileLocation) {
+	public ClusterResourceProvider(final MiddlewareProvider middlewareProvider) {
+		Validate.notNull(middlewareProvider,
+				"middlewareProvider cannot be null. This seems to be a coding problem and should be reported.");
 		this.hasInitErrors = false;
-		this.resources = new TreeMap<String, Resource>();
-		this.middlewareProvider = middlewareProvider;
-		this.jaxbApplicationsXmlFile = new File(jaxbApplicationsXmlFileLocation);
-		this.readWriteLock = new ReentrantReadWriteLock(false);
 	}
 
 	@Override
@@ -79,19 +62,41 @@ public class ClusterResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void init() {
-		final Lock writeLock = readWriteLock.writeLock();
-		writeLock.lock();
-		try {
-			// FIXME: Also consider resources not present in the xml!
-			loadResourcesFromFile_notThreadSafe();
-		} catch (final Exception e) {
-			hasInitErrors = true;
-			LOG.error("The cluster resource provider could not be initialized.", e);
-		} finally {
-			writeLock.unlock();
+	public synchronized void init() {
+		if (dataSource != null) {
+			LOG.info("ClusterResourcerProvider has already been initialized, ignoring invocation of init() method.");
+			return;
 		}
-
+		LOG.info("Initializing ClusterResourceProvider");
+		try {
+			// taken from: https://people.apache.org/~fhanik/jdbc-pool/jdbc-pool.html
+			final PoolProperties p = new PoolProperties();
+			// these values come from invoking gUSE webservices
+			p.setUrl(PropertyLoader.getInstance().getProperty("guse.system.database.url"));
+			// we know it's MySQL, but there's no need to hardcode these settings
+			p.setDriverClassName(PropertyLoader.getInstance().getProperty("guse.system.database.driver"));
+			p.setUsername(PropertyLoader.getInstance().getProperty("guse.system.database.user"));
+			p.setPassword(PropertyLoader.getInstance().getProperty("guse.system.database.password"));
+			// TODO: maybe put these in web.xml or somewhere else? at least maxActive?
+			p.setJmxEnabled(true);
+			p.setTestWhileIdle(false);
+			p.setTestOnBorrow(true);
+			p.setValidationQuery("SELECT 1");
+			p.setTestOnReturn(false);
+			p.setValidationInterval(30000);
+			p.setTimeBetweenEvictionRunsMillis(30000);
+			p.setMaxActive(10);
+			p.setInitialSize(1);
+			p.setMaxWait(10000);
+			p.setRemoveAbandonedTimeout(60);
+			p.setMinEvictableIdleTimeMillis(30000);
+			p.setLogAbandoned(true);
+			p.setRemoveAbandoned(true);
+			dataSource = new DataSource();
+			dataSource.setPoolProperties(p);
+		} catch (final Exception e) {
+			throw new ApplicationException("Could not initialize ClusterResourceProvider.", e);
+		}
 	}
 
 	@Override
@@ -101,140 +106,34 @@ public class ClusterResourceProvider implements ResourceProvider {
 
 	@Override
 	public Collection<Resource> getResources() {
-		final Lock readLock = readWriteLock.readLock();
-		readLock.lock();
-		try {
-			return Collections.unmodifiableCollection(resources.values());
-		} finally {
-			readLock.unlock();
-		}
+		// TODO: use MySQL
+		return Collections.emptyList();
 	}
 
 	@Override
 	public Resource getResource(final String name, final String type) {
-		final Lock readLock = readWriteLock.readLock();
-		readLock.lock();
-		try {
-			return resources.get(KeyUtils.generateResourceKey(name, type));
-		} finally {
-			readLock.unlock();
-		}
+		// TODO: use MySQL
+		final Resource.Builder builder = new Resource.Builder();
+		builder.withName(name);
+		builder.withType(type);
+		return builder.newInstance();
 	}
 
 	@Override
-	public void save() {
-		final Lock writeLock = readWriteLock.writeLock();
-		writeLock.lock();
-		try {
-			saveToFile_notThreadSafe();
-		} finally {
-			writeLock.unlock();
-		}
+	public void save(final Resource resource) {
+		// TODO: use MySQL (or maybe remove this method?)
 	}
 
-	// ###### LOAD/SAVE METHODS ######
-	// poor naming convention, but it has to be clear that the load/save methods are to be externally made thread safe
-	private void saveToFile_notThreadSafe() {
-		if (LOG.isInfoEnabled()) {
-			LOG.info("saving applications to " + jaxbApplicationsXmlFile.getAbsolutePath());
-		}
-		try {
-			ensureParentFolderExists_notThreadSafe();
-			final JAXBContext jaxbContext = JAXBContext.newInstance(JAXBResourceDatabase.class);
-			final Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-			jaxbMarshaller.setProperty(javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-			final JAXBResourceDatabase resourceDatabase = new JAXBResourceDatabase();
-			resourceDatabase.addResources(this.resources.values());
-			jaxbMarshaller.marshal(resourceDatabase, jaxbApplicationsXmlFile);
-		} catch (final JAXBException | IOException e) {
-			throw new ApplicationException("Could not save resources", e);
-		}
-	}
-
-	private void ensureParentFolderExists_notThreadSafe() throws IOException {
-		if (!jaxbApplicationsXmlFile.exists()) {
-			final File parentDirectory = jaxbApplicationsXmlFile.getParentFile();
-			if (parentDirectory == null) {
-				throw new IOException("Invalid location of applications database file! File location: "
-						+ jaxbApplicationsXmlFile.getCanonicalPath());
-			}
-			FileUtils.forceMkdir(parentDirectory);
-		}
-	}
-
-	// @SuppressWarnings("unchecked")
-	private void loadResourcesFromFile_notThreadSafe() {
-		if (LOG.isInfoEnabled()) {
-			LOG.info("loading applications from " + jaxbApplicationsXmlFile.getAbsolutePath());
-		}
-		try {
-			resources.clear();
-
-			// if the file does not exist, don't load anything and log this event
-			if (jaxbApplicationsXmlFile.exists()) {
-				final JAXBContext jaxbContext = JAXBContext.newInstance(JAXBResourceDatabase.class);
-				final Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
-				final JAXBResourceDatabase storedResources = (JAXBResourceDatabase) jaxbUnmarshaller
-						.unmarshal(jaxbApplicationsXmlFile);
-
-				// check that the stored resources match the available resources
-				final Map<String, Item> enabledClusterItemMap = getEnabledClusterItemMap_notThreadSafe();
-				for (final Resource storedResource : storedResources.getResources()) {
-					final String key = KeyUtils.generate(storedResource);
-					final Item enabledItem = enabledClusterItemMap.get(key);
-					if (enabledItem != null) {
-						final Resource.Builder resourceBuilder = new Resource.Builder();
-						resourceBuilder.withApplications(storedResource.getApplications());
-						resourceBuilder.withName(storedResource.getName());
-						resourceBuilder.withType(storedResource.getType());
-						resourceBuilder
-								.withQueues(extractQueuesFromItem_notThreadSafe(storedResource.getType(), enabledItem));
-						// allow users to add applications to this resource
-						resourceBuilder.canModifyApplications(true);
-						resources.put(key, resourceBuilder.newInstance());
-					} else {
-						LOG.warn("The stored resource [name=" + storedResource.getName() + ", type="
-								+ storedResource.getType()
-								+ "] is not enabled or does not exist on this WS-PGRADE instance.");
-					}
-				}
-			} else {
-				LOG.info(
-						"The xml file in which the applications are stored does not exist yet. It will be created once a save operation is performed. File location: "
-								+ jaxbApplicationsXmlFile.getAbsolutePath());
-			}
-		} catch (final JAXBException e) {
-			throw new ApplicationException("Could not load resources", e);
-		}
-	}
-
-	private Map<String, Item> getEnabledClusterItemMap_notThreadSafe() {
-		// get the enabled cluster middlewares
-		final Filter<Middleware> clusterMiddlewareFilter = new ClusterMiddlewareFilter();
-		final Collection<Middleware> enabledClusterMiddlewares = FilterApplicator
-				.applyFilter(middlewareProvider.getEnabledMiddlewares(), clusterMiddlewareFilter);
-		// select the enabled items from the list of enabled middlewares
-		final Map<String, Item> enabledClusterItemMap = new TreeMap<String, Item>();
-		final Filter<Item> enabledItemFilter = new SimpleFilterFactory().setEnabled(true).newItemFilter();
-		for (final Middleware enabledClusterMiddleware : enabledClusterMiddlewares) {
-			for (final Item enabledClusterItem : FilterApplicator.applyFilter(enabledClusterMiddleware.getItem(),
-					enabledItemFilter)) {
-				final String key = KeyUtils.generateResourceKey(enabledClusterItem.getName(),
-						enabledClusterMiddleware.getType());
-				if (enabledClusterItemMap.put(key, enabledClusterItem) != null) {
-					LOG.warn("There is a duplicate enabled middleware item. Middleware type = "
-							+ enabledClusterMiddleware.getType() + ", item name =" + enabledClusterItem.getName());
-				}
-			}
-		}
-		return enabledClusterItemMap;
+	@Override
+	public void merge(final Collection<Resource> resources) {
+		// TODO: do some fancy MySQL stuff to merge the hell out of these resources
 	}
 
 	private Collection<Queue> extractQueuesFromItem_notThreadSafe(final String middlewareType, final Item item) {
 		final Collection<String> extractedQueueNames;
 		switch (SupportedClusters.valueOf(middlewareType)) {
+		// could be done with reflection, but it's just four lines of code and reflection would make this code
+		// even harder to read
 		case lsf:
 			extractedQueueNames = item.getLsf().getQueue();
 			break;

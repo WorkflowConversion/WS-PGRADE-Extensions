@@ -1,6 +1,8 @@
 package com.workflowconversion.portlet.ui.resource.upload;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
@@ -17,12 +19,12 @@ import com.workflowconversion.portlet.core.resource.ResourceProvider;
  * @author delagarza
  *
  */
-public abstract class AbstractFileProcessor {
+public abstract class AbstractFileProcessor<T> {
 
 	private final static Logger LOG = LoggerFactory.getLogger(AbstractFileProcessor.class);
 
 	protected final File serverSideFile;
-	protected final BulkUploadListener listener;
+	protected final BulkUploadListener<T> listener;
 	protected final ResourceProvider resourceProvider;
 	protected int nParsedApplications;
 
@@ -36,7 +38,7 @@ public abstract class AbstractFileProcessor {
 	 * @param validMiddlewareTypes
 	 *            the set of valid middleware types.
 	 */
-	protected AbstractFileProcessor(final File serverSideFile, final BulkUploadListener listener,
+	protected AbstractFileProcessor(final File serverSideFile, final BulkUploadListener<T> listener,
 			final ResourceProvider resourceProvider) {
 		Validate.notNull(serverSideFile,
 				"serverSideFile cannot be null. This seems to be a coding problem and should be reported.");
@@ -57,14 +59,15 @@ public abstract class AbstractFileProcessor {
 	 * Starts parsing of the provided file.
 	 */
 	public final void start() {
+		Collection<T> parsedResources = Collections.emptyList();
 		try {
 			listener.parsingStarted();
-			parseFile(serverSideFile);
+			parsedResources = parseFile(serverSideFile);
 		} catch (final Exception e) {
 			LOG.error("Could not parse file from " + serverSideFile.getAbsolutePath(), e);
 			listener.parsingError("Could not parse uploaded file, reason: " + e.getMessage());
 		} finally {
-			listener.parsingCompleted(nParsedApplications);
+			listener.parsingCompleted(parsedResources);
 		}
 
 	}
@@ -72,10 +75,10 @@ public abstract class AbstractFileProcessor {
 	/**
 	 * Parsed an uploaded file.
 	 */
-	abstract void parseFile(final File serverSideFile) throws Exception;
+	abstract Collection<T> parseFile(final File serverSideFile) throws Exception;
 
 	/**
-	 * Attempts to add a parsed resource.
+	 * Finds a resource using a resource provider.
 	 * 
 	 * @param name
 	 *            the name of the resource.
@@ -100,7 +103,7 @@ public abstract class AbstractFileProcessor {
 		}
 		final Resource resource = resourceProvider.getResource(name, type);
 		if (resource == null) {
-			error.append("resource [name=" + name + ", type=" + type + "] not found");
+			error.append("gUSE could not find the resource [name=" + name + ", type=" + type + ']');
 			listener.parsingError(error.toString(), lineNumber);
 		}
 		return resource;

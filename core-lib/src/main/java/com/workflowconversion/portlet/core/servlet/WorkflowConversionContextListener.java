@@ -1,6 +1,5 @@
 package com.workflowconversion.portlet.core.servlet;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -8,13 +7,11 @@ import java.util.LinkedList;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
-import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
-import com.workflowconversion.portlet.core.execution.impl.DefaultJobExecutionPropertiesHandler;
+import com.workflowconversion.portlet.core.Settings;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.InMemoryMockMiddlewareProvider;
 import com.workflowconversion.portlet.core.middleware.impl.WSPGRADEMiddlewareProvider;
@@ -22,16 +19,9 @@ import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.ClusterResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.InMemoryMockResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.UnicoreResourceProvider;
-import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.GUSEPortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.MockPortletSanityCheck;
-import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;
-import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
-import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowExporterFactory;
-import com.workflowconversion.portlet.core.workflow.impl.DefaultWorkflowManagerFactory;
-import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowExporterFactory;
-import com.workflowconversion.portlet.core.workflow.impl.MockWorkflowManagerFactory;
 
 /**
  * Class that deals with cleaning/init up of webapps by reading configuration values from the servlet descriptor
@@ -67,26 +57,11 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		final Collection<ResourceProvider> applicationProviders = extractResourceProviders(servletContextEvent,
 				middlewareProvider, cacheDuration);
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
-		final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass = extractWorkflowManagerFactoryClass(
-				servletContextEvent);
-		final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass = extractWorkflowExporterFactoryClass(
-				servletContextEvent);
-		final String workflowStagingAreaPath = extractInitParam("workflow.stagingArea.path", servletContextEvent);
-		// make sure that the staging area exists
-		if (StringUtils.isNotBlank(workflowStagingAreaPath)) {
-			LOG.info("Creating workflow staging area folder");
-			new File(workflowStagingAreaPath).mkdirs();
-		}
-		// use the same instance, the default implementation is thread-safe
-		final JobExecutionPropertiesHandler jobExecutionPropertiesHandler = new DefaultJobExecutionPropertiesHandler();
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
 		settingsBuilder.withResourceProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
-				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
-				.withWorkflowManagerFactoryClass(workflowManagerFactoryClass)
-				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)
-				.withJobExecutionPropertiesHandler(jobExecutionPropertiesHandler);
+				.withPortletSanityCheck(portletSanityCheck);
 
 		Settings.setInstance(settingsBuilder.newSettings());
 	}
@@ -110,22 +85,6 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		return cacheDuration;
 	}
 
-	private Class<? extends WorkflowExporterFactory> extractWorkflowExporterFactoryClass(
-			final ServletContextEvent servletContextEvent) {
-		if (useMocks(servletContextEvent)) {
-			return MockWorkflowExporterFactory.class;
-		}
-		return DefaultWorkflowExporterFactory.class;
-	}
-
-	private Class<? extends WorkflowManagerFactory> extractWorkflowManagerFactoryClass(
-			final ServletContextEvent servletContextEvent) {
-		if (useMocks(servletContextEvent)) {
-			return MockWorkflowManagerFactory.class;
-		}
-		return DefaultWorkflowManagerFactory.class;
-	}
-
 	private String extractInitParam(final String paramName, final ServletContextEvent servletContextEvent) {
 		return servletContextEvent.getServletContext().getInitParameter(paramName);
 	}
@@ -140,8 +99,8 @@ public class WorkflowConversionContextListener implements ServletContextListener
 			resourceProviders
 					.add(new InMemoryMockResourceProvider("Read-only mock app provider", middlewareProvider, false));
 		} else {
-			resourceProviders.add(new ClusterResourceProvider(middlewareProvider,
-					extractInitParam("resource.xmlFile.location", servletContextEvent)));
+			// TODO: maybe load some connection pool settings?
+			resourceProviders.add(new ClusterResourceProvider(middlewareProvider));
 			resourceProviders.add(new UnicoreResourceProvider(middlewareProvider, cacheDuration));
 		}
 		return Collections.unmodifiableCollection(resourceProviders);

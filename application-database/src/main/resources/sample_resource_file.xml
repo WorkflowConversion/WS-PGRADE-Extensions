@@ -1,0 +1,15 @@
+<!-- 
+	The processing of tag names and attribute names in this file is NOT case sensitive, the only important thing to have in mind
+	is the tag and attribute names. Of course, the attribute values are case sensitive.
+	
+	It is not possible to add applications to resources that don't exist or are not enabled on the WS-PGRADE instance.
+-->
+<resources>
+	<resource name="pbs-cluster.university.eu" type="pbs">
+		<application name="SampleApp" version="1.1" path="/usr/bin/sampleapp" description="Sample app"/>
+		<application name="Sleepy" version="1.2" path="/usr/bin/sleep" description="Sample app, again"/>
+	</resource>
+	<resource name="moab-cluster.university.eu" type="moab">
+		<application name="MagicSauce" version="2.1" path="/share/bin/magic" description="Nobel prize, here I come!"/>
+	</resource>
+</resources>

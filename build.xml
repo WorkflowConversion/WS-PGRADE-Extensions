@@ -1,4 +1,4 @@
-<project name="WS-PGRADE-Portlets" default="deploy-all" basedir=".">
+<project name="WS-PGRADE-Portlets" default="deploy" basedir=".">
 	<description>
 		Script to deploy portlets to a remote liferay instance.
 	</description>
@@ -38,7 +38,7 @@
 
 	<!-- copies a single portlet to the liferay instance -->
 	<target name="deploy-portlet" depends="fail-if-missing-properties">
-		<property file="${portlet.dir}/portlet.properties"/>
+		<property file="${portlet.dir}/build.properties"/>
 		<echo>Deploying ${portlet.name}.war from ${portlet.dir}/target</echo>
 		<scp 
 			file="${portlet.dir}/target/${portlet.name}.war"
@@ -49,19 +49,13 @@
 	</target>
 
 	<!-- deploys all portlets -->
-  	<target name="deploy-all" depends="deploy-application-manager, deploy-workflow-importer" />
+  	<target name="deploy" depends="deploy-application-database" />
 	
-	<!-- deploys the application-manager portlet -->
-  	<target name="deploy-application-manager" depends="fail-if-missing-properties">
+	<!-- deploys the application-database portlet, along with the REST service -->
+  	<target name="deploy-application-database" depends="fail-if-missing-properties">
   		<antcall target="deploy-portlet">
-  			<param name="portlet.dir" value="application-manager"/>
+  			<param name="portlet.dir" value="application-database"/>
   		</antcall>
 	</target>
 	
-	<!-- deploys the workflow-importer portlet -->
-	<target name="deploy-workflow-importer" depends="fail-if-missing-properties">
-	  	<antcall target="deploy-portlet">
-	  		<param name="portlet.dir" value="workflow-importer" />
-		</antcall>
-	</target>
 </project>
