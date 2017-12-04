@@ -10,8 +10,8 @@
 	</parent>
 	<artifactId>core-lib</artifactId>
 	<packaging>jar</packaging>
-	<name>Core Library for the WS-PGRADE Workflow Conversion Portlets</name>
-	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
+	<name>Core Library for the WS-PGRADE Workflow Conversion Extensions</name>
+	<url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</url>
 
 	<dependencies>
 		<dependency>
@@ -77,10 +77,6 @@
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-jdbc</artifactId>
 		</dependency>
 	</dependencies>
 </project>

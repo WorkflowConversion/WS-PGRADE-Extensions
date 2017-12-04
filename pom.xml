@@ -35,14 +35,6 @@
 			<name>gUSE Maven repository</name>
 			<url>http://guse.sztaki.hu/nexus/content/repositories/releases</url>
 		</repository>
-		<!-- At the time of release, the needed version of liferay's portal-service 
-			was not found in the public maven repositories, so a in-project repository 
-			was created containing the needed jar file -->
-		<repository>
-			<id>WorkflowConversion_local_repo</id>
-			<name>Local project Maven repository</name>
-			<url>file://${project.basedir}/lib/mvnrepo/</url>
-		</repository>
 		<repository>
 			<id>vaadin-addons</id>
 			<url>http://maven.vaadin.com/vaadin-addons</url>
@@ -68,11 +60,6 @@
 			<name>UNICORE repository</name>
 			<url>http://unicore-dev.zam.kfa-juelich.de/maven</url>
 		</repository>
-		<repository>
-			<id>in2p3</id>
-			<name>IN2P3 Maven repository</name>
-			<url>http://grid.in2p3.fr/maven2/</url>
-		</repository>
 		<!-- old url doesn't work anymore, using new maven.java.net repository -->
 		<repository>
 			<id>java.net-Public</id>
@@ -97,7 +84,6 @@
 			<artifactId>vaadin-bom</artifactId>
 			<version>${vaadin.version}</version>
 			<type>pom</type>
-			<scope>import</scope>
 		</dependency>
 	</dependencies>
 
@@ -169,8 +155,6 @@
 				<version>2.0</version>
 				<scope>provided</scope>
 			</dependency>
-			<!-- <dependency> <groupId>hu.sztaki.lpds.guse</groupId> <artifactId>asm_api</artifactId> 
-				<version>${asm.version}</version> </dependency> -->
 			<dependency>
 				<groupId>hu.sztaki.lpds.guse</groupId>
 				<artifactId>information_cli</artifactId>
@@ -365,12 +349,6 @@
 				<artifactId>mysql-connector-java</artifactId>
 				<version>5.1.32</version>
 			</dependency>
-			<!-- https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-jdbc -->
-			<dependency>
-				<groupId>org.apache.tomcat</groupId>
-				<artifactId>tomcat-jdbc</artifactId>
-				<version>7.0.55</version>
-			</dependency>
 			<!-- includes the PropertiesConfiguration, which allows us to automatically 
 				refresh properties based on properties files -->
 			<dependency>
@@ -389,14 +367,6 @@
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
 				<version>19.0</version>
-			</dependency>
-			<!-- for string comparison (there doesn't seem to be a deployed version 
-				in any public maven repository, so this file is included in the lib/mvnrepo 
-				folder -->
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-text</artifactId>
-				<version>0.1-SNAPSHOT</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.commons</groupId>
@@ -417,9 +387,6 @@
 					</exclusion>
 				</exclusions>
 			</dependency>
-			<!-- <dependency> <groupId>org.glassfish.jersey</groupId> <artifactId>jersey-bom</artifactId> 
-				<version>${jersey.version}</version> <type>pom</type> <scope>import</scope> 
-				</dependency> -->
 		</dependencies>
 	</dependencyManagement>
 
