@@ -2,7 +2,7 @@ package com.workflowconversion.portlet.core.filter.impl;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.filter.Criterion;
 import com.workflowconversion.portlet.core.filter.Filter;

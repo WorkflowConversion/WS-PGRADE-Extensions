@@ -4,11 +4,15 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
+import com.workflowconversion.portlet.core.exception.ApplicationException;
+import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
+import com.workflowconversion.portlet.core.workflow.WorkflowExporterFactory;
+import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
 
 /**
  * Simple class that provides application settings that are configured when the application is started up.
@@ -22,6 +26,10 @@ public class Settings implements Serializable {
 	private final PortletSanityCheck portletSanityCheck;
 	private final Collection<ResourceProvider> resourceProviders;
 	private final MiddlewareProvider middlewareProvider;
+	private final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass;
+	private final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
+	private final String workflowStagingAreaPath;
+	private final JobExecutionPropertiesHandler jobExecutionPropertiesHandler;
 
 	private static Settings INSTANCE;
 
@@ -82,17 +90,66 @@ public class Settings implements Serializable {
 		return portletSanityCheck;
 	}
 
+	/**
+	 * @return the workflow exporter factory.
+	 */
+	public WorkflowExporterFactory getWorkflowExporterFactory() {
+		try {
+			return workflowExporterFactoryClass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ApplicationException("Could not instantiate a new WorkflowExporterFactory", e);
+		}
+	}
+
+	/**
+	 * @return the workflow manager factory.
+	 */
+	public WorkflowManagerFactory getWorkflowManagerFactory() {
+		try {
+			return workflowManagerFactoryClass.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new ApplicationException("Could not instantiate a new WorkflowProviderFactory", e);
+		}
+	}
+
+	/**
+	 * @return the workflow staging area path.
+	 */
+	public String getWorkflowStagingAreaPath() {
+		return workflowStagingAreaPath;
+	}
+
+	/**
+	 * @return the execution properties handler.
+	 */
+	public JobExecutionPropertiesHandler getJobExecutionPropertiesHandler() {
+		return jobExecutionPropertiesHandler;
+	}
+
 	private Settings(final PortletSanityCheck portletSanityCheck, final Collection<ResourceProvider> resourceProviders,
-			final MiddlewareProvider middlewareProvider) {
+			final MiddlewareProvider middlewareProvider,
+			final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass,
+			final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass,
+			final String workflowStagingAreaPath, final JobExecutionPropertiesHandler jobExecutionPropertiesHandler) {
 		Validate.notNull(portletSanityCheck,
 				"portletSanityCheck cannot be null, please use the Builder.withPortletSanityCheck() method to set a non-null value");
 		Validate.notEmpty(resourceProviders,
 				"resourceProviders cannot be null or empty, please use the Builder.withApplicationProviders() method to set a proper value");
 		Validate.notNull(middlewareProvider,
 				"middlewareProvider cannot be null, please use the Builder.withMiddlewareProvider() method to set a non-null value");
+		Validate.notNull(workflowManagerFactoryClass,
+				"workflowManagerFactoryClass cannot be null, please use the Builder.withWorkflowProviderFactoryClass() method to set a non-null value");
+		Validate.notNull(workflowExporterFactoryClass,
+				"workflowExporterFactoryClass cannot be null, please use the Builder.withWorkflowExporterFactoryClass() method to set a non-null value");
 		this.resourceProviders = Collections.unmodifiableCollection(resourceProviders);
 		this.portletSanityCheck = portletSanityCheck;
 		this.middlewareProvider = middlewareProvider;
+		this.workflowExporterFactoryClass = workflowExporterFactoryClass;
+		this.workflowManagerFactoryClass = workflowManagerFactoryClass;
+		// stating area could very well be empty, so no need to validate
+		this.workflowStagingAreaPath = workflowStagingAreaPath;
+		// execution properties handler might be unused
+		this.jobExecutionPropertiesHandler = jobExecutionPropertiesHandler;
 	}
 
 	/**
@@ -105,6 +162,10 @@ public class Settings implements Serializable {
 		private Collection<ResourceProvider> resourceProviders;
 		private PortletSanityCheck portletSanityCheck;
 		private MiddlewareProvider middlewareProvider;
+		private Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass;
+		private Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass;
+		private String workflowStagingAreaPath;
+		private JobExecutionPropertiesHandler jobExecutionPropertiesHandler;
 
 		/**
 		 * Sets the application providers.
@@ -143,12 +204,64 @@ public class Settings implements Serializable {
 		}
 
 		/**
+		 * Sets the workflow exporter factory.
+		 * 
+		 * @param workflowExporterFactoryClass
+		 *            the factory.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withWorkflowExporterFactoryClass(
+				final Class<? extends WorkflowExporterFactory> workflowExporterFactoryClass) {
+			this.workflowExporterFactoryClass = workflowExporterFactoryClass;
+			return this;
+		}
+
+		/**
+		 * Sets the workflow manager factory.
+		 * 
+		 * @param workflowManagerFactoryClass
+		 *            the workflow provider factory.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withWorkflowManagerFactoryClass(
+				final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass) {
+			this.workflowManagerFactoryClass = workflowManagerFactoryClass;
+			return this;
+		}
+
+		/**
+		 * Sets the path of the workflow staging area to use.
+		 * 
+		 * @param workflowStagingAreaPath
+		 *            the path to use.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withWorkflowStagingAreaPath(final String workflowStagingAreaPath) {
+			this.workflowStagingAreaPath = workflowStagingAreaPath;
+			return this;
+		}
+
+		/**
+		 * Sets the job execution properties handler to use.
+		 * 
+		 * @param jobExecutionPropertiesHandler
+		 *            the handler.
+		 * @return the instance of {@code this} {@link Builder}.
+		 */
+		public Builder withJobExecutionPropertiesHandler(
+				final JobExecutionPropertiesHandler jobExecutionPropertiesHandler) {
+			this.jobExecutionPropertiesHandler = jobExecutionPropertiesHandler;
+			return this;
+		}
+
+		/**
 		 * Builds a new {@link Settings}.
 		 * 
 		 * @return a new instance of an {@link Settings}.
 		 */
 		public Settings newSettings() {
-			return new Settings(portletSanityCheck, resourceProviders, middlewareProvider);
+			return new Settings(portletSanityCheck, resourceProviders, middlewareProvider, workflowExporterFactoryClass,
+					workflowManagerFactoryClass, workflowStagingAreaPath, jobExecutionPropertiesHandler);
 		}
 	}
 }

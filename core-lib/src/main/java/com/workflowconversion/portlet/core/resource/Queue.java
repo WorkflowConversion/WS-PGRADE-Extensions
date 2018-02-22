@@ -2,8 +2,7 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Simple wrapper for resource queues.
@@ -22,7 +21,7 @@ public class Queue implements Comparable<Queue>, Serializable {
 	private final String name;
 
 	private Queue(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
+		Validate.notBlank(name,
 				"name cannot be null, empty or contain only whitespaces; this is a coding problem and should be reported.");
 		this.name = name;
 	}

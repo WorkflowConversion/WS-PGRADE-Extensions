@@ -5,8 +5,7 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.filter.Filter;
 import com.workflowconversion.portlet.core.filter.FilterApplicator;
@@ -37,7 +36,7 @@ public abstract class AbstractFilteredMiddlewareProvider implements MiddlewarePr
 
 	@Override
 	public final Collection<Middleware> getEnabledMiddlewares(final String middlewareType) {
-		Validate.isTrue(StringUtils.isNotBlank(middlewareType),
+		Validate.notBlank(middlewareType,
 				"middlewareType cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
 		// filter using availability and type
 		final SimpleFilterFactory middlewareFilter = new SimpleFilterFactory();
@@ -48,7 +47,7 @@ public abstract class AbstractFilteredMiddlewareProvider implements MiddlewarePr
 	@Override
 	public final Collection<Item> getEnabledItems(final String middlewareType) {
 		// get the middlewares first
-		Validate.isTrue(StringUtils.isNotBlank(middlewareType),
+		Validate.notBlank(middlewareType,
 				"middlewareType cannot be null, empty or contain only whitespaces, this is probably a bug and should be reported.");
 		// filter using availability and type
 		final Collection<Middleware> availableMiddlewares = getEnabledMiddlewares(middlewareType);

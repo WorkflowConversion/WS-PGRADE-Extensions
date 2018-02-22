@@ -6,8 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.exception.ApplicationNotFoundException;
 import com.workflowconversion.portlet.core.exception.DuplicateApplicationException;
@@ -41,10 +40,8 @@ public class Resource implements Serializable {
 
 	private Resource(final String type, final String name, final boolean canModifyApplications,
 			final Collection<Application> initialApplications, final Collection<Queue> queues) {
-		Validate.isTrue(StringUtils.isNotBlank(type),
-				"type cannot be null, empty or contain only whitespace characters.");
-		Validate.isTrue(StringUtils.isNotBlank(name),
-				"name cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(type, "type cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(name, "name cannot be null, empty or contain only whitespace characters.");
 		this.type = type;
 		this.name = name;
 		this.canModifyApplications = canModifyApplications;
@@ -52,6 +49,7 @@ public class Resource implements Serializable {
 		this.applications = new TreeMap<String, Application>();
 		this.queues = new TreeMap<String, Queue>();
 
+		// copy the contents of the collection!
 		fillInitialApplications(initialApplications);
 		fillQueues(queues);
 	}

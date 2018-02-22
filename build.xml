@@ -49,13 +49,20 @@
 	</target>
 
 	<!-- deploys all portlets -->
-  	<target name="deploy" depends="deploy-application-database" />
+  	<target name="deploy" depends="deploy-application-manager, deploy-workflow-configurator" />
 	
-	<!-- deploys the application-database portlet, along with the REST service -->
-  	<target name="deploy-application-database" depends="fail-if-missing-properties">
+	<!-- deploys the application manager portlet -->
+  	<target name="deploy-application-manager" depends="fail-if-missing-properties">
   		<antcall target="deploy-portlet">
-  			<param name="portlet.dir" value="application-database"/>
+  			<param name="portlet.dir" value="application-manager"/>
   		</antcall>
+	</target>
+	
+	<!-- deploys the workflow configurator portlet -->
+	<target name="deploy-workflow-configurator" depends="fail-if-missing-properties">
+		<antcall target="deploy-portlet">
+	  		<param name="portlet.dir" value="workflow-configurator"/>
+	  	</antcall>
 	</target>
 	
 </project>

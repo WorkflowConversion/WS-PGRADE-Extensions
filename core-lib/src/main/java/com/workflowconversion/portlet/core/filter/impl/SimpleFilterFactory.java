@@ -3,8 +3,7 @@ package com.workflowconversion.portlet.core.filter.impl;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.filter.Criterion;
 import com.workflowconversion.portlet.core.filter.Filter;
@@ -33,7 +32,7 @@ public class SimpleFilterFactory {
 	 * @return an instance to {@code this} {@link SimpleFilterFactory}
 	 */
 	public SimpleFilterFactory withType(final String type) {
-		Validate.isTrue(StringUtils.isNotBlank(type),
+		Validate.notBlank(type,
 				"type cannot be null, empty or contain only whitespaces; this seems to be a coding problem and shoud be reported.");
 		this.type = type;
 		return this;
@@ -47,7 +46,7 @@ public class SimpleFilterFactory {
 	 * @return an instance to {@code this} {@link SimpleFilterFactory}
 	 */
 	public SimpleFilterFactory withName(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
+		Validate.notBlank(name,
 				"name cannot be null, empty or contain only whitespaces; this seems to be a coding problem and shoud be reported.");
 		this.name = name;
 		return this;

@@ -2,8 +2,7 @@ package com.workflowconversion.portlet.ui.table;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
-import org.jsoup.helper.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.data.Buffered.SourceException;
 import com.vaadin.data.Validator.InvalidValueException;
@@ -44,8 +43,7 @@ public abstract class AbstractAddGenericElementDialog<T> extends Window {
 	protected Wrapper<T> inmutableElementWrapper;
 
 	protected AbstractAddGenericElementDialog(final String caption, final GenericElementCommittedListener<T> listener) {
-		Validate.isTrue(StringUtils.isNotBlank(caption),
-				"caption cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(caption, "caption cannot be null, empty or contain only whitespace characters.");
 		Validate.notNull(listener, "listener cannot be null.");
 
 		this.fieldGroup = new FieldGroup();

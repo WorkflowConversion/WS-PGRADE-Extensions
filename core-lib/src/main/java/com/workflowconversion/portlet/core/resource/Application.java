@@ -2,8 +2,8 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Simple object that contains all of the information an application requires to be executed on gUSE.
@@ -25,11 +25,11 @@ public class Application implements Serializable {
 	private final String description;
 
 	private Application(final String name, final String version, final String path, final String description) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
+		Validate.notBlank(name,
 				"name cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		Validate.isTrue(StringUtils.isNotBlank(version),
+		Validate.notBlank(version,
 				"version cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		Validate.isTrue(StringUtils.isNotBlank(path),
+		Validate.notBlank(path,
 				"path cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
 		this.name = name;
 		this.version = version;

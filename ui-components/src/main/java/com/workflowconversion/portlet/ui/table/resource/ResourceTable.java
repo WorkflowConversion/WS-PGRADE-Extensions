@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.ui.table.resource;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.data.Item;
 import com.vaadin.ui.Label;

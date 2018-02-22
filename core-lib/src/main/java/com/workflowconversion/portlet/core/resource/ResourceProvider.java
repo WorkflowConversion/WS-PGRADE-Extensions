@@ -3,6 +3,8 @@ package com.workflowconversion.portlet.core.resource;
 import java.io.Serializable;
 import java.util.Collection;
 
+import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
+
 /**
  * Interface for resource providers.
  * 
@@ -19,6 +21,8 @@ import java.util.Collection;
  * in a certain form, problems with the consistency of the data could arise.
  * 
  * @author delagarza
+ * 
+ * @see MiddlewareProvider
  *
  */
 public interface ResourceProvider extends Serializable {
@@ -73,7 +77,8 @@ public interface ResourceProvider extends Serializable {
 	 * persistence layer would be a file on a disk; the applications contained in the passed resource would be the
 	 * "dirty" contents of a text editor. When the "save" button in a text editor is pressed, the contents of the text
 	 * file will be replaced by the contents in the text editor. If there are two text editors issuing the "save"
-	 * command, the last one will overwrite any previous modifications on the text file.
+	 * command, the last one will overwrite any previous modifications on the text file. This is, of course,
+	 * resource-wide.
 	 * 
 	 * @param resource
 	 *            the {@link Resource} that contains the applications to be saved.
@@ -81,19 +86,19 @@ public interface ResourceProvider extends Serializable {
 	public void save(final Resource resource);
 
 	/**
-	 * Instructs implementations to merge the contents of the passed resource with the contents on the persistence
-	 * layer. Users uploading the description of several applications at once might expect the contents to be merged and
+	 * Instructs implementations to merge the contents of the passed resources with the contents on the persistence
+	 * layer. Users uploading information about several applications at once might expect the contents to be merged and
 	 * not to be completely replaced.
 	 * 
 	 * Implementations should apply the following rules, in the given order:
 	 * <ul>
 	 * <li>Applications referring to resources that are not available in {@code dci_bridge_service} will <b>not</b> be
-	 * added.
-	 * <li>If an application exists on the passed collection but not on the persistence layer, it will be added.
-	 * <li>Applications existing on the passed collection and on the persistence layer will be modified.
+	 * added. Implementations can rely on the {@link MiddlewareProvider#getEnabledItems(String)} method to determine if
+	 * a resource is available in {@code dci_bridge_service}.
+	 * <li>If an application exists on the passed collection, it will be added/edited in the persistence layer.
 	 * </ul>
 	 * 
-	 * Notice how this method <b>does not</b> delete any information from the persistence layer.
+	 * This method <b>does not</b> delete any information from the persistence layer.
 	 * 
 	 * @param resources
 	 *            the collection of resources to merge.
