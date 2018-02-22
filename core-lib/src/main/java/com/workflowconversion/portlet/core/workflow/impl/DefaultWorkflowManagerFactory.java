@@ -6,14 +6,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
+import com.workflowconversion.portlet.core.Settings;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.search.AssetFinder;
-import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.workflow.WorkflowManager;
 import com.workflowconversion.portlet.core.workflow.WorkflowManagerFactory;
@@ -48,7 +47,7 @@ public class DefaultWorkflowManagerFactory implements WorkflowManagerFactory {
 		Validate.notEmpty(resourceProviders,
 				"resourceProviders cannot be null or empty; please use the withResourceProviders() method to set the applications.");
 		final String stagingAreaPath = Settings.getInstance().getWorkflowStagingAreaPath();
-		Validate.isTrue(StringUtils.isNotBlank(stagingAreaPath),
+		Validate.notBlank(stagingAreaPath,
 				"invalid staging area, please configure the 'workflow.stagingArea.path' property in the web.xml file.");
 		try {
 			final Path stagingArea = Paths.get(stagingAreaPath, Long.toString(portletUser.getUserId()));

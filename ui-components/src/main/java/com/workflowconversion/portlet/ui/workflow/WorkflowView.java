@@ -3,7 +3,7 @@ package com.workflowconversion.portlet.ui.workflow;
 import java.nio.file.Path;
 import java.util.Collection;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;

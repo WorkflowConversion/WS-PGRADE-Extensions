@@ -11,8 +11,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.workflow.impl.ArchivePathXmlAdapter;
 
@@ -66,7 +65,7 @@ public class Workflow {
 	 *            the id.
 	 */
 	public void setId(final String id) {
-		Validate.isTrue(StringUtils.isNotBlank(id),
+		Validate.notBlank(id,
 				"id cannot be null, empty or contain only whitespaces; this is a coding problem and should be reported.");
 		this.id = id;
 	}
@@ -90,7 +89,7 @@ public class Workflow {
 	 *            the name to set
 	 */
 	public void setName(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
+		Validate.notBlank(name,
 				"name cannot be null, empty or contain only whitespaces; this is a coding problem and should be reported.");
 		this.name = name;
 	}

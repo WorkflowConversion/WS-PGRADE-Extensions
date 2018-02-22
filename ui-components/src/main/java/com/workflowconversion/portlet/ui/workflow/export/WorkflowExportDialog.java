@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.ui.workflow.export;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
@@ -9,8 +9,8 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.OptionGroup;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.workflowconversion.portlet.core.Settings;
 import com.workflowconversion.portlet.core.exception.InvalidExportDestinationException;
-import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.user.PortletUser;
 import com.workflowconversion.portlet.core.workflow.Workflow;
 import com.workflowconversion.portlet.core.workflow.WorkflowExportDestination;

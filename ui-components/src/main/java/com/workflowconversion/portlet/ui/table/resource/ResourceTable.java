@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.ui.table.resource;
 
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.data.Item;
 import com.vaadin.ui.Label;
@@ -95,10 +95,10 @@ public class ResourceTable extends AbstractTableWithControls<Resource> {
 	}
 
 	@Override
-	public void elementDetailsSaved(final Object itemId, final Resource element) {
-		if (resourceProvider.canAddApplications() && element.canModifyApplications()) {
-			super.elementDetailsSaved(itemId, element);
-			resourceProvider.save();
+	public void elementDetailsSaved(final Object itemId, final Resource resource) {
+		if (resourceProvider.canAddApplications() && resource.canModifyApplications()) {
+			super.elementDetailsSaved(itemId, resource);
+			resourceProvider.save(resource);
 		} else {
 			throw new ApplicationException(
 					"The resource and/or the provider don't support modifying/adding applications. This seems to be a coding problem and should be reported.");

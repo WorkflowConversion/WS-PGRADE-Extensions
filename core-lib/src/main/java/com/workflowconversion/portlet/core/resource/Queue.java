@@ -2,11 +2,15 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Simple wrapper for resource queues.
+ * 
+ * It is assumed that instances of these classes will exist only within a single thread, meaning: the builder pattern is
+ * an overkill. However, making classes threadsafe is always a good practice, plus, using the builder pattern it is
+ * guaranteed that all instances of this class will be valid (i.e., they won't contain non-allowed values for members,
+ * such as a {@code null} name or id.
  * 
  * @author delagarza
  *
@@ -17,7 +21,7 @@ public class Queue implements Comparable<Queue>, Serializable {
 	private final String name;
 
 	private Queue(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
+		Validate.notBlank(name,
 				"name cannot be null, empty or contain only whitespaces; this is a coding problem and should be reported.");
 		this.name = name;
 	}

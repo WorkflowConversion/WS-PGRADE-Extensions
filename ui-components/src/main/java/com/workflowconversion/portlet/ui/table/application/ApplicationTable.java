@@ -1,7 +1,7 @@
 package com.workflowconversion.portlet.ui.table.application;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;

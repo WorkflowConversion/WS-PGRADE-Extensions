@@ -1,7 +1,6 @@
 package com.workflowconversion.portlet.core.workflow;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.resource.Application;
 import com.workflowconversion.portlet.core.resource.Queue;
@@ -28,7 +27,7 @@ public class Job {
 	 *            the name of this job.
 	 */
 	public Job(final String name) {
-		Validate.isTrue(StringUtils.isNotBlank(name), "name cannot be null, contain only whitespaces or be empty");
+		Validate.notBlank(name, "name cannot be null, contain only whitespaces or be empty");
 		this.name = name;
 	}
 

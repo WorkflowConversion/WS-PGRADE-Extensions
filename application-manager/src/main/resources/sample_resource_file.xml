@@ -1,6 +1,6 @@
 <!-- 
-	Processing of this file is NOT case sensitive, the only important thing to have in mind
-	is the tag and attribute names.
+	The processing of tag names and attribute names in this file is NOT case sensitive, the only important thing to have in mind
+	is the tag and attribute names. Of course, the attribute values are case sensitive.
 	
 	It is not possible to add applications to resources that don't exist or are not enabled on the WS-PGRADE instance.
 -->

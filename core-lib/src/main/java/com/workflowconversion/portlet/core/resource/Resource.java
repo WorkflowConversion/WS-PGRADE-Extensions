@@ -6,15 +6,11 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.workflowconversion.portlet.core.exception.ApplicationNotFoundException;
 import com.workflowconversion.portlet.core.exception.DuplicateApplicationException;
 import com.workflowconversion.portlet.core.exception.ResourceNotEditableException;
-import com.workflowconversion.portlet.core.resource.jaxb.ResourceXmlAdapter;
 import com.workflowconversion.portlet.core.utils.KeyUtils;
 
 /**
@@ -22,10 +18,14 @@ import com.workflowconversion.portlet.core.utils.KeyUtils;
  * 
  * {@link Resource} classes contain a list of {@link Application} and a list of queues.
  * 
+ * It is assumed that instances of these classes will exist only within a single thread, meaning: the builder pattern is
+ * an overkill. However, making classes threadsafe is always a good practice, plus, using the builder pattern it is
+ * guaranteed that all instances of this class will be valid (i.e., they won't contain non-allowed values for members,
+ * such as a {@code null} name or id.
+ * 
  * @author delagarza
  *
  */
-@XmlJavaTypeAdapter(ResourceXmlAdapter.class)
 public class Resource implements Serializable {
 
 	private static final long serialVersionUID = -2174466858733103521L;
@@ -40,10 +40,8 @@ public class Resource implements Serializable {
 
 	private Resource(final String type, final String name, final boolean canModifyApplications,
 			final Collection<Application> initialApplications, final Collection<Queue> queues) {
-		Validate.isTrue(StringUtils.isNotBlank(type),
-				"type cannot be null, empty or contain only whitespace characters.");
-		Validate.isTrue(StringUtils.isNotBlank(name),
-				"name cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(type, "type cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(name, "name cannot be null, empty or contain only whitespace characters.");
 		this.type = type;
 		this.name = name;
 		this.canModifyApplications = canModifyApplications;
@@ -51,6 +49,7 @@ public class Resource implements Serializable {
 		this.applications = new TreeMap<String, Application>();
 		this.queues = new TreeMap<String, Queue>();
 
+		// copy the contents of the collection!
 		fillInitialApplications(initialApplications);
 		fillQueues(queues);
 	}

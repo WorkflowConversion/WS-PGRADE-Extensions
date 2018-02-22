@@ -1,7 +1,6 @@
 package com.workflowconversion.portlet.ui;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
+import org.apache.commons.lang3.Validate;
 
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -38,10 +37,8 @@ public class ConfirmationDialog extends Window {
 	 */
 	public ConfirmationDialog(final String caption, final String message,
 			final ConfirmationDialogCloseListener listener) {
-		Validate.isTrue(StringUtils.isNotBlank(caption),
-				"caption cannot be null, empty or contain only whitespace characters.");
-		Validate.isTrue(StringUtils.isNotBlank(message),
-				"message cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(caption, "caption cannot be null, empty or contain only whitespace characters.");
+		Validate.notBlank(message, "message cannot be null, empty or contain only whitespace characters.");
 		Validate.notNull(listener, "listener cannot be null.");
 		this.caption = caption;
 		this.message = message;

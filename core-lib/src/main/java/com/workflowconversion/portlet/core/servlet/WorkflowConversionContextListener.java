@@ -8,11 +8,12 @@ import java.util.LinkedList;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mysql.jdbc.AbandonedConnectionCleanupThread;
+import com.workflowconversion.portlet.core.Settings;
 import com.workflowconversion.portlet.core.execution.JobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.execution.impl.DefaultJobExecutionPropertiesHandler;
 import com.workflowconversion.portlet.core.middleware.MiddlewareProvider;
@@ -22,7 +23,6 @@ import com.workflowconversion.portlet.core.resource.ResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.ClusterResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.InMemoryMockResourceProvider;
 import com.workflowconversion.portlet.core.resource.impl.UnicoreResourceProvider;
-import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.core.validation.PortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.GUSEPortletSanityCheck;
 import com.workflowconversion.portlet.core.validation.impl.MockPortletSanityCheck;
@@ -92,22 +92,26 @@ public class WorkflowConversionContextListener implements ServletContextListener
 	}
 
 	private int extractCacheDuration(final ServletContextEvent servletContextEvent) {
-		final String cacheDurationString = extractInitParam("cache.seconds.duration", servletContextEvent);
-		final int defaultCacheDuration = 120;
-		int cacheDuration;
+		return extractIntegerParameter("cache.seconds.duration", 120, servletContextEvent);
+	}
+
+	private int extractIntegerParameter(final String parameterName, final int defaultValue,
+			final ServletContextEvent servletContextEvent) {
+		final String rawParamValue = extractInitParam(parameterName, servletContextEvent);
+		int paramValue;
 		try {
-			cacheDuration = Integer.parseInt(cacheDurationString);
+			paramValue = Integer.parseInt(rawParamValue);
 		} catch (final NumberFormatException e) {
-			LOG.error("Could not parse parameter 'cache.seconds.duration' Defaulting to " + defaultCacheDuration
-					+ " seconds. Passed value: " + cacheDurationString);
-			cacheDuration = defaultCacheDuration;
+			LOG.error("Could not parse parameter '" + parameterName + "'. Defaulting to " + defaultValue
+					+ " seconds. Passed value: '" + rawParamValue + "'");
+			paramValue = defaultValue;
 		}
-		if (cacheDuration <= 0) {
-			LOG.error("Invalid value provided for 'cache.seconds.duration' Defaulting to " + cacheDuration
-					+ " seconds. Passed value: " + cacheDurationString);
-			cacheDuration = defaultCacheDuration;
+		if (paramValue <= 0) {
+			LOG.error("Invalid value provided for 'cache.seconds.duration' Defaulting to " + paramValue
+					+ " seconds. Passed value: " + rawParamValue);
+			paramValue = defaultValue;
 		}
-		return cacheDuration;
+		return paramValue;
 	}
 
 	private Class<? extends WorkflowExporterFactory> extractWorkflowExporterFactoryClass(
@@ -141,10 +145,14 @@ public class WorkflowConversionContextListener implements ServletContextListener
 					.add(new InMemoryMockResourceProvider("Read-only mock app provider", middlewareProvider, false));
 		} else {
 			resourceProviders.add(new ClusterResourceProvider(middlewareProvider,
-					extractInitParam("resource.xmlFile.location", servletContextEvent)));
+					extractMaxDatabaseActiveConnections(servletContextEvent)));
 			resourceProviders.add(new UnicoreResourceProvider(middlewareProvider, cacheDuration));
 		}
 		return Collections.unmodifiableCollection(resourceProviders);
+	}
+
+	private int extractMaxDatabaseActiveConnections(final ServletContextEvent servletContextEvent) {
+		return extractIntegerParameter("db.max.active.connections", 10, servletContextEvent);
 	}
 
 	private PortletSanityCheck extractPortletSanityCheck(final ServletContextEvent servletContextEvent) {

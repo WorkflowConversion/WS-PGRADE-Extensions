@@ -5,11 +5,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.workflowconversion</groupId>
-		<artifactId>WS-PGRADE-Portlets</artifactId>
+		<artifactId>WS-PGRADE-Extensions</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>core-lib</artifactId>
 	<packaging>jar</packaging>
-	<name>Core Library for the WS-PGRADE Workflow Conversion Portlets</name>
-	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
+	<name>Core Library for the WS-PGRADE Workflow Conversion Extensions</name>
+	<url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</url>
+
 </project>

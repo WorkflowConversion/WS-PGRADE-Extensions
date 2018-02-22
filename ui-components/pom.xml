@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.workflowconversion</groupId>
-		<artifactId>WS-PGRADE-Portlets</artifactId>
+		<artifactId>WS-PGRADE-Extensions</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>ui-components</artifactId>

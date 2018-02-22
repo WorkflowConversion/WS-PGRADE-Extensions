@@ -2,19 +2,19 @@ package com.workflowconversion.portlet.core.resource;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.Validate;
-
-import com.workflowconversion.portlet.core.resource.jaxb.ApplicationXmlAdapter;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Simple object that contains all of the information an application requires to be executed on gUSE.
  * 
+ * It is assumed that instances of these classes will exist only within a single thread, meaning: the builder pattern is
+ * an overkill. However, making classes threadsafe is always a good practice, plus, using the builder pattern it is
+ * guaranteed that all instances of this class will be valid (i.e., they won't contain non-allowed values for members,
+ * such as a {@code null} name or id.
+ * 
  * @author delagarza
  */
-@XmlJavaTypeAdapter(ApplicationXmlAdapter.class)
 public class Application implements Serializable {
 
 	private static final long serialVersionUID = -8200132807492156967L;
@@ -25,11 +25,11 @@ public class Application implements Serializable {
 	private final String description;
 
 	private Application(final String name, final String version, final String path, final String description) {
-		Validate.isTrue(StringUtils.isNotBlank(name),
+		Validate.notBlank(name,
 				"name cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		Validate.isTrue(StringUtils.isNotBlank(version),
+		Validate.notBlank(version,
 				"version cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
-		Validate.isTrue(StringUtils.isNotBlank(path),
+		Validate.notBlank(path,
 				"path cannot be null, empty or contain only whitespace characters; this is a coding problem and should be reported.");
 		this.name = name;
 		this.version = version;

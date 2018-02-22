@@ -5,8 +5,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.http.annotation.NotThreadSafe;
-import org.jsoup.helper.Validate;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,12 +19,12 @@ import com.workflowconversion.portlet.core.utils.KeyUtils;
 import dci.data.Middleware;
 
 /**
- * Mock resource provider (not thread safe).
+ * Mock resource provider (not thread safe). This mock implementation does the opposite to the requirements, but it's OK
+ * because this class is only for testing purposes.
  * 
  * @author delagarza
  *
  */
-@NotThreadSafe
 public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	private static final long serialVersionUID = 9085026519196444948L;
@@ -95,7 +94,7 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 
 	@Override
 	public void init() {
-		// nop
+		LOG.info("Initializing InMemoryMockResourceProvider");
 	}
 
 	@Override
@@ -114,9 +113,19 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void save() {
-		LOG.info("COMMITTING CHANGES");
-		// does nothing, since we're actually not storing anything
+	public void save(final Resource resource) {
+		// does nothing, since we're just storing everything in-memory
+		LOG.info("Saving " + resource);
+	}
+
+	@Override
+	public void merge(final Collection<Resource> resources) {
+		// does nothing, since we're just storing everything in-memory
+		if (resources != null) {
+			for (final Resource resource : resources) {
+				LOG.info("Merging " + resource);
+			}
+		}
 	}
 
 	@Override

@@ -1,35 +1,31 @@
-# WS-PGRADE Workflow Conversion Portlets
-## What are these portlets?
-### The `WorkflowImporter` portlet
-This portlet lets users to import workflows created in [KNIME]. 
-
-Imagine a user that has completed a test workflow in [KNIME] and wants to export it to a [WS-PGRADE] instance by using the [KNIME2gUSE] extension. Let's see a simple example to fully understand the problem that this portlet tries to solve.
-
-A scientist has designed a simple [KNIME] workflow, comprised of two applications: _App1_ and _App2_. Our scientist would like to execute her workflow on a local cluster visible on a [WS-PGRADE] instance. On the scientists computer both applications are located on `/usr/bin`, but this is not necessarily true for the clusters available in the [WS-PGRADE] instance. In fact, _App1_ is accessible only to _cluster1_, while _App2_ is accessible only through _cluster2_.
-
-Our scientist could very well design the same workflow again in [WS-PGRADE], but this is where `WorfklowImporter` comes to save the day, since she would take the exported workflow that was generaded by the [KNIME2gUSE] extension and upload it via the `WorkflowImporter` portlet.
-
-The portlet would then notice that there are two applications, _App1_ and _App2_ being used in the imported workflow and will then display the available applications. Our scientist would select the appropriate version of _App1_ and _App2_, finalize the import and then be able to execute the workflow on a distributed environment, _as if_ she had designed the workflow directly in [WS-PGRADE].
-
-### The `ApplicationManager` portlet
+# WS-PGRADE Extensions
+## What are these extensions?
+### The `ApplicationManager` Portlet
 [WS-PGRADE] is able to communicate with several resource managers, and these managers often lack an application database of sorts. [UNICORE] excels in this aspect and keeps all applications registered in an _incarnation database_, but this seems to be the exception.
 
 This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_.
 
 
-## How can I build the portlets?
-You will need [maven] to build the portlets. After you've installed [maven], run the following command to build the portlets:
+## How can I build the extensions?
+First, you'll need to install some files in your local [maven] repository. Typically, you wouldn't need to perform a manual installation of dependencies, but at some point between the creation of this project and the release of it, one of the repositories holding required dependencies was not reachable anymore. Sadly, code that is not maintained by us refers to a repository that is not reachable, so we need to simulate that these dependencies were already obtained (by installing them manually).    This step has to be done only once.
+
+Once you've downloaded and installed [maven], go to the `dependencies` folder and execute the following commands:
+
+	$ mvn install:install-file -DpomFile=portal-service.pom -Dfile=portal-service.jar
+    $ mvn install:install-file -DpomFile=unicore6-api.pom -Dfile=unicore6-api.jar
+    $ mvn install:install-file -DpomFile=externals.pom -Dfile=externals.pom
+    $ mvn install:install-file -DpomFile=unreleased.pom -Dfile=unreleased.pom
+
+After you've installed the dependencies, run the following command to build the extensions:
 
     $ mvn package
     
 ## Is there an installation process?
 Yes. In fact, you need to run `sql/setupdb.sql` before installing the portlets. This MySQL script has been designed to work _within_ [WS-PGRADE]'s database (at the time of release, the name of this database is `guse`), this means that you have to run it on the MySQL instance that your [WS-PGRADE] runs on.
 
-The script will create a table and a couple of stored procedures needed for the proper functioning of the portlets.
+The script will create a table and a couple of stored procedures needed for the proper functioning of the extensions.
 
-This step has to be done only once.
-
-## How can I install the portlets?
+## How can I install the extensions?
 There are two ways in which you can deploy the portlets on a [WS-PGRADE] instance. Regardless of which way you choose, you need to restart the [WS-PGRADE] portal.
 
 ### Manually deploying the portlets

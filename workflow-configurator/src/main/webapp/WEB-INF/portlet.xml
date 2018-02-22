@@ -4,18 +4,18 @@
 	xsi:schemaLocation='http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd http://java.sun.com/xml/ns/portlet/portlet-app_2_0.xsd'
 	version='2.0'>
 	<portlet>
-		<description>WS-PGRADE Workflow Importer (v. ${version})</description>
+		<description>WS-PGRADE Workflow Configurator (v. ${version})</description>
 		<!-- portlet.name property is defined in pom.xml -->
 		<portlet-name>${portlet.name}</portlet-name>
-		<display-name>WS-PGRADE Workflow Importer</display-name>
+		<display-name>WS-PGRADE Workflow Configurator</display-name>
 		<portlet-class>com.workflowconversion.portlet.CustomVaadinPortlet</portlet-class>
 		<init-param>
             <name>UI</name>
-            <value>com.workflowconversion.portlet.workflowimporter.WorkflowImporterUI</value>
+            <value>com.workflowconversion.portlet.configurator.WorkflowConfiguratorUI</value>
         </init-param>
         <init-param>
             <name>widgetset</name>
-            <value>com.workflowconversion.portlet.workflowimporter.WidgetSet</value>
+            <value>com.workflowconversion.portlet.configurator.WidgetSet</value>
         </init-param>        
 		<expiration-cache>0</expiration-cache>
 		<supports>
@@ -23,8 +23,8 @@
 			<portlet-mode>VIEW</portlet-mode>
 		</supports>
 		<portlet-info>
-			<title>WS-PGRADE Workflow Importer</title>
-			<short-title>WS-PGRADE Workflow Importer</short-title>
+			<title>WS-PGRADE Workflow Configurator</title>
+			<short-title>WS-PGRADE Workflow Configurator</short-title>
 		</portlet-info>
 		<!-- only admins are allowed to add this portlet to pages -->
 		<security-role-ref>

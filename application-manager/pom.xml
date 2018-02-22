@@ -5,14 +5,14 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.workflowconversion</groupId>
-		<artifactId>WS-PGRADE-Portlets</artifactId>
+		<artifactId>WS-PGRADE-Extensions</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>application-manager-portlet</artifactId>
+	<artifactId>application-manager</artifactId>
 	<packaging>war</packaging>
 	<name>Application Manager Portlet</name>
-	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
-
+	<url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</url>
+	
 	<dependencies>
 		<dependency>
 			<groupId>com.workflowconversion</groupId>
@@ -25,7 +25,7 @@
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -40,7 +40,7 @@
 						</goals>
 						<configuration>
 							<files>
-								<file>${project.basedir}/portlet.properties</file>
+								<file>${project.basedir}/build.properties</file>
 							</files>
 						</configuration>
 					</execution>

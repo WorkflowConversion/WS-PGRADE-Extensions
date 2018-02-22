@@ -12,10 +12,10 @@
         <tag>workflow</tag>
         <tag>fine-grained interoperability</tag>
     </tags>
-    <short-description>WS-PGRADE Workflow Importer.</short-description>
-    <long-description>An extended WS-PGRADE Workflow importer featuring an application database to select applications from.</long-description>
+    <short-description>WS-PGRADE Workflow Configurator.</short-description>
+    <long-description>An extended WS-PGRADE workflow configurator featuring access to an application database to select applications from.</long-description>
     <change-log></change-log>
-    <page-url>https://github.com/WorkflowConversion/WorkflowImporter</page-url>
+    <page-url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</page-url>
     <author>Luis de la Garza, University of Tuebingen</author>
     <licenses>
         <license osi-approved="true">GPL</license>

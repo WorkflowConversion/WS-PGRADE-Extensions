@@ -3,7 +3,7 @@ package com.workflowconversion.portlet.core.filter;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import org.jsoup.helper.Validate;
+import org.apache.commons.lang3.Validate;
 
 /**
  * Simple class that iterates over a collection and applies filters.

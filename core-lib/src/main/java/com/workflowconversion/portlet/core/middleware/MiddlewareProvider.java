@@ -8,7 +8,13 @@ import dci.data.Item;
 import dci.data.Middleware;
 
 /**
- * Defines the methods to retrieve gUSE middleware/items.
+ * Defines the methods to retrieve gUSE middleware/items. gUSE stores information about computing resources on an xml
+ * file which is accessible (read-only) through the {@dci_bridge_service} component. Since more than one class will be
+ * accessing the contents of this xml file, it makes sense to define an interface to decouple components.
+ * 
+ * The xml file contains information about the resources and their associated queues and there is, of course, no
+ * information regarding applications, so applications need to be accessed in some other way, and this depends on the
+ * type of resource (see {@link com.workflowconversion.portlet.core.resource.ResourceProvider}).
  * 
  * @author delagarza
  *

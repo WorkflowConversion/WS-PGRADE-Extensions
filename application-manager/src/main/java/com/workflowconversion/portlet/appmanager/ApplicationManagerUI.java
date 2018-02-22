@@ -9,6 +9,7 @@ import com.vaadin.data.Item;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.server.ThemeResource;
+import com.vaadin.server.VaadinRequest;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -18,10 +19,10 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.workflowconversion.portlet.core.Settings;
 import com.workflowconversion.portlet.core.exception.ApplicationException;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
-import com.workflowconversion.portlet.core.settings.Settings;
 import com.workflowconversion.portlet.ui.HorizontalSeparator;
 import com.workflowconversion.portlet.ui.NotificationUtils;
 import com.workflowconversion.portlet.ui.WorkflowConversionUI;
@@ -183,6 +184,12 @@ public class ApplicationManagerUI extends WorkflowConversionUI {
 		resourceProviderComboBox.setItemIconPropertyId(PROPERTY_NAME_ICON);
 
 		return resourceProviderComboBox;
+	}
+
+	@Override
+	protected void refresh(final VaadinRequest vaadinRequest) {
+		super.refresh(vaadinRequest);
+
 	}
 
 	// simple struct-like class

@@ -1,6 +1,6 @@
 package com.workflowconversion.portlet.core;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Supported clusters enumeration.
