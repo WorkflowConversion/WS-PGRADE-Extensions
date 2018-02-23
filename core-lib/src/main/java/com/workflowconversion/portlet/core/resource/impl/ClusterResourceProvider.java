@@ -65,7 +65,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	private final static String GET_ALL_SQL = "{CALL sp_get_applications(?, ?)}";
 	private final static String ADD_SQL = "{CALL sp_add_application(?, ?, ?, ?, ?, ?)}";
 	private final static String EDIT_SQL = "{CALL sp_edit_application(?, ?, ?, ?, ?, ?)}";
-	private final static String DELETE_SQL = "{CALL sp_delete_application(?)}";
+	private final static String DELETE_SQL = "{CALL sp_delete_applications(?, ?)}";
 
 	private volatile boolean hasInitErrors;
 	private final int maxActiveConnections;
@@ -289,6 +289,11 @@ public class ClusterResourceProvider implements ResourceProvider {
 			}
 			callableStatement.getConnection().commit();
 		} catch (final SQLException e) {
+			try {
+				callableStatement.getConnection().rollback();
+			} catch (final Exception e2) {
+				LOG.error("Could not rollback changes on a batch application update. Check database connectivity", e2);
+			}
 			throw new ApplicationException("Could not save application in database. Check database connectivity.", e);
 		}
 	}
