@@ -62,7 +62,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	private final static Logger LOG = LoggerFactory.getLogger(ClusterResourceProvider.class);
 
 	private final static String SETUP_SCRIPT_LOCATION = "setupdb.sql";
-	private final static String GET_ALL_SQL = "{CALL sp_get_applications(?, ?)}";
+	private final static String GET_ALL_SQL = "{CALL sp_get_all_applications(?, ?)}";
 	private final static String ADD_SQL = "{CALL sp_add_application(?, ?, ?, ?, ?, ?)}";
 	private final static String EDIT_SQL = "{CALL sp_edit_application(?, ?, ?, ?, ?, ?)}";
 	private final static String DELETE_SQL = "{CALL sp_delete_applications(?, ?)}";
@@ -493,6 +493,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 			final Connection connection;
 			try {
 				connection = dataSource.getConnection();
+				connection.setAutoCommit(true);
 			} catch (final SQLException e) {
 				throw new ApplicationException(
 						"Could not retrieve SQL connection from the JDBC data source. Check database connectivity.", e);
