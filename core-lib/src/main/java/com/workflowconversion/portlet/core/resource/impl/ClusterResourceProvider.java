@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.ObjectPool;
@@ -50,8 +49,6 @@ import hu.sztaki.lpds.information.local.PropertyLoader;
  * 
  * During the initialization, this provider will establish a JDBC connection to the MySQL database and will execute a
  * setup SQL script (SQL) that will create the needed MySQL objects if it's needed to.
- *
- * 
  * 
  * @author delagarza
  *
@@ -62,7 +59,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	private final static Logger LOG = LoggerFactory.getLogger(ClusterResourceProvider.class);
 
 	private final static String SETUP_SCRIPT_LOCATION = "setupdb.sql";
-	private final static String GET_ALL_SQL = "{CALL sp_get_all_applications(?, ?)}";
+	private final static String GET_SQL = "{CALL sp_get_applications(?, ?)}";
 	private final static String ADD_SQL = "{CALL sp_add_application(?, ?, ?, ?, ?, ?)}";
 	private final static String EDIT_SQL = "{CALL sp_edit_application(?, ?, ?, ?, ?, ?)}";
 	private final static String DELETE_SQL = "{CALL sp_delete_applications(?, ?)}";
@@ -74,7 +71,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 	// these cannot be final because their values will be set when the init() method is invoked
 	private DataSource dataSource;
 	// creation of CallableStatement objects is expensive, so we will have a dedicated pool for each kind of statement
-	private ObjectPool<CallableStatement> getAllStatementPool;
+	private ObjectPool<CallableStatement> getStatementPool;
 	private ObjectPool<CallableStatement> addStatementPool;
 	private ObjectPool<CallableStatement> editStatementPool;
 	private ObjectPool<CallableStatement> deleteStatementPool;
@@ -152,8 +149,8 @@ public class ClusterResourceProvider implements ResourceProvider {
 			throw new ApplicationException("Could not execute database initialization script (setupdb.sql).", e);
 		}
 		// init the CallableStatement object pools
-		getAllStatementPool = new SoftReferenceObjectPool<CallableStatement>(
-				new CallableStatementFactory(dataSource, GET_ALL_SQL));
+		getStatementPool = new SoftReferenceObjectPool<CallableStatement>(
+				new CallableStatementFactory(dataSource, GET_SQL));
 		addStatementPool = new SoftReferenceObjectPool<CallableStatement>(
 				new CallableStatementFactory(dataSource, ADD_SQL));
 		editStatementPool = new SoftReferenceObjectPool<CallableStatement>(
@@ -226,7 +223,8 @@ public class ClusterResourceProvider implements ResourceProvider {
 		final Collection<ApplicationWithResource> appsToEdit = new LinkedList<ApplicationWithResource>();
 
 		final Map<String, Resource> existingResources = new TreeMap<String, Resource>();
-		for (final Resource existingResource : getResources_internal(null, null)) {
+
+		for (final Resource existingResource : getResources_internal()) {
 			existingResources.put(KeyUtils.generate(existingResource), existingResource);
 		}
 
@@ -302,96 +300,59 @@ public class ClusterResourceProvider implements ResourceProvider {
 	public Resource getResource(final String name, final String type) {
 		Validate.notBlank(name, "name cannot be empty or only whitespace.");
 		Validate.notBlank(type, "type cannot be empty or only whitespace.");
-		final Collection<Resource> resources = getResources_internal(name, type);
-		Validate.isTrue(resources.size() == 1,
-				"More than one resource was returned when only one was expected. This is a bug and should be reported.");
-		return resources.iterator().next();
+		final Map<String, Resource> enabledResources = getEnabledClusterResources();
+		// is the resource even active?
+		final Resource resource = enabledResources.get(KeyUtils.generateResourceKey(name, type));
+		if (resource != null) {
+			final CallableStatement getApplicationsStatement = borrowCallableStatement(getStatementPool);
+			try {
+				addApplications(resource, getApplicationsStatement);
+			} catch (final SQLException e) {
+				LOG.error("Could not retrieve applications for resource: " + resource, e);
+			} finally {
+				returnCallableStatement(getStatementPool, getApplicationsStatement);
+			}
+		}
+		return resource;
 	}
 
 	@Override
 	public Collection<Resource> getResources() {
-		return Collections.unmodifiableCollection(getResources_internal(null, null));
+		return Collections.unmodifiableCollection(getResources_internal());
 	}
 
-	private Collection<Resource> getResources_internal(final String desiredResourceName,
-			final String desiredResourceType) {
-		final Collection<Resource> resources = new LinkedList<Resource>();
-		final Map<String, Item> enabledClusterItems = getEnabledClusterItems();
-		final CallableStatement callableStatement = borrowCallableStatement(getAllStatementPool);
+	private Collection<Resource> getResources_internal() {
+		final Collection<Resource> enabledResources = getEnabledClusterResources().values();
+		final CallableStatement callableStatement = borrowCallableStatement(getStatementPool);
 		try {
-			// set both input parameters to null
-			callableStatement.setString(1, desiredResourceName);
-			callableStatement.setString(2, desiredResourceType);
-			callableStatement.execute();
-
-			String previousResourceName = null;
-			String previousResourceType = null;
-			Item previousItem = null;
-			// store the key to avoid computing it every time we need to compare it to the current key
-			String previousResourceKey = null;
-			// these will hold only applications associated to one resource
-			final Collection<Application> applications = new LinkedList<Application>();
-
-			try (ResultSet resultSet = callableStatement.getResultSet()) {
-				while (resultSet.next()) {
-					// verify that the resource belonging to this application is enabled
-					final String resourceName = StringUtils.trimToEmpty(resultSet.getString("resource_name"));
-					final String resourceType = StringUtils.trimToEmpty(resultSet.getString("resource_type"));
-					final String resourceKey = KeyUtils.generateResourceKey(resourceName, resourceType);
-					final Item item = enabledClusterItems.get(resourceKey);
-					if (item == null) {
-						// TODO: generate this warning only once per resource and not once per application associated to
-						// it!
-						LOG.warn("Resource [name=" + resourceName + ", type=" + resourceType
-								+ "] is not enabled. Ignoring applications associated to it.");
-						// make sure we add the previous active resource with its applications
-						if (previousItem != null) {
-							addResource(resources, previousResourceName, previousResourceType, applications,
-									previousItem);
-						}
-					} else {
-						// get the column values to instantiate an app
-						final Application application = new Application.Builder().withName(resultSet.getString("name"))
-								.withVersion(resultSet.getString("version")).withPath(resultSet.getString("path"))
-								.withDescription(resultSet.getString("description")).newInstance();
-						// are we seeing the first active resource OR are we seeing the same resource as before?
-						if (previousResourceKey == null || previousResourceKey.equals(resourceKey)) {
-							applications.add(application);
-						} else {
-							// this is a new resource we're seeing, so we need to actually instantiate a new resource
-							// with all the applications we've gotten
-							addResource(resources, previousResourceName, previousResourceType, applications,
-									previousItem);
-						}
-					}
-					previousResourceKey = resourceKey;
-					previousResourceName = resourceName;
-					previousResourceType = resourceType;
-					previousItem = item;
-				}
-			}
-			// we still have to add the last resource (unless not a single resource was active!)
-			if (previousItem != null) {
-				addResource(resources, previousResourceName, previousResourceType, applications, previousItem);
+			// iterate over all enabled resources and query the database to retrieve applications
+			for (final Resource enabledResource : enabledResources) {
+				addApplications(enabledResource, callableStatement);
 			}
 		} catch (final SQLException e) {
-			throw new ApplicationException("Could not retrieve applications for ClusterResourceProvider.", e);
+			LOG.error("Could not retrieve applications for ClusterResourceProvider.", e);
 		} finally {
 			// return the object no matter what
-			returnCallableStatement(getAllStatementPool, callableStatement);
+			returnCallableStatement(getStatementPool, callableStatement);
 		}
-		return resources;
+		return enabledResources;
 	}
 
-	private void addResource(final Collection<Resource> resources, final String resourceName, final String resourceType,
-			final Collection<Application> applications, final Item associatedItem) {
-		final Resource.Builder resourceBuilder = new Resource.Builder();
-		resourceBuilder.canModifyApplications(true).withName(resourceName).withType(resourceType)
-				.withApplications(applications);
-		resourceBuilder.withQueues(extractQueuesFromItem(resourceType, associatedItem));
-		resources.add(resourceBuilder.newInstance());
-		// clear them so the new resource sees only its own apps
-		applications.clear();
+	private void addApplications(final Resource resource, final CallableStatement callableStatement)
+			throws SQLException {
+		callableStatement.setString(1, resource.getName());
+		callableStatement.setString(2, resource.getType());
+		callableStatement.execute();
+
+		try (ResultSet resultSet = callableStatement.getResultSet()) {
+			while (resultSet.next()) {
+				// get the column values to instantiate an app
+				final Application.Builder applicationBuilder = new Application.Builder();
+				applicationBuilder.withName(resultSet.getString("name")).withVersion(resultSet.getString("version"))
+						.withPath(resultSet.getString("path")).withDescription(resultSet.getString("description"));
+				resource.addApplication(applicationBuilder.newInstance());
+			}
+		}
 	}
 
 	private CallableStatement borrowCallableStatement(final ObjectPool<CallableStatement> pool) {
@@ -414,26 +375,30 @@ public class ClusterResourceProvider implements ResourceProvider {
 		}
 	}
 
-	private Map<String, Item> getEnabledClusterItems() {
-		// get the enabled cluster middlewares
+	private Map<String, Resource> getEnabledClusterResources() {
+		final Map<String, Resource> enabledResources = new TreeMap<String, Resource>();
 		final Filter<Middleware> clusterMiddlewareFilter = new ClusterMiddlewareFilter();
 		final Collection<Middleware> enabledClusterMiddlewares = FilterApplicator
 				.applyFilter(middlewareProvider.getEnabledMiddlewares(), clusterMiddlewareFilter);
-		// select the enabled items from the list of enabled middlewares
-		final Map<String, Item> enabledClusterItemMap = new TreeMap<String, Item>();
 		final Filter<Item> enabledItemFilter = new SimpleFilterFactory().setEnabled(true).newItemFilter();
 		for (final Middleware enabledClusterMiddleware : enabledClusterMiddlewares) {
 			for (final Item enabledClusterItem : FilterApplicator.applyFilter(enabledClusterMiddleware.getItem(),
 					enabledItemFilter)) {
-				final String key = KeyUtils.generateResourceKey(enabledClusterItem.getName(),
-						enabledClusterMiddleware.getType());
-				if (enabledClusterItemMap.put(key, enabledClusterItem) != null) {
-					LOG.warn("There is a duplicate enabled middleware item. Middleware type = "
+				final String resourceType = enabledClusterMiddleware.getType();
+				final String resourceName = enabledClusterItem.getName();
+				final String key = KeyUtils.generateResourceKey(resourceName, resourceType);
+				if (enabledResources.containsKey(key)) {
+					LOG.warn("Ignoring duplicate enabled middleware item. Middleware type = "
 							+ enabledClusterMiddleware.getType() + ", item name =" + enabledClusterItem.getName());
+				} else {
+					final Resource.Builder resourceBuilder = new Resource.Builder();
+					resourceBuilder.withName(enabledClusterItem.getName()).withType(enabledClusterMiddleware.getType());
+					resourceBuilder.withQueues(extractQueuesFromItem(resourceType, enabledClusterItem));
+					enabledResources.put(key, resourceBuilder.newInstance());
 				}
 			}
 		}
-		return enabledClusterItemMap;
+		return enabledResources;
 	}
 
 	private Collection<Queue> extractQueuesFromItem(final String middlewareType, final Item item) {

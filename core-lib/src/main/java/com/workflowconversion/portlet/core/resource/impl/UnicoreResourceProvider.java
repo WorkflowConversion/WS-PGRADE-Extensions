@@ -139,8 +139,7 @@ public class UnicoreResourceProvider implements ResourceProvider {
 
 			}
 		} catch (final Exception e) {
-			LOG.error("Could not retrieve UNICORE applications from " + item.getName());
-			throw new ApplicationException("Could not retrieve the applicatons for " + item.getName(), e);
+			LOG.error("Could not retrieve UNICORE applications from " + item.getName(), e);
 		}
 	}
 

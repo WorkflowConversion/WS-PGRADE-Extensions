@@ -15,21 +15,20 @@ CREATE TABLE IF NOT EXISTS tbl_application (
 );
 
 -- create the "get" stored procedure
--- if all the applications are needed, then set both input parameters to NULL
-DROP PROCEDURE IF EXISTS sp_get_all_applications;
+DROP PROCEDURE IF EXISTS sp_get_applications;
 DELIMITER #
-CREATE PROCEDURE sp_get_all_applications(
+CREATE PROCEDURE sp_get_applications(
 	IN param_resource_name		TEXT,
 	IN param_resource_type		TEXT
 )
 BEGIN
 	SELECT 
-		id, resource_name, resource_type, name, version, path, description 
+		resource_name, resource_type, name, version, path, description 
 	FROM 
 		tbl_application
 	WHERE
-		(param_resource_name IS NULL OR resource_name = param_resource_name) AND
-		(param_resource_type IS NULL OR resource_type = param_resource_type)
+		resource_name = param_resource_name AND
+		resource_type = param_resource_type
 	ORDER BY
 		resource_name, resource_type;
 END#

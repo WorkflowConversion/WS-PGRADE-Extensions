@@ -37,8 +37,14 @@ import java.text.SimpleDateFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
- * Tool to run database scripts
+ * Tool to run database scripts.
+ * 
+ * Taken from: https://stackoverflow.com/questions/1497569/how-to-execute-sql-script-file-using-jdbc
+ * 
+ * Fixed some minor bugs.
  */
 public class ScriptRunner {
 
@@ -54,9 +60,7 @@ public class ScriptRunner {
 	private final boolean stopOnError;
 	private final boolean autoCommit;
 
-	@SuppressWarnings("UseOfSystemOutOrSystemErr")
 	private PrintWriter logWriter = null;
-	@SuppressWarnings("UseOfSystemOutOrSystemErr")
 	private PrintWriter errorLogWriter = null;
 
 	private String delimiter = DEFAULT_DELIMITER;
@@ -192,15 +196,27 @@ public class ScriptRunner {
 				conn.commit();
 			}
 		} catch (final IOException e) {
+			if (!autoCommit) {
+				try {
+					conn.rollback();
+				} catch (final Exception e2) {
+					printlnError("Could not rollback transaction. " + e2);
+				}
+			}
 			throw new IOException(String.format("Error executing '%s': %s", command, e.getMessage()), e);
 		} finally {
-			conn.rollback();
 			flush();
 		}
 	}
 
 	private void execCommand(final Connection conn, final StringBuffer command, final LineNumberReader lineReader)
 			throws SQLException {
+		// ignore empty lines
+		if (StringUtils.trimToNull(command.toString()) == null) {
+			println(String.format("Ignoring command containing only whitespace (line %d)", lineReader.getLineNumber()));
+			return;
+		}
+
 		final Statement statement = conn.createStatement();
 
 		println(command);
