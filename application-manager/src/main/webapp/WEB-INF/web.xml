@@ -40,11 +40,11 @@
 		<init-param>
 			<description>Vaadin UI class to start</description>
 			<param-name>UI</param-name>
-			<param-value>com.workflowconversion.portlet.appdb.ApplicationDatabasePortlet</param-value>
+			<param-value>com.workflowconversion.portlet.appmanager.ApplicationManagerUI</param-value>
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/${portlet.name}Servlet/*</url-pattern>
@@ -53,14 +53,15 @@
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/VAADIN/*</url-pattern>
 	</servlet-mapping>
-	
+
 	<!-- this should be the last declared mapping -->
 	<servlet-mapping>
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 
-	<!-- the following sections are needed to enable communication with gUSE's back end -->
+	<!-- the following sections are needed to enable communication with gUSE's 
+		back end -->
 	<servlet>
 		<servlet-name>InitServices</servlet-name>
 		<servlet-class>hu.sztaki.lpds.information.local.InitAxisServices</servlet-class>
@@ -94,18 +95,6 @@
 			<param-value>hu.sztaki.lpds.information.local.PropertyInitCommandImpl</param-value>
 		</init-param>
 	</servlet>
-	<!-- 
-	<servlet>
-		<servlet-name>CredentialProvider</servlet-name>
-		<servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-	<servlet>
-		<servlet-name>WorkflowStatusHandlerService</servlet-name>
-		<servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-	-->
 	<servlet-mapping>
 		<servlet-name>InitServices</servlet-name>
 		<url-pattern>/init</url-pattern>
@@ -188,16 +177,6 @@
 		<servlet-name>SOAPMonitorService</servlet-name>
 		<url-pattern>/SOAPMonitor</url-pattern>
 	</servlet-mapping>
-	<!-- 
-	<servlet-mapping>
-		<servlet-name>CredentialProvider</servlet-name>
-		<url-pattern>/CredentialProvider</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>WorkflowStatusHandlerService</servlet-name>
-		<url-pattern>/WorkflowStatusHandlerService</url-pattern>
-	</servlet-mapping>
-	-->
 	<session-config>
 		<session-timeout>30</session-timeout>
 	</session-config>
