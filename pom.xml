@@ -374,13 +374,8 @@
 			<version>5.1.32</version>
 		</dependency>
 		<!-- includes the PropertiesConfiguration, which allows us to automatically 
-			refresh properties based on properties files 
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>1.6</version>
-		</dependency>
-		-->
+			refresh properties based on properties files <dependency> <groupId>commons-configuration</groupId> 
+			<artifactId>commons-configuration</artifactId> <version>1.6</version> </dependency> -->
 		<!-- includes a database connection pool -->
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
@@ -412,112 +407,118 @@
 					<target>${maven.compiler.target}</target>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>2.6.1</version>
-				<!-- Clean up also any pre-compiled themes -->
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>src/main/webapp/VAADIN/themes</directory>
-							<includes>
-								<include>**/styles.css</include>
-								<include>**/styles.scss.cache</include>
-							</includes>
-						</fileset>
-					</filesets>
-				</configuration>
-			</plugin>
-			<!--This plugin's configuration is used to store Eclipse m2e settings 
-				only. It has no influence on the Maven build itself. See: https://dev.vaadin.com/ticket/8899 -->
-			<plugin>
-				<groupId>org.eclipse.m2e</groupId>
-				<artifactId>lifecycle-mapping</artifactId>
-				<version>1.0.0</version>
-				<configuration>
-					<lifecycleMappingMetadata>
-						<pluginExecutions>
-							<pluginExecution>
-								<pluginExecutionFilter>
-									<groupId>com.vaadin</groupId>
-									<artifactId>vaadin-maven-plugin</artifactId>
-									<versionRange>[${vaadin.plugin.version},)</versionRange>
-									<goals>
-										<goal>update-theme</goal>
-										<goal>update-widgetset</goal>
-										<goal>compile</goal>
-										<goal>compile-theme</goal>
-									</goals>
-								</pluginExecutionFilter>
-								<action>
-									<ignore />
-								</action>
-							</pluginExecution>
-						</pluginExecutions>
-					</lifecycleMappingMetadata>
-				</configuration>
-			</plugin>
-			<!-- make sure portlets (war files) get resource filtering -->
-			<plugin>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>2.4</version>
-				<configuration>
-					<!-- vaadin portlets don't need a web.xml, but, as of gUSE 3.7.4, WS-PGRADE 
-						portlets need a web.xml -->
-					<failOnMissingWebXml>true</failOnMissingWebXml>
-					<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar,WEB-INF/classes/VAADIN/gwt-unitCache/**,WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
-					<warName>${portlet.name}</warName>
-					<webResources>
-						<resource>
-							<filtering>true</filtering>
-							<directory>src/main/resources</directory>
-							<includes>
-								<include>logback.xml</include>
-								<include>sample_resource_file.xml</include>
-							</includes>
-							<targetPath>WEB-INF/classes</targetPath>
-						</resource>
-						<resource>
-							<filtering>true</filtering>
-							<directory>src/main/webapp/WEB-INF</directory>
-							<includes>
-								<include>liferay-display.xml</include>
-								<include>liferay-plugin-package.xml</include>
-								<include>liferay-portlet.xml</include>
-								<include>portlet.xml</include>
-								<include>sun-jaxws.xml</include>
-								<include>web.xml</include>
-							</includes>
-							<targetPath>WEB-INF</targetPath>
-						</resource>
-					</webResources>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.vaadin</groupId>
-				<artifactId>vaadin-maven-plugin</artifactId>
-				<version>${vaadin.plugin.version}</version>
-				<configuration>
-					<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
-					<webappDirectory>${basedir}/target/classes/VAADIN/widgetsets</webappDirectory>
-					<draftCompile>false</draftCompile>
-					<compileReport>false</compileReport>
-					<style>OBF</style>
-					<strict>true</strict>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>update-theme</goal>
-							<goal>update-widgetset</goal>
-							<goal>compile</goal>
-							<goal>compile-theme</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-clean-plugin</artifactId>
+					<version>2.6.1</version>
+					<!-- Clean up also any pre-compiled themes -->
+					<configuration>
+						<filesets>
+							<fileset>
+								<directory>src/main/webapp/VAADIN/themes</directory>
+								<includes>
+									<include>**/styles.css</include>
+									<include>**/styles.scss.cache</include>
+								</includes>
+							</fileset>
+						</filesets>
+					</configuration>
+				</plugin>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. See: https://dev.vaadin.com/ticket/8899 -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>com.vaadin</groupId>
+										<artifactId>vaadin-maven-plugin</artifactId>
+										<versionRange>[${vaadin.plugin.version},)</versionRange>
+										<goals>
+											<goal>update-theme</goal>
+											<goal>update-widgetset</goal>
+											<goal>compile</goal>
+											<goal>compile-theme</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+				<!-- make sure portlets (war files) get resource filtering -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-war-plugin</artifactId>
+					<version>2.4</version>
+					<configuration>
+						<!-- vaadin portlets don't need a web.xml, but, as of gUSE 3.7.4, WS-PGRADE 
+							portlets need a web.xml -->
+						<failOnMissingWebXml>true</failOnMissingWebXml>
+						<packagingExcludes>%regex[WEB-INF/lib/bcprov-jdk.*],WEB-INF/lib/cog-jglobus-1.8.jar,%regex[WEB-INF/lib/cryptix.*],WEB-INF/lib/guava-13.0.1.jar,%regex[WEB-INF/lib/xbean.*],WEB-INF/lib/xmlbeans-2.5.0.jar,WEB-INF/classes/VAADIN/gwt-unitCache/**,WEB-INF/classes/VAADIN/widgetsets/WEB-INF/**</packagingExcludes>
+						<warName>${portlet.name}</warName>
+						<webResources>
+							<resource>
+								<filtering>true</filtering>
+								<directory>src/main/resources</directory>
+								<includes>
+									<include>logback.xml</include>
+									<include>sample_resource_file.xml</include>
+								</includes>
+								<targetPath>WEB-INF/classes</targetPath>
+							</resource>
+							<resource>
+								<filtering>true</filtering>
+								<directory>src/main/webapp/WEB-INF</directory>
+								<includes>
+									<include>liferay-display.xml</include>
+									<include>liferay-plugin-package.xml</include>
+									<include>liferay-portlet.xml</include>
+									<include>portlet.xml</include>
+									<include>sun-jaxws.xml</include>
+									<include>web.xml</include>
+								</includes>
+								<targetPath>WEB-INF</targetPath>
+							</resource>
+						</webResources>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>com.vaadin</groupId>
+					<artifactId>vaadin-maven-plugin</artifactId>
+					<version>${vaadin.plugin.version}</version>
+					<configuration>
+						<extraJvmArgs>-Xmx512M -Xss1024k</extraJvmArgs>
+						<webappDirectory>${basedir}/target/classes/VAADIN/widgetsets</webappDirectory>
+						<draftCompile>false</draftCompile>
+						<compileReport>false</compileReport>
+						<style>OBF</style>
+						<strict>true</strict>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>update-theme</goal>
+								<goal>update-widgetset</goal>
+								<goal>compile</goal>
+								<goal>compile-theme</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>
