@@ -84,24 +84,4 @@ public interface ResourceProvider extends Serializable {
 	 *            the {@link Resource} that contains the applications to be saved.
 	 */
 	public void save(final Resource resource);
-
-	/**
-	 * Instructs implementations to merge the contents of the passed resources with the contents on the persistence
-	 * layer. Users uploading information about several applications at once might expect the contents to be merged and
-	 * not to be completely replaced.
-	 * 
-	 * Implementations should apply the following rules, in the given order:
-	 * <ul>
-	 * <li>Applications referring to resources that are not available in {@code dci_bridge_service} will <b>not</b> be
-	 * added. Implementations can rely on the {@link MiddlewareProvider#getEnabledItems(String)} method to determine if
-	 * a resource is available in {@code dci_bridge_service}.
-	 * <li>If an application exists on the passed collection, it will be added/edited in the persistence layer.
-	 * </ul>
-	 * 
-	 * This method <b>does not</b> delete any information from the persistence layer.
-	 * 
-	 * @param resources
-	 *            the collection of resources to merge.
-	 */
-	public void merge(final Collection<Resource> resources);
 }

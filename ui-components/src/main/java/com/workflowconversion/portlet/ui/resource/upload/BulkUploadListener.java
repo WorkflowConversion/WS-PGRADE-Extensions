@@ -34,24 +34,6 @@ public interface BulkUploadListener<T> {
 	void parsingError(final String error);
 
 	/**
-	 * Parsing warning occurred.
-	 * 
-	 * @param warning
-	 *            a description of the warning.
-	 * @param lineNumber
-	 *            the line number.
-	 */
-	void parsingWarning(final String warning, final long lineNumber);
-
-	/**
-	 * Parsing warning occurred.
-	 * 
-	 * @param warning
-	 *            a description of the warning.
-	 */
-	void parsingWarning(final String warning);
-
-	/**
 	 * Parsing completed.
 	 * 
 	 * @param parsedElements

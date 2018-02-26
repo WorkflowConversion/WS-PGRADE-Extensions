@@ -11,16 +11,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.ObjectPool;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.SoftReferenceObjectPool;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.apache.tomcat.jdbc.pool.PoolProperties;
 import org.slf4j.Logger;
@@ -61,20 +57,16 @@ public class ClusterResourceProvider implements ResourceProvider {
 	private final static String SETUP_SCRIPT_LOCATION = "setupdb.sql";
 	private final static String GET_SQL = "{CALL sp_get_applications(?, ?)}";
 	private final static String ADD_SQL = "{CALL sp_add_application(?, ?, ?, ?, ?, ?)}";
-	private final static String EDIT_SQL = "{CALL sp_edit_application(?, ?, ?, ?, ?, ?)}";
 	private final static String DELETE_SQL = "{CALL sp_delete_applications(?, ?)}";
 
 	private volatile boolean hasInitErrors;
 	private final int maxActiveConnections;
 	private final MiddlewareProvider middlewareProvider;
+	private final Map<String, Resource> resources;
+	private final ReadWriteLock readWriteLock;
 
 	// these cannot be final because their values will be set when the init() method is invoked
 	private DataSource dataSource;
-	// creation of CallableStatement objects is expensive, so we will have a dedicated pool for each kind of statement
-	private ObjectPool<CallableStatement> getStatementPool;
-	private ObjectPool<CallableStatement> addStatementPool;
-	private ObjectPool<CallableStatement> editStatementPool;
-	private ObjectPool<CallableStatement> deleteStatementPool;
 
 	/**
 	 * @param middlewareProvider
@@ -88,6 +80,8 @@ public class ClusterResourceProvider implements ResourceProvider {
 		Validate.isTrue(maxActiveConnections >= 1, "maxActiveConnections must be greater or equal to one.");
 		this.middlewareProvider = middlewareProvider;
 		this.maxActiveConnections = maxActiveConnections;
+		this.resources = new TreeMap<String, Resource>();
+		this.readWriteLock = new ReentrantReadWriteLock(false);
 		this.hasInitErrors = false;
 	}
 
@@ -102,61 +96,60 @@ public class ClusterResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public synchronized void init() {
-		if (dataSource != null) {
-			LOG.info("ClusterResourcerProvider has already been initialized, ignoring invocation of init() method.");
-			return;
-		}
-		LOG.info("Initializing ClusterResourceProvider");
+	public void init() {
+		final Lock writeLock = readWriteLock.writeLock();
+		writeLock.lock();
 		try {
-			// taken from: https://people.apache.org/~fhanik/jdbc-pool/jdbc-pool.html
-			final PoolProperties p = new PoolProperties();
-			// these values come from invoking gUSE webservices
-			p.setUrl(PropertyLoader.getInstance().getProperty("guse.system.database.url"));
-			// we know it's MySQL, but there's no need to hardcode these settings
-			p.setDriverClassName(PropertyLoader.getInstance().getProperty("guse.system.database.driver"));
-			p.setUsername(PropertyLoader.getInstance().getProperty("guse.system.database.user"));
-			p.setPassword(PropertyLoader.getInstance().getProperty("guse.system.database.password"));
-			p.setMaxActive(this.maxActiveConnections);
-			p.setJmxEnabled(true);
-			p.setTestWhileIdle(false);
-			p.setTestOnBorrow(true);
-			p.setValidationQuery("SELECT 1");
-			p.setTestOnReturn(false);
-			p.setValidationInterval(30000);
-			p.setTimeBetweenEvictionRunsMillis(30000);
-			p.setInitialSize(1);
-			p.setMaxWait(10000);
-			p.setRemoveAbandonedTimeout(60);
-			p.setMinEvictableIdleTimeMillis(30000);
-			p.setLogAbandoned(true);
-			p.setRemoveAbandoned(true);
-			dataSource = new DataSource();
-			dataSource.setPoolProperties(p);
-		} catch (final Exception e) {
-			hasInitErrors = true;
-			throw new ApplicationException("Could not initialize ClusterResourceProvider.", e);
+			if (dataSource != null) {
+				LOG.info(
+						"ClusterResourcerProvider has already been initialized, ignoring invocation of init() method.");
+				return;
+			}
+			LOG.info("Initializing ClusterResourceProvider");
+			try {
+				// taken from: https://people.apache.org/~fhanik/jdbc-pool/jdbc-pool.html
+				final PoolProperties p = new PoolProperties();
+				// these values come from invoking gUSE webservices
+				p.setUrl(PropertyLoader.getInstance().getProperty("guse.system.database.url"));
+				// we know it's MySQL, but there's no need to hardcode these settings
+				p.setDriverClassName(PropertyLoader.getInstance().getProperty("guse.system.database.driver"));
+				p.setUsername(PropertyLoader.getInstance().getProperty("guse.system.database.user"));
+				p.setPassword(PropertyLoader.getInstance().getProperty("guse.system.database.password"));
+				p.setMaxActive(this.maxActiveConnections);
+				p.setJmxEnabled(true);
+				p.setTestWhileIdle(false);
+				p.setTestOnBorrow(true);
+				p.setValidationQuery("SELECT 1");
+				p.setTestOnReturn(false);
+				p.setValidationInterval(30000);
+				p.setTimeBetweenEvictionRunsMillis(30000);
+				p.setInitialSize(1);
+				p.setMaxWait(10000);
+				p.setRemoveAbandonedTimeout(60);
+				p.setMinEvictableIdleTimeMillis(30000);
+				p.setLogAbandoned(true);
+				p.setRemoveAbandoned(true);
+				dataSource = new DataSource();
+				dataSource.setPoolProperties(p);
+			} catch (final Exception e) {
+				hasInitErrors = true;
+				throw new ApplicationException("Could not initialize ClusterResourceProvider.", e);
+			}
+			// run the initialization script
+			try (Connection connection = dataSource.getConnection()) {
+				LOG.info("Running setupdb.sql");
+				// setupdb.sql must be in the classpath to be accessible!
+				final ScriptRunner runner = new ScriptRunner(connection, true, true);
+				runner.runScript(new BufferedReader(new InputStreamReader(
+						ClusterResourceProvider.class.getResourceAsStream('/' + SETUP_SCRIPT_LOCATION))));
+			} catch (final IOException | SQLException e) {
+				hasInitErrors = true;
+				throw new ApplicationException("Could not execute database initialization script (setupdb.sql).", e);
+			}
+			loadResourcesFromDatabase_notThreadSafe();
+		} finally {
+			writeLock.unlock();
 		}
-		// run the initialization script
-		try (Connection connection = dataSource.getConnection()) {
-			LOG.info("Running setupdb.sql");
-			// setupdb.sql must be in the classpath to be accessible!
-			final ScriptRunner runner = new ScriptRunner(connection, true, true);
-			runner.runScript(new BufferedReader(new InputStreamReader(
-					ClusterResourceProvider.class.getResourceAsStream('/' + SETUP_SCRIPT_LOCATION))));
-		} catch (final IOException | SQLException e) {
-			hasInitErrors = true;
-			throw new ApplicationException("Could not execute database initialization script (setupdb.sql).", e);
-		}
-		// init the CallableStatement object pools
-		getStatementPool = new SoftReferenceObjectPool<CallableStatement>(
-				new CallableStatementFactory(dataSource, GET_SQL));
-		addStatementPool = new SoftReferenceObjectPool<CallableStatement>(
-				new CallableStatementFactory(dataSource, ADD_SQL));
-		editStatementPool = new SoftReferenceObjectPool<CallableStatement>(
-				new CallableStatementFactory(dataSource, EDIT_SQL));
-		deleteStatementPool = new SoftReferenceObjectPool<CallableStatement>(
-				new CallableStatementFactory(dataSource, DELETE_SQL));
 	}
 
 	@Override
@@ -168,177 +161,96 @@ public class ClusterResourceProvider implements ResourceProvider {
 	public void save(final Resource resource) {
 		// TODO: maybe use transactions? but then we would have to use the same connection for two statements, and given
 		// that we are using object pools, who knows how long would it take to implement this or to refactor it
-
-		// delete everything related to this resource, then add whatever we've given
-		final CallableStatement deleteStatement = borrowCallableStatement(deleteStatementPool);
+		final Lock writeLock = readWriteLock.writeLock();
+		writeLock.lock();
 		try {
-			deleteStatement.setString(1, resource.getName());
-			deleteStatement.setString(2, resource.getType());
-			deleteStatement.execute();
-		} catch (final SQLException e) {
-			throw new ApplicationException(
-					"Could not delete applications from the database. Check database connectivity.", e);
-		} finally {
-			returnCallableStatement(deleteStatementPool, deleteStatement);
-		}
+			final Resource existingResource = resources.get(KeyUtils.generate(resource));
+			// existingResource and resource are holding the same reference (or they should)
+			if (existingResource != null) {
+				if (existingResource != resource) {
+					throw new ApplicationException(
+							"Inconsistent resources. This is a coding problem and should be reported.");
+				}
+				// delete everything related to this resource on the DB, then add whatever we've given
+				try (Connection connection = dataSource.getConnection();
+						CallableStatement deleteStatement = connection.prepareCall(DELETE_SQL)) {
+					connection.setAutoCommit(false);
+					deleteStatement.setString(1, resource.getName());
+					deleteStatement.setString(2, resource.getType());
+					deleteStatement.execute();
 
-		saveResource_internal(resource);
-	}
-
-	// saves all apps in this resource into the DB
-	private void saveResource_internal(final Resource resource) {
-		final CallableStatement addStatement = borrowCallableStatement(addStatementPool);
-		try {
-			for (final Application app : resource.getApplications()) {
-				executeApplicationCallableStatement(app, resource, addStatement);
-			}
-		} finally {
-			returnCallableStatement(addStatementPool, addStatement);
-		}
-	}
-
-	// since both add and edit stored procedures require the same ammount of parameters, it's pretty useful to use a
-	// method like this
-	private void executeApplicationCallableStatement(final Application app, final Resource resource,
-			final CallableStatement callableStatement) {
-		try {
-			callableStatement.setString(1, resource.getName());
-			callableStatement.setString(2, resource.getType());
-			callableStatement.setString(3, app.getName());
-			callableStatement.setString(4, app.getVersion());
-			callableStatement.setString(5, app.getPath());
-			callableStatement.setString(6, app.getDescription());
-			callableStatement.execute();
-		} catch (final SQLException e) {
-			throw new ApplicationException("Could not add application in the database. Check database connectivity.",
-					e);
-		}
-	}
-
-	@Override
-	public void merge(final Collection<Resource> resources) {
-		// basically, we need to create two collections: one containing apps to add and one containing apps to edit
-		// this is to know which stored procedure we will be using
-		final Collection<ApplicationWithResource> appsToAdd = new LinkedList<ApplicationWithResource>();
-		final Collection<ApplicationWithResource> appsToEdit = new LinkedList<ApplicationWithResource>();
-
-		final Map<String, Resource> existingResources = new TreeMap<String, Resource>();
-
-		for (final Resource existingResource : getResources_internal()) {
-			existingResources.put(KeyUtils.generate(existingResource), existingResource);
-		}
-
-		for (final Resource resource : resources) {
-			final String resourceKey = KeyUtils.generate(resource);
-			final Resource existingResource = existingResources.get(resourceKey);
-			if (existingResource == null) {
-				for (final Application app : resource.getApplications()) {
-					appsToAdd.add(new ApplicationWithResource(app, resource));
+					try (CallableStatement addStatement = connection.prepareCall(ADD_SQL)) {
+						for (final Application app : resource.getApplications()) {
+							executeAddApplicationStatement(app, resource, addStatement);
+						}
+					}
+					connection.commit();
+				} catch (final SQLException e) {
+					LOG.error("Could not save applications. Check database connectivity.", e);
 				}
 			} else {
-				// like in Inception, we need to go deeper! This means that instead of just adding all apps,
-				// we need to check which ones already exist to update them and which ones we need to add...
-				// luckily the difference is just which CallableStatement to use
-				final Map<String, Application> existingApplications = new TreeMap<String, Application>();
-				for (final Application existingApplication : existingResource.getApplications()) {
-					existingApplications.put(KeyUtils.generate(existingApplication), existingApplication);
-				}
-				for (final Application application : resource.getApplications()) {
-					final String appKey = KeyUtils.generate(application);
-					final Application existingApplication = existingApplications.get(appKey);
-					if (existingApplication == null) {
-						appsToAdd.add(new ApplicationWithResource(application, resource));
-					} else {
-						appsToEdit.add(new ApplicationWithResource(application, resource));
-					}
-				}
+				// trying to save a resource that doesn't even exist
+				throw new ApplicationException("Resource does not exist or is not enabled; name=" + resource.getName()
+						+ ", type=" + resource.getType());
 			}
-		}
-
-		final CallableStatement addStatement = borrowCallableStatement(addStatementPool);
-		try {
-			executeBatchApplicationCallableStatement(appsToAdd, addStatement);
 		} finally {
-			returnCallableStatement(addStatementPool, addStatement);
-		}
-
-		final CallableStatement editStatement = borrowCallableStatement(editStatementPool);
-		try {
-			executeBatchApplicationCallableStatement(appsToEdit, editStatement);
-		} finally {
-			returnCallableStatement(editStatementPool, editStatement);
+			writeLock.unlock();
 		}
 	}
 
-	private void executeBatchApplicationCallableStatement(final Collection<ApplicationWithResource> applications,
-			final CallableStatement callableStatement) {
-		// keep track of apps we've already processed
-		final Set<String> processedApps = new TreeSet<String>();
-		try {
-			// enable transactions
-			callableStatement.getConnection().setAutoCommit(false);
-			for (final ApplicationWithResource appWithResource : applications) {
-				if (!processedApps.add(appWithResource.getKey())) {
-					LOG.warn("This application has been added to the database already and will be ignored. "
-							+ appWithResource);
-				}
-				executeApplicationCallableStatement(appWithResource.application, appWithResource.resource,
-						callableStatement);
-			}
-			callableStatement.getConnection().commit();
-		} catch (final SQLException e) {
-			try {
-				callableStatement.getConnection().rollback();
-			} catch (final Exception e2) {
-				LOG.error("Could not rollback changes on a batch application update. Check database connectivity", e2);
-			}
-			throw new ApplicationException("Could not save application in database. Check database connectivity.", e);
-		}
+	private void executeAddApplicationStatement(final Application app, final Resource resource,
+			final CallableStatement addApplicationStatement) throws SQLException {
+		addApplicationStatement.setString(1, resource.getName());
+		addApplicationStatement.setString(2, resource.getType());
+		addApplicationStatement.setString(3, app.getName());
+		addApplicationStatement.setString(4, app.getVersion());
+		addApplicationStatement.setString(5, app.getPath());
+		addApplicationStatement.setString(6, app.getDescription());
+		addApplicationStatement.execute();
 	}
 
 	@Override
 	public Resource getResource(final String name, final String type) {
 		Validate.notBlank(name, "name cannot be empty or only whitespace.");
 		Validate.notBlank(type, "type cannot be empty or only whitespace.");
-		final Map<String, Resource> enabledResources = getEnabledClusterResources();
-		// is the resource even active?
-		final Resource resource = enabledResources.get(KeyUtils.generateResourceKey(name, type));
-		if (resource != null) {
-			final CallableStatement getApplicationsStatement = borrowCallableStatement(getStatementPool);
-			try {
-				addApplications(resource, getApplicationsStatement);
-			} catch (final SQLException e) {
-				LOG.error("Could not retrieve applications for resource: " + resource, e);
-			} finally {
-				returnCallableStatement(getStatementPool, getApplicationsStatement);
-			}
+
+		final Lock readLock = readWriteLock.readLock();
+		readLock.lock();
+		try {
+			return resources.get(KeyUtils.generateResourceKey(name, type));
+		} finally {
+			readLock.unlock();
 		}
-		return resource;
 	}
 
 	@Override
 	public Collection<Resource> getResources() {
-		return Collections.unmodifiableCollection(getResources_internal());
+		final Lock readLock = readWriteLock.readLock();
+		readLock.lock();
+		try {
+			return Collections.unmodifiableCollection(resources.values());
+		} finally {
+			readLock.unlock();
+		}
 	}
 
-	private Collection<Resource> getResources_internal() {
+	// queries the DB and loads the internal map holding resources
+	private void loadResourcesFromDatabase_notThreadSafe() {
 		final Collection<Resource> enabledResources = getEnabledClusterResources().values();
-		final CallableStatement callableStatement = borrowCallableStatement(getStatementPool);
-		try {
+		resources.clear();
+		try (Connection connection = dataSource.getConnection();
+				CallableStatement callableStatement = connection.prepareCall(GET_SQL)) {
 			// iterate over all enabled resources and query the database to retrieve applications
 			for (final Resource enabledResource : enabledResources) {
-				addApplications(enabledResource, callableStatement);
+				fillApplicationsForResource(enabledResource, callableStatement);
+				resources.put(KeyUtils.generate(enabledResource), enabledResource);
 			}
 		} catch (final SQLException e) {
 			LOG.error("Could not retrieve applications for ClusterResourceProvider.", e);
-		} finally {
-			// return the object no matter what
-			returnCallableStatement(getStatementPool, callableStatement);
 		}
-		return enabledResources;
 	}
 
-	private void addApplications(final Resource resource, final CallableStatement callableStatement)
+	private void fillApplicationsForResource(final Resource resource, final CallableStatement callableStatement)
 			throws SQLException {
 		callableStatement.setString(1, resource.getName());
 		callableStatement.setString(2, resource.getType());
@@ -352,26 +264,6 @@ public class ClusterResourceProvider implements ResourceProvider {
 						.withPath(resultSet.getString("path")).withDescription(resultSet.getString("description"));
 				resource.addApplication(applicationBuilder.newInstance());
 			}
-		}
-	}
-
-	private CallableStatement borrowCallableStatement(final ObjectPool<CallableStatement> pool) {
-		try {
-			return pool.borrowObject();
-		} catch (final Exception e) {
-			// there's not much we can do here other than add some message
-			throw new ApplicationException("Could not retrieve a CallableStatement. Check database connectivity.", e);
-		}
-	}
-
-	private void returnCallableStatement(final ObjectPool<CallableStatement> pool,
-			final CallableStatement callableStatement) {
-		try {
-			pool.returnObject(callableStatement);
-		} catch (final Exception e) {
-			throw new ApplicationException(
-					"Could not return CallableStatement back to its pool. This might be a bug and should be reported.",
-					e);
 		}
 	}
 
@@ -394,6 +286,7 @@ public class ClusterResourceProvider implements ResourceProvider {
 					final Resource.Builder resourceBuilder = new Resource.Builder();
 					resourceBuilder.withName(enabledClusterItem.getName()).withType(enabledClusterMiddleware.getType());
 					resourceBuilder.withQueues(extractQueuesFromItem(resourceType, enabledClusterItem));
+					resourceBuilder.canModifyApplications(true);
 					enabledResources.put(key, resourceBuilder.newInstance());
 				}
 			}
@@ -434,78 +327,6 @@ public class ClusterResourceProvider implements ResourceProvider {
 		@Override
 		public boolean passes(final Middleware element) {
 			return SupportedClusters.isSupported(element.getType());
-		}
-	}
-
-	private final static class CallableStatementFactory extends BasePooledObjectFactory<CallableStatement> {
-
-		private final String sql;
-		private final DataSource dataSource;
-
-		public CallableStatementFactory(final DataSource dataSource, final String sql) {
-			Validate.notNull(dataSource, "Null dataSource provided! This seems to be a bug and should be reported.");
-			Validate.notBlank(sql,
-					"Invalid SQL! Passed value: '" + sql + "'. This seems to be a bug and should be reported.");
-
-			this.dataSource = dataSource;
-			this.sql = sql;
-		}
-
-		@Override
-		public CallableStatement create() throws Exception {
-			// we cannot use "try with resources" because we need to keep the JDBC connection open as long as the
-			// CallableStatement is "active"
-			final Connection connection;
-			try {
-				connection = dataSource.getConnection();
-				connection.setAutoCommit(true);
-			} catch (final SQLException e) {
-				throw new ApplicationException(
-						"Could not retrieve SQL connection from the JDBC data source. Check database connectivity.", e);
-			}
-
-			return connection.prepareCall(sql);
-		}
-
-		@Override
-		public void destroyObject(final PooledObject<CallableStatement> obj) throws Exception {
-			passivateObject(obj);
-		}
-
-		@Override
-		public void passivateObject(final PooledObject<CallableStatement> obj) throws Exception {
-			final Connection connection = obj.getObject().getConnection();
-			if (connection != null && !connection.isClosed()) {
-				try {
-					connection.close();
-				} catch (final SQLException e) {
-					throw new ApplicationException("Could not close SQL connection. Check database connectivity", e);
-				}
-			}
-		}
-
-		@Override
-		public PooledObject<CallableStatement> wrap(final CallableStatement obj) {
-			return new DefaultPooledObject<CallableStatement>(obj);
-		}
-	}
-
-	private static class ApplicationWithResource {
-		final Application application;
-		final Resource resource;
-
-		public ApplicationWithResource(final Application application, final Resource resource) {
-			this.application = application;
-			this.resource = resource;
-		}
-
-		public String getKey() {
-			return KeyUtils.generate(resource) + '_' + KeyUtils.generate(application);
-		}
-
-		@Override
-		public String toString() {
-			return resource.toString() + "; " + application.toString();
 		}
 	}
 }

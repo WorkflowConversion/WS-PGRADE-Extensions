@@ -119,16 +119,6 @@ public class InMemoryMockResourceProvider implements ResourceProvider {
 	}
 
 	@Override
-	public void merge(final Collection<Resource> resources) {
-		// does nothing, since we're just storing everything in-memory
-		if (resources != null) {
-			for (final Resource resource : resources) {
-				LOG.info("Merging " + resource);
-			}
-		}
-	}
-
-	@Override
 	public boolean hasInitErrors() {
 		// TODO Auto-generated method stub
 		return false;

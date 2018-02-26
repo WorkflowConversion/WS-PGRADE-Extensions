@@ -68,26 +68,3 @@ BEGIN
 		resource_type = param_resource_type;
 END#
 DELIMITER ;
-
--- create the "edit" stored procedure
-DROP PROCEDURE IF EXISTS sp_edit_application;
-DELIMITER #
-CREATE PROCEDURE sp_edit_application (
-	IN 	param_resource_name		TEXT,
-	IN 	param_resource_type 	TEXT,
-	IN 	param_name				TEXT,
-	IN 	param_version			TEXT,
-	IN 	param_path				TEXT,
-	IN 	param_description		TEXT
-)
-BEGIN
-	UPDATE tbl_application SET 			
-		description = param_description
-	WHERE
-		resource_name = param_resource_name AND
-		resource_type = param_resource_type AND		
-		name = param_name AND
-		version = param_version AND
-		path = param_path;
-END#
-DELIMITER ;

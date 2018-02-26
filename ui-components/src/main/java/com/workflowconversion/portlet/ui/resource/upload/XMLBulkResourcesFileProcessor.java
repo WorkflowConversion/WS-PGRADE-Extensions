@@ -81,21 +81,15 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor<Resourc
 			loadAttributesInMap(attributes);
 
 			if (qName.equalsIgnoreCase(RESOURCE_NODE_NAME)) {
-				// find the resource using the resource provider (this method has error handling, so no
-				// need to do it again)
-				currentResource = findResource(extractFromAttributesMap(Resource.Field.Name),
-						extractFromAttributesMap(Resource.Field.Type), locator.getLineNumber());
+				final String resourceName = extractFromAttributesMap(Resource.Field.Name);
+				final String resourceType = extractFromAttributesMap(Resource.Field.Type);
+				currentResource = findResource(resourceName, resourceType, locator.getLineNumber());
 				if (currentResource != null) {
-					final String currentResourceKey = KeyUtils.generate(currentResource);
-					// check if we've already seen this resource
-					final Resource storedResource = parsedResources.put(currentResourceKey, currentResource);
-					if (storedResource != null) {
-						// we've seen this resource before, do not use the one from the provider, use the
-						// one we've got in the map because that one contains the apps we've parsed,
-						// so we need to rever the 'put' operation
-						parsedResources.put(currentResourceKey, storedResource);
-						currentResource = storedResource;
-					}
+					parsedResources.put(KeyUtils.generate(currentResource), currentResource);
+				} else {
+					XMLBulkResourcesFileProcessor.this.listener
+							.parsingError("Resource does not exist or is not enabled; name=" + resourceName + ", type="
+									+ resourceType, locator.getLineNumber());
 				}
 			} else if (qName.equalsIgnoreCase(APPLICATION_NODE_NAME)) {
 				addParsedApplication(currentResource, extractFromAttributesMap(Application.Field.Name),
@@ -103,9 +97,10 @@ public class XMLBulkResourcesFileProcessor extends AbstractFileProcessor<Resourc
 						extractFromAttributesMap(Application.Field.Path),
 						extractFromAttributesMap(Application.Field.Description), locator.getLineNumber());
 			} else {
-				// jesus, too many dots
-				XMLBulkResourcesFileProcessor.this.listener
-						.parsingWarning("Ignoring unrecognized tag name '" + qName + '\'', locator.getLineNumber());
+				if (!qName.equalsIgnoreCase("resources")) {
+					XMLBulkResourcesFileProcessor.this.listener.parsingError("Unrecognized tag name '" + qName + '\'',
+							locator.getLineNumber());
+				}
 			}
 		}
 

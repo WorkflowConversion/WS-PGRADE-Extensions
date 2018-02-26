@@ -208,11 +208,9 @@ public class BulkUploadApplicationsDialog extends Window {
 	private class DefaultBulkUploadListener implements BulkUploadListener<Resource> {
 
 		private final Collection<String> errors;
-		private final Collection<String> warnings;
 
 		private DefaultBulkUploadListener() {
 			this.errors = new LinkedList<String>();
-			this.warnings = new LinkedList<String>();
 		}
 
 		@Override
@@ -231,18 +229,11 @@ public class BulkUploadApplicationsDialog extends Window {
 		}
 
 		@Override
-		public void parsingWarning(final String warning, final long lineNumber) {
-			parsingWarning("Line " + lineNumber + ": " + warning);
-		}
-
-		@Override
-		public void parsingWarning(final String warning) {
-			warnings.add(warning);
-		}
-
-		@Override
 		public void parsingCompleted(final Collection<Resource> parsedResources) {
 			try {
+				for (final Resource parsedResource : parsedResources) {
+					resourceProvider.save(parsedResource);
+				}
 				final int numberOfParsedApplications = getApplicationCount(parsedResources);
 				if (errors.isEmpty()) {
 					final String message = "Processed and added " + numberOfParsedApplications
@@ -258,16 +249,6 @@ public class BulkUploadApplicationsDialog extends Window {
 					formattedError.append("</ul>");
 					NotificationUtils.displayError(formattedError.toString());
 				}
-				if (!warnings.isEmpty()) {
-					final StringBuilder formattedWarnings = new StringBuilder(
-							"<h3>The following warnings were generated while processing the file:");
-					for (final String warning : warnings) {
-						formattedWarnings.append("<li>").append(warning);
-					}
-					formattedWarnings.append("</ul>");
-					NotificationUtils.displayWarning(formattedWarnings.toString());
-				}
-				resourceProvider.merge(parsedResources);
 			} finally {
 				upload.setEnabled(true);
 			}

@@ -196,10 +196,4 @@ public class UnicoreResourceProvider implements ResourceProvider {
 				"This provider does not support adding/editing applications. This is probably a coding problem and should be reported.");
 	}
 
-	@Override
-	public void merge(final Collection<Resource> resources) {
-		throw new ApplicationException(
-				"This provider does not support adding/editing applications. This is probably a coding problem and should be reported.");
-	}
-
 }

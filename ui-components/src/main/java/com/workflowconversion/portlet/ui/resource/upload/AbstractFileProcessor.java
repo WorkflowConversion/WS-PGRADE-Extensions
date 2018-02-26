@@ -142,11 +142,11 @@ public abstract class AbstractFileProcessor<T> {
 						}
 					}
 				} else {
-					listener.parsingWarning("Cannot add application [" + parsedApplication + "] to read-only resource.",
+					listener.parsingError("Cannot add application [" + parsedApplication + "] to read-only resource.",
 							lineNumber);
 				}
 			} else {
-				listener.parsingWarning("Cannot add application [" + parsedApplication + "] to invalid resource.",
+				listener.parsingError("Cannot add application [" + parsedApplication + "] to invalid resource.",
 						lineNumber);
 			}
 		}
