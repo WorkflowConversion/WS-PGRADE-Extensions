@@ -56,7 +56,7 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 
 	private static final Logger LOG = LoggerFactory.getLogger(WorkflowConfiguratorUI.class);
 
-	private final Map<Integer, WorkflowView> workflowViewMap;
+	private final Map<Object, WorkflowView> workflowViewMap;
 	private WorkflowManager workflowManager;
 
 	/**
@@ -64,7 +64,7 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 	 */
 	public WorkflowConfiguratorUI() {
 		super(Settings.getInstance().getPortletSanityCheck(), Settings.getInstance().getResourceProviders());
-		workflowViewMap = new TreeMap<Integer, WorkflowView>();
+		workflowViewMap = new TreeMap<Object, WorkflowView>();
 
 	}
 
@@ -77,7 +77,7 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 		workflowManager.init();
 
 		final ComboBox workflowComboBox = getWorkflowComboBox();
-		final Button importButton = createButton("Import...", "Import a workflow");
+		final Button importButton = createButton("Upload...", "Upload a workflow to configure");
 
 		// fill the combobox with workflows
 		for (final Workflow workflow : workflowManager.getImportedWorkflows()) {
@@ -94,7 +94,7 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 				workflowDetailsLayout.removeAllComponents();
 				// check for nulls in case an item was removed
 				if (event != null && event.getProperty() != null && event.getProperty().getValue() != null) {
-					final int workflowViewId = (int) event.getProperty().getValue();
+					final Object workflowViewId = event.getProperty().getValue();
 					workflowDetailsLayout.addComponent(workflowViewMap.get(workflowViewId));
 				}
 				workflowDetailsLayout.markAsDirtyRecursive();
@@ -110,7 +110,7 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 		comboBoxLayout.setComponentAlignment(importButton, Alignment.BOTTOM_RIGHT);
 
 		final Button saveButton = createButton("Save All", "Save changes");
-		final Button exportButton = createButton("Export...", "Export current workflow");
+		final Button exportButton = createButton("Download", "Download current workflow");
 		final Button deleteButton = createButton("Delete", "Delete current workflow");
 		final HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
@@ -229,8 +229,8 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 	@SuppressWarnings("unchecked")
 	private void addWorkflowToComboBox(final Workflow workflow, final ComboBox workflowComboBox,
 			final Collection<ResourceProvider> resourceProviders) {
-		final int id = workflowViewMap.size();
-		final Item item = workflowComboBox.addItem(id);
+		final Object id = workflowComboBox.addItem();
+		final Item item = workflowComboBox.getItem(id);
 		item.getItemProperty(PROPERTY_NAME_CAPTION).setValue(workflow.getName());
 		workflowViewMap.put(id, new WorkflowView(workflow, resourceProviders));
 	}
@@ -280,8 +280,8 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 	}
 
 	private void deleteButtonClicked(final ComboBox workflowComboBox) {
-		if (workflowComboBox.getValue() != null) {
-			final int workflowViewId = (Integer) workflowComboBox.getValue();
+		final Object workflowViewId = workflowComboBox.getValue();
+		if (workflowViewId != null) {
 			final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
 			workflowManager.deleteWorkflow(workflowView.getWorkflow());
 			workflowViewMap.remove(workflowViewId);
@@ -292,9 +292,7 @@ public class WorkflowConfiguratorUI extends WorkflowConversionUI {
 	}
 
 	private Workflow getSelectedWorkflow(final ComboBox workflowComboBox) {
-		final int workflowViewId = (int) workflowComboBox.getValue();
-		final WorkflowView workflowView = workflowViewMap.get(workflowViewId);
-		return workflowView.getWorkflow();
+		return workflowViewMap.get(workflowComboBox.getValue()).getWorkflow();
 	}
 
 	private StreamResource createWorkflowStreamResource(final ComboBox workflowComboBox) {

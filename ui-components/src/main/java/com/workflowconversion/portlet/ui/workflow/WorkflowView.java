@@ -1,6 +1,5 @@
 package com.workflowconversion.portlet.ui.workflow;
 
-import java.nio.file.Path;
 import java.util.Collection;
 
 import org.apache.commons.lang3.Validate;
@@ -21,9 +20,7 @@ public class WorkflowView extends VerticalLayout {
 
 	private static final long serialVersionUID = 3843347539780676302L;
 
-	private final String workflowId;
-	private final String workflowName;
-	private final Path archivePath;
+	private final Workflow workflow;
 
 	/**
 	 * @param workflow
@@ -36,9 +33,7 @@ public class WorkflowView extends VerticalLayout {
 				"workflow cannot be null. This seems to be a coding problem and should be reported.");
 		Validate.notNull(resourceProviders,
 				"resourceProviders cannot be null. This seems to be a coding problem and should be reported.");
-		this.workflowId = workflow.getId();
-		this.workflowName = workflow.getName();
-		this.archivePath = workflow.getArchivePath();
+		this.workflow = workflow;
 		initUI(workflow, resourceProviders);
 	}
 
@@ -53,15 +48,6 @@ public class WorkflowView extends VerticalLayout {
 	 * @return the workflow, as configured in this view.
 	 */
 	public Workflow getWorkflow() {
-		final Workflow workflow = new Workflow();
-		workflow.setId(workflowId);
-		workflow.setName(workflowName);
-		workflow.setArchivePath(archivePath);
-		for (int i = 0; i < getComponentCount(); i++) {
-			final Panel jobViewPanel = (Panel) getComponent(i);
-			final JobView jobView = (JobView) jobViewPanel.getContent();
-			workflow.addJob(jobView.getJob());
-		}
 		return workflow;
 	}
 }
