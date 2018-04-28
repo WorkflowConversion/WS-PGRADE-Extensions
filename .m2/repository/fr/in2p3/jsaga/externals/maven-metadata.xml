@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>fr.in2p3.jsaga</groupId>
+  <artifactId>externals</artifactId>
+  <versioning>
+    <versions>
+      <version>1.0-SNAPSHOT</version>
+    </versions>
+    <lastUpdated>20180428180922</lastUpdated>
+  </versioning>
+</metadata>

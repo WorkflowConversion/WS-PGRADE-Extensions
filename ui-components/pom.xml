@@ -10,8 +10,16 @@
 	</parent>
 	<artifactId>ui-components</artifactId>
 	<packaging>jar</packaging>
-	<name>UI Components for the WS-PGRADE Workflow Conversion Portlets</name>
-	<url>https://github.com/WorkflowConversion/WS-PGRADE-Portlets</url>
+	<name>UI Components for the WS-PGRADE Workflow Conversion Extensions</name>
+	<url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</url>
+	
+	<repositories>
+		<repository>
+			<id>local</id>
+			<name>Local repository</name>
+			<url>file://${project.basedir}/../.m2/repository</url>
+		</repository>
+	</repositories>
 	
 	<dependencies>
 		<dependency>
