@@ -1,4 +1,6 @@
 # WS-PGRADE Extensions
+[![Build Status](https://travis-ci.org/WorkflowConversion/WS-PGRADE-Extensions.svg?branch=master)](https://travis-ci.org/WorkflowConversion/WS-PGRADE-Extensions)
+
 ## What are these extensions?
 ### The `ApplicationManager` Portlet
 [WS-PGRADE] is able to communicate with several resource managers, and these managers often lack an application database of sorts. [UNICORE] excels in this aspect and keeps all applications registered in an _incarnation database_, but this seems to be the exception.
