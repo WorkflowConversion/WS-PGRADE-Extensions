@@ -1,0 +1,19 @@
+language: java
+jdk:
+  - openjdk8
+  - oraclejdk8
+cache:
+  directories:
+    - "$HOME/.m2/repository"
+sudo: false
+notifications:
+  email:
+    on_success: never
+    on_failure: never
+install:
+  - mvn install:install-file -DpomFile=dependencies/portal-service.pom -Dfile=dependencies/portal-service.jar
+  - mvn install:install-file -DpomFile=dependencies/unicore6-api.pom -Dfile=dependencies/unicore6-api.jar
+  - mvn install:install-file -DpomFile=dependencies/externals.pom -Dfile=dependencies/externals.pom
+  - mvn install:install-file -DpomFile=dependencies/unreleased.pom -Dfile=dependencies/unreleased.pom
+script: 
+  - mvn package
