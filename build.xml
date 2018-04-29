@@ -2,26 +2,29 @@
 	<description>
 		Script to deploy portlets to a remote liferay instance.
 	</description>
-	<property name="deployment.properties.file" value="deployment.properties"/>
-	
+	<!-- changing this without changing the files/folders to which the values point might break the build -->
+	<property name="deployment.properties.file" value="deployment.properties" />
+	<property name="application.manager.path" value="application-manager" />
+	<property name="workflow.configuration.path" value="workflow-configurator" />
+
 	<!-- checks that deployment.properties exists -->
 	<target name="resource-check">
-		<available file="${deployment.properties.file}" property="deployment.properties.present"/>
+		<available file="${deployment.properties.file}" property="deployment.properties.present" />
 	</target>
-	
+
 	<!-- if deployment.properties is not found, this task will terminate the execution of this script -->
 	<target name="fail-if-missing-properties-file" depends="resource-check" unless="deployment.properties.present">
-		<fail message="Missing file ${deployment.properties.file}; Use deployment.properties.example as a guide."/>
+		<fail message="Missing file ${deployment.properties.file}; Use deployment.properties.example as a guide." />
 	</target>
-	
+
 	<!-- stops execution of the script if the given property is not defined -->
 	<target name="fail-if-missing-property" unless="${required.property}">
-		<fail message="Missing property ${required.property} in file ${deployment.properties.file}; Use deployment.properties.example as a guide."/>
+		<fail message="Missing property ${required.property} in file ${deployment.properties.file}; Use deployment.properties.example as a guide." />
 	</target>
 
 	<!-- if any of the required properties is missing, this task will terminate the execution of this script  -->
 	<target name="fail-if-missing-properties" depends="fail-if-missing-properties-file">
-		<property file="${deployment.properties.file}"/>
+		<property file="${deployment.properties.file}" />
 		<antcall target="fail-if-missing-property">
 			<param name="required.property" value="remote.server" />
 		</antcall>
@@ -32,37 +35,33 @@
 			<param name="required.property" value="remote.server.deploy.path" />
 		</antcall>
 		<antcall target="fail-if-missing-property">
+			<param name="required.property" value="remote.server.scripts.path" />
+		</antcall>
+		<antcall target="fail-if-missing-property">
 			<param name="required.property" value="keyfile.location" />
 		</antcall>
 	</target>
 
-	<!-- copies a single portlet to the liferay instance -->
-	<target name="deploy-portlet" depends="fail-if-missing-properties">
-		<property file="${portlet.dir}/build.properties"/>
-		<echo>Deploying ${portlet.name}.war from ${portlet.dir}/target</echo>
-		<scp 
-			file="${portlet.dir}/target/${portlet.name}.war"
-			remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp"
-			trust="true" verbose="false" keyfile="${keyfile.location}" />
-		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}"
-			command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
+	<!-- copies a single portlet to the liferay instance under a temporary name to avoid auto-deploy -->
+	<target name="upload-portlet-tmpfile" depends="fail-if-missing-properties">
+		<property file="${portlet.dir}/build.properties" />
+		<echo>Uploading ${portlet.name}.war.</echo>
+		<scp file="${portlet.dir}/target/${portlet.name}.war" remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp" trust="true" verbose="false" keyfile="${keyfile.location}" />
 	</target>
 
-	<!-- deploys all portlets -->
-  	<target name="deploy" depends="deploy-application-manager, deploy-workflow-configurator" />
-	
-	<!-- deploys the application manager portlet -->
-  	<target name="deploy-application-manager" depends="fail-if-missing-properties">
-  		<antcall target="deploy-portlet">
-  			<param name="portlet.dir" value="application-manager"/>
-  		</antcall>
+	<!-- uploads both portlets, deploys them and then restarts server -->
+	<target name="deploy" depends="fail-if-missing-properties">
+		<echo>Uploading portlet files. This might take a while, depending on the speed of your connection.</echo>
+		<antcall target="upload-portlet-tmpfile">
+			<param name="portlet.dir" value="${application.manager.path}" />
+		</antcall>
+		<antcall target="upload-portlet-tmpfile">
+			<param name="portlet.dir" value="${workflow.configurator.path}" />
+		</antcall>
+		<echo>Restarting WS-PGRADE portal. This will take a few minutes.</echo>
+		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}" 
+			command="${remote.server.scripts.path}/stop.sh &amp;&amp; 
+                     mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war &amp;&amp;
+					 ${remote.server.scripts.path}/stop.sh" />
 	</target>
-	
-	<!-- deploys the workflow configurator portlet -->
-	<target name="deploy-workflow-configurator" depends="fail-if-missing-properties">
-		<antcall target="deploy-portlet">
-	  		<param name="portlet.dir" value="workflow-configurator"/>
-	  	</antcall>
-	</target>
-	
 </project>

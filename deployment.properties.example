@@ -6,7 +6,10 @@ remote.server=your.server.com
 keyfile.location=~/.ssh/id_rsa
 
 # username (passwordless SSH, using provided key)
-remote.server.username=username
+remote.server.username=guseuser
 
-# remote server's liferay deploy folder
-remote.server.deploy.path=/path/to/your/liferay/deploy/folder
+# remote server's liferay deploy folder 
+remote.server.deploy.path=~/guse/deploy
+
+# remote server's init/stop script folder (these scripts are part of gUSE release)
+remote.server.scripts.path=~/guse-init-scripts

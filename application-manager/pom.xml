@@ -13,14 +13,6 @@
 	<name>Application Manager Portlet</name>
 	<url>https://github.com/WorkflowConversion/WS-PGRADE-Extensions</url>
 	
-	<repositories>
-		<repository>
-			<id>local</id>
-			<name>Local repository</name>
-			<url>file://${project.basedir}/../.m2/repository</url>
-		</repository>
-	</repositories>
-	
 	<dependencies>
 		<dependency>
 			<groupId>com.workflowconversion</groupId>

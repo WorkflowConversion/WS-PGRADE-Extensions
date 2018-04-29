@@ -5,16 +5,27 @@
 
 This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_.
 
-## Why are there binaries in this repository?
-Java repositories should not contain binaries, but at some point between the creation of this project and the release of it, one of the repositories holding required dependencies was not reachable anymore. Sadly, code that is not maintained by us refers to a repository that is not reachable, so we are distributing the needed files in the `.m2/repository` folder. 
+## Required development tools
+You will need Java 1.8 and [maven]. Plus, if you want to deploy the files yourself, you will also need Apache ant.
+
+## Why is there a dependencies folder?
+Java repositories should not contain binaries, but at some point between the creation of this project and the release of it, one of the repositories holding required dependencies was not reachable anymore. Sadly, code that is not maintained by us refers to a repository that is not reachable, so we are distributing the needed files in the `dependencies` folder.
+
+## How can I install the dependencies?
+Go to the `dependencies` folder and execute the following commands to install the dependencies in your local repository:
+
+    $ mvn install:install-file -DpomFile=portal-service.pom -Dfile=portal-service.jar
+    $ mvn install:install-file -DpomFile=unicore6-api.pom -Dfile=unicore6-api.jar
+    $ mvn install:install-file -DpomFile=externals.pom -Dfile=externals.pom
+    $ mvn install:install-file -DpomFile=unreleased.pom -Dfile=unreleased.pom
 
 ## How can I build the extensions?
-First, you'll need to install Java 1.8 and [maven] and then run:
+To build the extensions, simply run:
 
     $ mvn package
     
 ## Is there an installation process?
-No. You just need to copy the generated portlets into your [WS-PGRADE] instance and that's it. These portlets perform their own set-up when deployed.
+No. You just need to install the generated portlets into your [WS-PGRADE] instance by following [WS-PGRADE] user's manual. 
 
 ## How can I install the extensions?
 There are two ways in which you can deploy the portlets on a [WS-PGRADE] instance. Regardless of which way you choose, you need to restart the [WS-PGRADE] portal.

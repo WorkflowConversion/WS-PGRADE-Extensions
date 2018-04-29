@@ -72,11 +72,13 @@
 			<name>MyProxy API and Client</name>
 			<url>https://cilogon.svn.sourceforge.net/svnroot/cilogon/m2-repo/</url>
 		</repository>
+        <!-- seems dead since April 2018
 		<repository>
 			<id>eviware.com</id>
 			<name>Eviware Maven Repository</name>
 			<url>http://www.eviware.com/repository/maven2/</url>
 		</repository>
+        -->
 	</repositories>
 
 	<dependencyManagement>
