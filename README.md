@@ -7,11 +7,14 @@
 
 This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_.
 
+### The `WorkflowConfigurator` Portlet
+It offers a simpler configuration tool for uploaded workflows. After being edited, you can export them to any other [WS-PGRADE] instance or use them in the current portal.
+
 ## Required development tools
   - Java 1.8
   - [maven]
   
-If you want to deploy the files yourself, you will also need Apache [ant] configured with the .
+If you want to deploy the files yourself, you will also need Apache [ant] with the `jsch.jar 0.1.54` or later (for `scp` and `sshexec` ant tasks), which you can find [here](http://www.jcraft.com/jsch/).
 
 ## Why is there a dependencies folder?
 Java repositories should not contain binaries, but at some point between the creation of this project and the release of it, one of the repositories holding required dependencies was not reachable anymore. Sadly, code that is not maintained by us refers to a repository that is not reachable, so we are distributing the needed files in the `dependencies` folder.
