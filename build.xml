@@ -5,7 +5,7 @@
 	<!-- changing this without changing the files/folders to which the values point might break the build -->
 	<property name="deployment.properties.file" value="deployment.properties" />
 	<property name="application.manager.path" value="application-manager" />
-	<property name="workflow.configuration.path" value="workflow-configurator" />
+	<property name="workflow.configurator.path" value="workflow-configurator" />
 
 	<!-- checks that deployment.properties exists -->
 	<target name="resource-check">
@@ -47,10 +47,13 @@
 		<property file="${portlet.dir}/build.properties" />
 		<echo>Uploading ${portlet.name}.war.</echo>
 		<scp file="${portlet.dir}/target/${portlet.name}.war" remoteTofile="${remote.server.username}@${remote.server}:${remote.server.deploy.path}/${portlet.name}.war_tmp" trust="true" verbose="false" keyfile="${keyfile.location}" />
+		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}" command="mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war" />
 	</target>
 
 	<!-- uploads both portlets, deploys them and then restarts server -->
 	<target name="deploy" depends="fail-if-missing-properties">
+		<echo>Stopping WS-PGRADE portal.</echo>
+		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}" command="${remote.server.scripts.path}/stop.sh" />
 		<echo>Uploading portlet files. This might take a while, depending on the speed of your connection.</echo>
 		<antcall target="upload-portlet-tmpfile">
 			<param name="portlet.dir" value="${application.manager.path}" />
@@ -58,10 +61,7 @@
 		<antcall target="upload-portlet-tmpfile">
 			<param name="portlet.dir" value="${workflow.configurator.path}" />
 		</antcall>
-		<echo>Restarting WS-PGRADE portal. This will take a few minutes.</echo>
-		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}" 
-			command="${remote.server.scripts.path}/stop.sh &amp;&amp; 
-                     mv ${remote.server.deploy.path}/${portlet.name}.war_tmp ${remote.server.deploy.path}/${portlet.name}.war &amp;&amp;
-					 ${remote.server.scripts.path}/stop.sh" />
+		<echo>Starting WS-PGRADE portal. This will take a few minutes.</echo>
+		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}" command="${remote.server.scripts.path}/start.sh" />
 	</target>
 </project>

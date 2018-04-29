@@ -6,7 +6,10 @@
 This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_.
 
 ## Required development tools
-You will need Java 1.8 and [maven]. Plus, if you want to deploy the files yourself, you will also need Apache ant.
+  - Java 1.8
+  - [maven]
+  
+If you want to deploy the files yourself, you will also need Apache [ant] configured with the .
 
 ## Why is there a dependencies folder?
 Java repositories should not contain binaries, but at some point between the creation of this project and the release of it, one of the repositories holding required dependencies was not reachable anymore. Sadly, code that is not maintained by us refers to a repository that is not reachable, so we are distributing the needed files in the `dependencies` folder.
