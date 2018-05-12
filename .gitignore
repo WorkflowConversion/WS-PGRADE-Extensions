@@ -13,4 +13,4 @@ target/
 scrapbook.jpage
 
 # do not upload password information
-deployment.properties
+deployment.properties*

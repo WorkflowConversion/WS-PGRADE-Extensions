@@ -64,7 +64,8 @@ public class WorkflowConversionContextListener implements ServletContextListener
 		final int cacheDuration = extractCacheDuration(servletContextEvent);
 
 		final MiddlewareProvider middlewareProvider = extractMiddlewareProvider(servletContextEvent, cacheDuration);
-		final Collection<ResourceProvider> applicationProviders = extractResourceProviders(servletContextEvent,
+		// resource providers are initialized after gUSE sends the "init" signal
+		final Collection<ResourceProvider> resourceProviders = extractResourceProviders(servletContextEvent,
 				middlewareProvider, cacheDuration);
 		final PortletSanityCheck portletSanityCheck = extractPortletSanityCheck(servletContextEvent);
 		final Class<? extends WorkflowManagerFactory> workflowManagerFactoryClass = extractWorkflowManagerFactoryClass(
@@ -82,7 +83,7 @@ public class WorkflowConversionContextListener implements ServletContextListener
 
 		final Settings.Builder settingsBuilder = new Settings.Builder();
 
-		settingsBuilder.withResourceProviders(applicationProviders).withMiddlewareProvider(middlewareProvider)
+		settingsBuilder.withResourceProviders(resourceProviders).withMiddlewareProvider(middlewareProvider)
 				.withPortletSanityCheck(portletSanityCheck).withWorkflowStagingAreaPath(workflowStagingAreaPath)
 				.withWorkflowManagerFactoryClass(workflowManagerFactoryClass)
 				.withWorkflowExporterFactoryClass(workflowExporterFactoryClass)

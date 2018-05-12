@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/j2ee"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_3_0.xsd">
 	<display-name>WS-PGRADE portlet (${portlet.name})</display-name>
 
 	<listener>
@@ -10,9 +10,9 @@
 
 	<context-param>
 		<description>
-    		Using UI development mode enables developers to test changes without having to restart
-    		the portal because resources depending on gUSE will be simple mocks.
-    	</description>
+			Using UI development mode enables developers to test changes without having to restart
+			the portal because resources depending on gUSE will be simple mocks.
+		</description>
 		<param-name>ui.development.mode</param-name>
 		<param-value>false</param-value>
 	</context-param>
@@ -34,17 +34,35 @@
 		<param-name>productionMode</param-name>
 		<param-value>true</param-value>
 	</context-param>
+
+	<servlet>
+		<servlet-name>${portlet.name}RESTServlet</servlet-name>
+		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+		<init-param>
+			<param-name>jersey.config.server.provider.packages</param-name>
+			<param-value>com.workflowconversion.portlet.appmanager.rest</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
 	<servlet>
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<servlet-class>com.vaadin.server.VaadinServlet</servlet-class>
 		<init-param>
 			<description>Vaadin UI class to start</description>
 			<param-name>UI</param-name>
-			<param-value>com.workflowconversion.portlet.appmanager.ApplicationManagerUI</param-value>
+			<param-value>com.workflowconversion.portlet.appmanager.ApplicationManagerUI
+			</param-value>
 		</init-param>
 		<load-on-startup>10</load-on-startup>
 	</servlet>
 
+	<servlet-mapping>
+		<servlet-name>${portlet.name}RESTServlet</servlet-name>
+		<url-pattern>/rest/*</url-pattern>
+	</servlet-mapping>
+
+	<!-- Vaadin servlet mappings -->
 	<servlet-mapping>
 		<servlet-name>${portlet.name}Servlet</servlet-name>
 		<url-pattern>/${portlet.name}Servlet/*</url-pattern>
@@ -63,36 +81,43 @@
 	<!-- the following sections are needed to enable communication with gUSE's 
 		back end -->
 	<servlet>
+		<!-- we need extra initialization steps -->
 		<servlet-name>InitServices</servlet-name>
-		<servlet-class>hu.sztaki.lpds.information.local.InitAxisServices</servlet-class>
+		<servlet-class>com.workflowconversion.portlet.core.servlet.WorkflowConversionInitServlet</servlet-class>
 		<init-param>
 			<param-name>baseurl</param-name>
 			<!-- portlet.name property is defined in build.properties -->
-			<param-value>http://localhost:8080/${portlet.name}/servlet/AxisServlet</param-value>
+			<param-value>http://localhost:8080/${portlet.name}/servlet/AxisServlet
+			</param-value>
 		</init-param>
 		<init-param>
 			<param-name>install-4</param-name>
 			<!-- portlet.name property is defined in build.properties -->
-			<param-value>webapps/${portlet.name}/WEB-INF/lib/wfi.wsdd</param-value>
+			<param-value>webapps/${portlet.name}/WEB-INF/lib/wfi.wsdd
+			</param-value>
 		</init-param>
 		<init-param>
 			<param-name>install-1</param-name>
 			<!-- portlet.name property is defined in build.properties -->
-			<param-value>webapps/${portlet.name}/WEB-INF/lib/storage.wsdd</param-value>
+			<param-value>webapps/${portlet.name}/WEB-INF/lib/storage.wsdd
+			</param-value>
 		</init-param>
 		<init-param>
 			<param-name>install-2</param-name>
 			<!-- portlet.name property is defined in build.properties -->
-			<param-value>webapps/${portlet.name}/WEB-INF/lib/submitter.wsdd</param-value>
+			<param-value>webapps/${portlet.name}/WEB-INF/lib/submitter.wsdd
+			</param-value>
 		</init-param>
 		<init-param>
 			<param-name>install-3</param-name>
 			<!-- portlet.name property is defined in build.properties -->
-			<param-value>webapps/${portlet.name}/WEB-INF/lib/remote.wsdd</param-value>
+			<param-value>webapps/${portlet.name}/WEB-INF/lib/remote.wsdd
+			</param-value>
 		</init-param>
 		<init-param>
 			<param-name>run-0</param-name>
-			<param-value>hu.sztaki.lpds.information.local.PropertyInitCommandImpl</param-value>
+			<param-value>hu.sztaki.lpds.information.local.PropertyInitCommandImpl
+			</param-value>
 		</init-param>
 	</servlet>
 	<servlet-mapping>
@@ -102,7 +127,8 @@
 
 	<servlet>
 		<servlet-name>InitServlet</servlet-name>
-		<servlet-class>hu.sztaki.lpds.pgportal.servlet.InitServlet</servlet-class>
+		<servlet-class>hu.sztaki.lpds.pgportal.servlet.InitServlet
+		</servlet-class>
 	</servlet>
 
 	<servlet-mapping>
@@ -122,7 +148,8 @@
 
 	<servlet>
 		<servlet-name>lg</servlet-name>
-		<servlet-class>hu.sztaki.lpds.pgportal.servlet.LoggServlet</servlet-class>
+		<servlet-class>hu.sztaki.lpds.pgportal.servlet.LoggServlet
+		</servlet-class>
 	</servlet>
 
 	<servlet-mapping>
@@ -133,7 +160,8 @@
 
 	<servlet>
 		<servlet-name>tce</servlet-name>
-		<servlet-class>hu.sztaki.lpds.pgportal.servlet.TinyMCEList</servlet-class>
+		<servlet-class>hu.sztaki.lpds.pgportal.servlet.TinyMCEList
+		</servlet-class>
 	</servlet>
 
 	<servlet-mapping>
@@ -143,18 +171,21 @@
 
 	<servlet>
 		<servlet-name>AxisServlet</servlet-name>
-		<servlet-class>org.apache.axis.transport.http.AxisServlet</servlet-class>
+		<servlet-class>org.apache.axis.transport.http.AxisServlet
+		</servlet-class>
 	</servlet>
 
 	<servlet>
 		<servlet-name>AdminServlet</servlet-name>
-		<servlet-class>org.apache.axis.transport.http.AdminServlet</servlet-class>
+		<servlet-class>org.apache.axis.transport.http.AdminServlet
+		</servlet-class>
 		<load-on-startup>100</load-on-startup>
 	</servlet>
 
 	<servlet>
 		<servlet-name>SOAPMonitorService</servlet-name>
-		<servlet-class>org.apache.axis.monitor.SOAPMonitorService</servlet-class>
+		<servlet-class>org.apache.axis.monitor.SOAPMonitorService
+		</servlet-class>
 		<init-param>
 			<param-name>SOAPMonitorPort</param-name>
 			<param-value>5001</param-value>

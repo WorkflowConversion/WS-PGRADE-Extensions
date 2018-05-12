@@ -13,6 +13,7 @@
 	<!-- some of these are likely to change if a different WS-PGRADE version 
 		is used -->
 	<properties>
+		<jersey.version>2.27</jersey.version>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
 		<liferay.version>6.2.0-ga2</liferay.version>
@@ -27,7 +28,7 @@
 		<module>core-lib</module>
 		<module>ui-components</module>
 		<module>application-manager</module>
-		<module>workflow-configurator</module>
+		<!-- module>workflow-configurator</module -->
 	</modules>
 
 	<repositories>
@@ -72,13 +73,9 @@
 			<name>MyProxy API and Client</name>
 			<url>https://cilogon.svn.sourceforge.net/svnroot/cilogon/m2-repo/</url>
 		</repository>
-        <!-- seems dead since April 2018
-		<repository>
-			<id>eviware.com</id>
-			<name>Eviware Maven Repository</name>
-			<url>http://www.eviware.com/repository/maven2/</url>
-		</repository>
-        -->
+		<!-- seems dead since April 2018 <repository> <id>eviware.com</id> <name>Eviware 
+			Maven Repository</name> <url>http://www.eviware.com/repository/maven2/</url> 
+			</repository> -->
 	</repositories>
 
 	<dependencyManagement>
@@ -90,10 +87,38 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.glassfish.jersey</groupId>
+				<artifactId>jersey-bom</artifactId>
+				<version>${jersey.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
+		<!-- we need jersey for a simple REST API -->
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-servlet</artifactId>
+		</dependency>
+		<!-- uncomment if json support is required 
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+		</dependency>
+		-->
+		<dependency>
+			<groupId>org.glassfish.jersey.inject</groupId>
+			<artifactId>jersey-hk2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>javax.ws.rs-api</artifactId>
+			<version>2.1</version>
+		</dependency>
+
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
@@ -136,23 +161,19 @@
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-server</artifactId>
-			<version>${vaadin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-push</artifactId>
-			<version>${vaadin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-client</artifactId>
-			<version>${vaadin.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-themes</artifactId>
-			<version>${vaadin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.portlet</groupId>

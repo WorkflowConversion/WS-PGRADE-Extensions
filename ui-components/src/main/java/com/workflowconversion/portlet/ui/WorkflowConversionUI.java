@@ -64,8 +64,6 @@ public abstract class WorkflowConversionUI extends UI {
 
 		if (currentUser.isAuthenticated()) {
 			if (portletSanityCheck.isPortletProperlyInitialized()) {
-				// happy path!
-				initApplicationProviders();
 				content = prepareContent();
 			} else {
 				content = new SimpleContent.Builder().withIconLocation("../runo/icons/64/lock.png")
@@ -88,17 +86,6 @@ public abstract class WorkflowConversionUI extends UI {
 	 * @return the main window of this application.
 	 */
 	protected abstract Layout prepareContent();
-
-	private void initApplicationProviders() {
-		// init any provider that needs initialization
-		LOG.info("initializing resource providers");
-		for (final ResourceProvider provider : resourceProviders) {
-			if (LOG.isInfoEnabled()) {
-				LOG.info("initializing " + provider.getClass());
-			}
-			provider.init();
-		}
-	}
 
 	private PortletUser extractCurrentUser(final PortletRequest request) {
 		try {
