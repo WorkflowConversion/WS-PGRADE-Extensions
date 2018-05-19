@@ -41,6 +41,26 @@ import com.workflowconversion.portlet.core.resource.ResourceProvider;
 public class ApplicationsResource {
 	private final static Logger LOG = LoggerFactory.getLogger(ApplicationsResource.class);
 
+
+	/**
+	 * Gets the applications in XML format. We use the same format as the XML file to upload resources, e.g.:
+	 * <pre>{@code
+	 * <resources>
+	 *   <resource name="pbs-cluster.university.eu" type="pbs">
+	 *	   <application name="SampleApp" version="1.1" path="/usr/bin/sampleapp" description="Sample app"/>
+	 *	   <application name="Sleepy" version="1.2" path="/usr/bin/sleep" description="Sample app, again"/>
+	 *   </resource>
+	 *   <resource name="moab-cluster.university.eu" type="moab">
+	 *	   <application name="MagicSauce" version="2.1" path="/share/bin/magic" description="Nobel prize, here I come!"/>
+	 *   </resource>
+     * </resources>
+	 * }</pre>
+	 * @return
+	 * @throws IOException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws ParserConfigurationException
+	 * @throws TransformerException
+	 */
 	@GET
 	@Produces(MediaType.APPLICATION_XML)
 	public Response getXml() throws IOException, TransformerFactoryConfigurationError, ParserConfigurationException,
