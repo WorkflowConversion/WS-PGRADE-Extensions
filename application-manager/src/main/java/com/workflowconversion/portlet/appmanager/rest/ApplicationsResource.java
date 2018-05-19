@@ -27,6 +27,7 @@ import org.w3c.dom.Element;
 
 import com.workflowconversion.portlet.core.Settings;
 import com.workflowconversion.portlet.core.resource.Application;
+import com.workflowconversion.portlet.core.resource.Queue;
 import com.workflowconversion.portlet.core.resource.Resource;
 import com.workflowconversion.portlet.core.resource.ResourceProvider;
 
@@ -43,18 +44,22 @@ public class ApplicationsResource {
 
 
 	/**
-	 * Gets the applications in XML format. We use the same format as the XML file to upload resources, e.g.:
+	 * Gets the applications in XML format. We use a format compatible with the XML file to upload resources, e.g.:
 	 * <pre>{@code
 	 * <resources>
 	 *   <resource name="pbs-cluster.university.eu" type="pbs">
 	 *	   <application name="SampleApp" version="1.1" path="/usr/bin/sampleapp" description="Sample app"/>
 	 *	   <application name="Sleepy" version="1.2" path="/usr/bin/sleep" description="Sample app, again"/>
+	 *     <queue name="fast_jobs"/>
+	 *     <queue name="slow_jobs"/>
 	 *   </resource>
 	 *   <resource name="moab-cluster.university.eu" type="moab">
 	 *	   <application name="MagicSauce" version="2.1" path="/share/bin/magic" description="Nobel prize, here I come!"/>
+	 *     <queue name="default_queue"/>
 	 *   </resource>
      * </resources>
 	 * }</pre>
+	 * 
 	 * @return
 	 * @throws IOException
 	 * @throws TransformerFactoryConfigurationError
@@ -88,6 +93,12 @@ public class ApplicationsResource {
 					applicationElement.setAttribute("description", app.getDescription());
 					resourceElement.appendChild(applicationElement);
 				}
+				
+				for (final Queue queue : resource.getQueues()) {
+					final Element queueElement = document.createElement("queue");
+					queueElement.setAttribute("name", queue.getName());
+					resourceElement.appendChild(queueElement);
+				}
 
 				rootElement.appendChild(resourceElement);
 			}
@@ -102,6 +113,6 @@ public class ApplicationsResource {
 		final StreamResult streamResult = new StreamResult(writer);
 		transformer.transform(source, streamResult);
 
-		return Response.ok(writer.toString(), MediaType.APPLICATION_JSON).build();
+		return Response.ok(writer.toString(), MediaType.APPLICATION_XML).build();
 	}
 }

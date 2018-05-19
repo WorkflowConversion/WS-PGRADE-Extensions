@@ -15,7 +15,6 @@ public class ApplicationException extends RuntimeException {
 	 */
 	public ApplicationException(String message) {
 		super(message);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -23,7 +22,6 @@ public class ApplicationException extends RuntimeException {
 	 */
 	public ApplicationException(Throwable cause) {
 		super(cause);
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -32,6 +30,5 @@ public class ApplicationException extends RuntimeException {
 	 */
 	public ApplicationException(String message, Throwable cause) {
 		super(message, cause);
-		// TODO Auto-generated constructor stub
 	}
 }
