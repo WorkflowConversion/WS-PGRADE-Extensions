@@ -311,6 +311,10 @@ public class ClusterResourceProvider implements ResourceProvider {
 		case sge:
 			extractedQueueNames = item.getSge().getQueue();
 			break;
+		case local:
+			// no queues for local submitter
+			extractedQueueNames = Collections.<String>emptyList();
+			break;
 		default:
 			throw new IllegalArgumentException("Cannot handle items of type " + middlewareType);
 		}

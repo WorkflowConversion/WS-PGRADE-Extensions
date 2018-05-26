@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  */
 public enum SupportedClusters {
-	pbs, lsf, sge, moab;
+	pbs, lsf, sge, moab, local;
 
 	public static boolean isSupported(final String resourceType) {
 		if (StringUtils.isNotBlank(resourceType)) {
