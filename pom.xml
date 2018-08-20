@@ -16,7 +16,7 @@
 		<jersey.version>2.27</jersey.version>
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
-		<liferay.version>6.2.0-ga2</liferay.version>
+		<liferay.version>6.2.0-ga1</liferay.version>
 		<vaadin.version>7.4.3</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<tomcat.version>7.0.55</tomcat.version>
@@ -148,7 +148,7 @@
 			<version>1.0.7</version>
 		</dependency>
 		<dependency>
-			<groupId>com.liferay</groupId>
+			<groupId>com.liferay.portal</groupId>
 			<artifactId>portal-service</artifactId>
 			<version>${liferay.version}</version>
 			<scope>provided</scope>

@@ -40,6 +40,14 @@
 			<param name="required.property" value="keyfile.location" />
 		</antcall>
 	</target>
+	
+	<!-- executes mvn package -->
+	<target name="build">
+	    <exec dir="${basedir}" executable="mvn">
+	        <arg value="clean"/>
+	    	<arg value="package"/>
+		</exec>
+	</target>
 
 	<!-- copies a single portlet to the liferay instance under a temporary name to avoid auto-deploy -->
 	<target name="upload-portlet-tmpfile" depends="fail-if-missing-properties">
@@ -51,6 +59,8 @@
 
 	<!-- uploads both portlets, deploys them and then restarts server -->
 	<target name="deploy" depends="fail-if-missing-properties">
+		<echo>Building.</echo>
+		<antcall target="build" />
 		<echo>Stopping WS-PGRADE portal.</echo>
 		<sshexec host="${remote.server}" username="${remote.server.username}" trust="true" verbose="false" keyfile="${keyfile.location}" command="${remote.server.scripts.path}/stop.sh" />
 		<echo>Uploading portlet files. This might take a while, depending on the speed of your connection.</echo>

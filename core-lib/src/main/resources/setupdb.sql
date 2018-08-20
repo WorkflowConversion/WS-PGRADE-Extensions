@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS tbl_application (
 	version			TEXT			NOT NULL,
 	path			TEXT			NOT NULL,
 	description		TEXT,	
-	UNIQUE INDEX (resource_name(128), resource_type(16), name(256), version(32), path(512))	
+	UNIQUE INDEX (resource_name(64), resource_type(16), name(64), version(32), path(128))	
 );
 
 -- create the "get" stored procedure
