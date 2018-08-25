@@ -64,6 +64,7 @@ public abstract class WorkflowConversionUI extends UI {
 
 		if (currentUser.isAuthenticated()) {
 			if (portletSanityCheck.isPortletProperlyInitialized()) {
+				LOG.info("Connection with gUSE services has been established.");
 				content = prepareContent();
 			} else {
 				content = new SimpleContent.Builder().withIconLocation("../runo/icons/64/lock.png")

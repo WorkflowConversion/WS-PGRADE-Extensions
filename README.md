@@ -5,7 +5,23 @@
 ### The `ApplicationManager` Portlet
 [WS-PGRADE] is able to communicate with several resource managers, and these managers often lack an application database of sorts. [UNICORE] excels in this aspect and keeps all applications registered in an _incarnation database_, but this seems to be the exception.
 
-This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_.
+This portlet lets the administrator of the [WS-PGRADE] portal to register applications, thus, extending [WS-PGRADE] by adding its own _application database_. It also offers read-only access via a minimalistic REST-API. 
+
+#### Obtaining a read-only copy of the database via a REST call
+Access: `[portal-url]/ApplicationManagerPortlet/rest/apps`.
+
+The output is an XML file similar to:
+
+```xml
+<resources>
+  <resource name="c153-110.localcloud" type="pbs">
+    <queue name="batch"/>
+    <application name="blast" version="1.4" description="Basic local allignment search tool." path="/share/bin/blast"/>    
+  </resource>
+</resources>
+``` 
+
+
 
 ### The `WorkflowConfigurator` Portlet
 It offers a simpler configuration tool for uploaded workflows. After being edited, you can export them to any other [WS-PGRADE] instance or use them in the current portal.
