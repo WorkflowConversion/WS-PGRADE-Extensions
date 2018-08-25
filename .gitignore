@@ -14,3 +14,6 @@ scrapbook.jpage
 
 # do not upload password information
 deployment.properties*
+
+# IntelliJ
+.idea
