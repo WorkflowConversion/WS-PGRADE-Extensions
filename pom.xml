@@ -17,7 +17,7 @@
 		<jaxws-rt.version>2.2.8</jaxws-rt.version>
 		<guse.version>3.7.4</guse.version>
 		<liferay.version>6.2.0-ga1</liferay.version>
-		<vaadin.version>7.4.3</vaadin.version>
+		<vaadin.version>7.7.24</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 		<tomcat.version>7.0.55</tomcat.version>
 		<maven.compiler.source>1.7</maven.compiler.source>
